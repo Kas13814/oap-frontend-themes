@@ -1,0 +1,1121 @@
+<!DOCTYPE html>
+<html lang="en-GB" dir="ltr">
+<head>
+<script id="oap-theme-boot">
+(function(){
+  const root = document.documentElement;
+
+  // Keys used across OAP (index + other pages)
+  const KEY_PREF = "pref-theme";          // light | dark (existing)
+  const KEY_THEME = "theme";              // optional legacy/alt
+  const KEY_MODE  = "oap_theme_mode";     // light | dark | gradient (if used)
+  const KEY_INK   = "oap_gradient_ink";   // white | black (if used)
+
+  function readTheme(){
+    const v =
+      localStorage.getItem(KEY_MODE) ||
+      localStorage.getItem(KEY_PREF) ||
+      localStorage.getItem(KEY_THEME) ||
+      localStorage.getItem("oap_theme") ||
+      localStorage.getItem("OAP_THEME") ||
+      "";
+    const t = String(v || "").toLowerCase();
+    if (t === "gradient") return "gradient";
+    if (t === "light") return "light";
+    if (t === "dark") return "dark";
+    // fallback to OS preference
+    return (matchMedia && matchMedia("(prefers-color-scheme: light)").matches) ? "light" : "dark";
+  }
+
+  function readInk(){
+    const v =
+      localStorage.getItem(KEY_INK) ||
+      localStorage.getItem("gradientInk") ||
+      localStorage.getItem("oap_gradientInk") ||
+      "";
+    const ink = String(v || "white").toLowerCase();
+    return (ink === "black") ? "black" : "white";
+  }
+
+  function apply(){
+    const t = readTheme();
+    if (t === "gradient") {
+      root.setAttribute("data-theme","gradient");
+      root.setAttribute("data-gradient-ink", readInk());
+    } else {
+      root.setAttribute("data-theme", t);
+      root.removeAttribute("data-gradient-ink");
+    }
+  }
+
+  // Apply immediately
+  try { apply(); } catch(_) {}
+
+  // Keep synced if index changes theme
+  window.addEventListener("storage", function(e){
+    const k = e.key || "";
+    if (
+      k === KEY_PREF || k === KEY_THEME || k === KEY_MODE || k === KEY_INK ||
+      k === "oap_theme" || k === "OAP_THEME" || k === "gradientInk" || k === "oap_gradientInk"
+    ){
+      try { apply(); } catch(_) {}
+    }
+  });
+})();
+</script>
+
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <link rel="stylesheet" href="/assets/css/themes.css">
+<title>Employee Master</title>
+
+<!-- Boot: الثيم موحد مع index.html -->
+
+
+<style>
+:root{
+  --bg:#F6F4F1; --card:#FAFAFA; --text:#0F1220; --muted:#6B7280;
+  --brand:#22D3A6; --accent:#6D28D9; --ring:#E8E8E8;
+  --shadow:0 10px 30px rgba(2,8,23,.12); --radius:22px;
+}
+
+*{box-sizing:border-box}
+html,body{height:100%;overflow:hidden}
+
+body{
+  margin:0;
+  background: var(--bg);
+  color:var(--text);
+  font:14px/1.5 "Segoe UI",Inter,Roboto,system-ui,-apple-system,sans-serif;
+}
+
+.container{max-width:1120px;margin:32px auto;padding:0 16px;height:calc(88vh - 64px);max-height:740px;display:flex;flex-direction:column}
+.header{display:flex;gap:16px;align-items:center;justify-content:space-between;margin-bottom:18px}
+.title{font-size:18px;font-weight:700;display:flex;align-items:center;gap:8px}
+.header .actions{display:flex;gap:8px;align-items:center}
+
+.btn{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  border:1px solid var(--ring);
+  background:var(--card);
+  color:var(--text);
+  padding:9px 14px;
+  border-radius:12px;
+  cursor:pointer;
+  text-decoration:none;
+  font-size:13px;
+  transition:
+    background-color .15s ease,
+    box-shadow .15s ease,
+    transform .12s ease;
+}
+.btn-primary{
+  background:var(--brand);
+  color:#fff;
+  border-color:transparent;
+}
+.btn-primary:hover{
+  color:#000000;
+}
+.btn-ghost{
+  background:transparent;
+}
+.btn:hover{
+  background-color:rgba(15,23,42,0.06);
+  box-shadow:0 2px 6px rgba(15,23,42,0.18);
+  transform:translateY(-1px);
+}
+.btn:active{
+  transform:translateY(0);
+  box-shadow:none;
+}
+
+.panel{
+  background:var(--card);
+  border:1px solid var(--ring);
+  border-radius:var(--radius);
+  box-shadow:var(--shadow);
+  padding:18px;
+  flex:1 1 auto;
+  display:flex;
+  flex-direction:column;
+  min-height:0;
+}
+.toolbar{display:flex;gap:10px;align-items:center;justify-content:space-between;margin-bottom:12px;padding-left:18px;padding-right:18px;}
+.toolbar-actions{display:flex;gap:8px;align-items:center}
+.form-footer{display:flex;justify-content:flex-end;gap:10px;margin-top:14px;padding-top:14px;border-top:1px solid var(--ring);padding-left:18px;padding-right:18px;}
+.form{display:grid;grid-template-columns:1fr 1fr;gap:12px;flex:1 1 auto;min-height:0;overflow:auto;padding-right:18px;
+  padding-left:18px;          /* extra left space so focus ring is not clipped */margin-right:0;}
+/* Scrollbar: remove track background */
+.form{scrollbar-width:thin;scrollbar-color:color-mix(in srgb, var(--text) 35%, transparent) transparent}
+.form::-webkit-scrollbar{width:10px}
+.form::-webkit-scrollbar-track{background:transparent}
+.form::-webkit-scrollbar-thumb{background:color-mix(in srgb, var(--text) 35%, transparent);border-radius:999px;border:3px solid transparent;background-clip:content-box}
+
+.form .full, .form-grid .full{grid-column:1/-1}
+label{display:block;color:var(--muted);font-size:12px;margin:7px 0 6px}
+input,select,textarea{
+  width:100%; padding:10px 12px; border-radius:12px;
+  border:1px solid var(--ring); outline:none;
+  background:var(--card); color:var(--text);
+}
+textarea{min-height:90px; resize:vertical}
+.mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.3px}
+
+input:focus, select:focus, textarea:focus{
+  border-color: var(--brand);
+  /* Visible green focus ring on all sides (no clipping) */
+  box-shadow: 0 0 0 2px var(--brand), inset 0 0 0 1px var(--brand);
+}
+
+
+
+.toast{
+  position:fixed; right:16px; bottom:16px; background:#111827; color:#F9FAFB;
+  padding:12px 14px; border-radius:12px; box-shadow:var(--shadow); display:none;
+}
+.toast.ok{background:linear-gradient(135deg,#16A34A,#22D3A6)}
+.toast.err{background:linear-gradient(135deg,#EF4444,#F14668)}
+
+#formTitle{font-weight:700;font-size:16px}
+#formDesc{color:var(--muted);font-size:12px}
+
+/* ===== Tabs layout (patch) ===== */
+.form.tabs-enabled{
+  display:flex;
+  flex-direction:column;
+  flex:1;
+  min-height:0;
+  overflow:hidden; /* scrolling moves to .tab-panels */
+  padding-right:18px;
+  margin-right:0;
+}
+
+/* Futuristic tabs (only) */
+.tabs{
+  position:relative;
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  padding:6px;
+  margin: 10px 0 12px 0;
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--card) 78%, transparent);
+  border:1px solid color-mix(in srgb, var(--ring) 65%, transparent);
+  box-shadow:none;
+  backdrop-filter: saturate(130%) blur(10px);
+  -webkit-backdrop-filter: saturate(130%) blur(10px);
+  isolation:isolate;
+}
+
+/* Gradient border glow */
+.tabs::before{
+  content:'';
+  position:absolute;
+  inset:-1px;
+  border-radius:18px;
+  padding:1px;
+  background:
+    linear-gradient(
+      120deg,
+      color-mix(in srgb, var(--accent) 78%, transparent),
+      color-mix(in srgb, var(--brand) 78%, transparent),
+      color-mix(in srgb, var(--text) 12%, transparent)
+    );
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events:none;
+  opacity:.80;
+}
+
+/* Moving active indicator (driven by JS vars) */
+.tabs::after{
+  content:'';
+  position:absolute;
+  top:0;
+  left:0;
+  width: var(--tab-indicator-w, 0px);
+  height: var(--tab-indicator-h, 30px);
+  transform: translate(var(--tab-indicator-x, 0px), var(--tab-indicator-y, 0px));
+  border-radius:12px;
+  background:
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--brand) 24%, transparent),
+      color-mix(in srgb, var(--accent) 18%, transparent)
+    );
+  box-shadow:none;
+  pointer-events:none;
+  opacity: var(--tab-indicator-o, 0);
+  transition: transform .22s ease, width .22s ease, opacity .20s ease;
+  z-index:0;
+}
+
+.tab-btn{
+  position:relative;
+  z-index:1;
+  appearance:none;
+  border:1px solid transparent;
+  background: transparent;
+  color:var(--text);
+  padding:7px 12px;
+  border-radius:12px;
+  font-weight:700;
+  letter-spacing:.2px;
+  cursor:pointer;
+  transition:
+    transform .10s ease,
+    color .15s ease,
+    border-color .15s ease,
+    background .15s ease,
+    box-shadow .15s ease;
+}
+
+.tab-btn::before{
+  content:'';
+  position:absolute;
+  inset:0;
+  border-radius:14px;
+  background:
+    radial-gradient(140px 80px at 15% 25%, color-mix(in srgb, var(--text) 10%, transparent), transparent 60%),
+    radial-gradient(160px 90px at 90% 0%,  color-mix(in srgb, var(--brand) 16%, transparent), transparent 65%);
+  opacity:0;
+  transition: opacity .15s ease;
+  pointer-events:none;
+}
+
+.tab-btn:hover{ transform:translateY(-1px); }
+.tab-btn:hover::before{ opacity:1; }
+.tab-btn:active{ transform:translateY(0) scale(.99); }
+
+.tab-btn[aria-selected="true"]{
+  background:
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--brand) 20%, transparent),
+      color-mix(in srgb, var(--accent) 14%, transparent)
+    );
+  border-color: color-mix(in srgb, var(--brand) 35%, var(--ring));
+  box-shadow:none;
+}
+
+.tab-btn:focus-visible{
+  outline:2px solid color-mix(in srgb, var(--brand) 75%, var(--ring));
+  outline-offset:2px;
+}
+
+.tab-panels{
+  flex:1;
+  min-height:0;
+  overflow:auto;               /* scroll inside form */
+  padding-right:18px;
+  padding-left:18px;           /* extra left space so focus ring is not clipped */
+  margin-right:0;              /* bring scrollbar closer to border */
+}
+
+/* Scrollbar styling for the inner scroller */
+.tab-panels::-webkit-scrollbar{width:10px}
+.tab-panels::-webkit-scrollbar-track{background:transparent}
+.tab-panels::-webkit-scrollbar-thumb{
+  background:color-mix(in srgb, var(--text) 28%, transparent);
+  border-radius:9px;
+  border:3px solid transparent;
+  background-clip:content-box;
+}
+
+.tab-panel{ display:none; }
+.tab-panel.active{ display:block; }
+
+.form-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:14px;
+}
+
+
+/* --- Controls tab: separate time fields horizontally --- */
+.tab-panel[data-tab="controls"] .form-grid{ column-gap: 14px; row-gap: 14px; }
+
+.mode-select{max-width:340px}
+
+/* Mobile */
+@media (max-width: 720px){
+  .form-grid{grid-template-columns:1fr}
+  .full{grid-column:auto}
+}
+
+
+/* --- Controls divider --- */
+.field.divider{padding:0; margin: 18px 0 14px; grid-column: 1 / -1;}
+.field.divider .sep{
+  display:flex;
+  align-items:center;
+  gap:0;
+  width:100%;
+  padding: 2px 0;
+}
+.field.divider .sep::before,
+.field.divider .sep::after{
+  content:'';
+  flex:1;
+  height:1px;
+  background: var(--ring);
+  opacity: .9;
+}
+
+
+/* --- Control 2 spacing (move up) --- */
+[data-field="Control2ID"]{ margin-top: -14px !important; }
+
+[data-field="Control2StartTime"],
+[data-field="Control2EndTime"]{ margin-top: -14px !important; }
+
+</style>
+<style id="oap-theme-3modes">
+</style>
+
+<script>
+/* OAP Theme Boot — follow index.html (light/dark/gradient + ink) */
+(function () {
+  "use strict";
+  const KEY_MODE = "oap_theme_mode";
+  const KEY_INK  = "oap_gradient_ink";
+
+  const normMode = (v) => {
+    v = (v || "").toLowerCase();
+    return (v === "light" || v === "dark" || v === "gradient") ? v : "";
+  };
+  const normInk = (v) => {
+    v = (v || "").toLowerCase();
+    return (v === "white" || v === "black") ? v : "";
+  };
+
+  function readPreferred() {
+    let mode = normMode(localStorage.getItem(KEY_MODE));
+    let ink  = normInk(localStorage.getItem(KEY_INK));
+
+    if (!mode) {
+      mode = normMode(
+        localStorage.getItem("OAP_THEME") ||
+        localStorage.getItem("pref-theme") ||
+        localStorage.getItem("theme")
+      ) || "light";
+    }
+
+    if (mode !== "gradient") ink = "";
+    if (mode === "gradient" && !ink) ink = normInk(localStorage.getItem(KEY_INK)) || "white";
+
+    return { mode, ink };
+  }
+
+  function applyTheme() {
+    const p = readPreferred();
+    document.documentElement.setAttribute("data-theme", p.mode);
+    if (p.mode === "gradient") {
+      document.documentElement.setAttribute("data-gradient-ink", p.ink);
+    } else {
+      document.documentElement.removeAttribute("data-gradient-ink");
+    }
+  }
+
+  applyTheme();
+  ["focus", "pageshow", "visibilitychange"].forEach((ev) => {
+    window.addEventListener(ev, applyTheme, { passive: true });
+  });
+  window.addEventListener("storage", applyTheme);
+})();
+</script>
+
+
+<style>
+</style>
+
+  <script src="/assets/js/theme-manager.js" defer></script>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <div class="title" id="pageTitle">📋 Shift Report</div>
+    <div class="actions">
+      <a href="/pages/Navigation panel.html" class="btn btn-ghost" title="Back" aria-label="Back">⟵ Back</a>
+      <a href="/index.html" class="btn btn-ghost" title="Home" aria-label="Home">
+        <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+          <path d="M3 11l9-8 9 8" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M5 11v9h14v-9" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </a>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="toolbar">
+      <div>
+        <div id="formTitle"></div>
+        <div id="formDesc"></div>
+      </div>
+      <div class="toolbar-actions">
+        </div>
+    </div>
+    <form id="dynForm" class="form" autocomplete="off"></form>
+    <div class="form-footer">
+      <button id="clearBtn" class="btn btn-ghost" type="button">Clear</button>
+        <button id="submitBtn" class="btn btn-primary" type="button">Submit</button>
+    </div>
+  </div>
+</div>
+<div id="toast" class="toast">Saved</div>
+
+<script>
+// ===== Supabase config =====
+const SUPABASE_URL = "https://inuqlhkoaoeiycefvjyj.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImludXFsaGtvYW9laXljZWZ2anlqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMxMTUxODEsImV4cCI6MjA3ODY5MTE4MX0.DCAY9rN0noaBoE_T-6eDsb_79szK91af989f9TqjEow";
+
+
+// Try to use the logged-in user's access_token (if present) to satisfy RLS.
+// Fallback to anon key when no session exists.
+const SUPABASE_REF = (new URL(SUPABASE_URL)).hostname.split('.')[0];
+
+function getSupabaseAccessToken(){
+  const key = `sb-${SUPABASE_REF}-auth-token`;
+  const raw = localStorage.getItem(key);
+  if(!raw) return null;
+  try{
+    const obj = JSON.parse(raw);
+    return obj?.access_token || obj?.currentSession?.access_token || obj?.session?.access_token || null;
+  }catch(_){
+    return null;
+  }
+}
+
+function supabaseHeaders(extra){
+  const token = getSupabaseAccessToken();
+  const bearer = token || SUPABASE_ANON_KEY;
+  return Object.assign({
+    'Content-Type':'application/json',
+    'apikey': SUPABASE_ANON_KEY,
+    'Authorization': 'Bearer ' + bearer
+  }, extra || {});
+}
+// ===== Helpers =====
+const DATE_FMT = 'DD-MM-YYYY';
+const TIME_FMT = 'HH:mm';
+
+function normalizeDigits(s){
+  if(s == null) return s;
+  const map = {
+    '٠':'0','١':'1','٢':'2','٣':'3','٤':'4',
+    '٥':'5','٦':'6','٧':'7','٨':'8','٩':'9'
+  };
+  return String(s).replace(/[٠-٩]/g, ch => map[ch] ?? ch);
+}
+
+function toDDMMYYYY(s){
+  s = normalizeDigits(s);
+  if(!s) return '';
+  if(/^\d{2}-\d{2}-\d{4}$/.test(s)) return s;
+  if(/^\d{4}-\d{2}-\d{2}$/.test(s)){
+    const y = s.slice(0,4), m = s.slice(5,7), d = s.slice(8,10);
+    return d + '-' + m + '-' + y;
+  }
+  return s;
+}
+
+
+function ddmmToISO(s){
+  s = normalizeDigits(s);
+  if(!s) return '';
+  // already ISO
+  if(/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+  // dd-mm-yyyy -> yyyy-mm-dd
+  const mm = String(s).match(/^(\d{2})-(\d{2})-(\d{4})$/);
+  if(mm) return `${mm[3]}-${mm[2]}-${mm[1]}`;
+  return s;
+}
+
+function isoToDDMMYYYY(iso){
+  if(!iso) return '';
+  const m = String(iso).match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if(!m) return '';
+  return `${m[3]}-${m[2]}-${m[1]}`;
+}
+
+function setFieldValue(formId, name, value){
+  const el = document.getElementById(formId + '_' + name);
+  if(!el) return;
+  el.value = (value ?? '');
+}
+
+
+function to24h(t){
+  t = normalizeDigits(t);
+  const m = String(t||'').match(/(\d{1,2}):(\d{2})/);
+  if(!m) return '';
+  let hh = Math.max(0, Math.min(23, parseInt(m[1],10) || 0));
+  let mm = Math.max(0, Math.min(59, parseInt(m[2],10) || 0));
+  return String(hh).padStart(2,'0') + ':' + String(mm).padStart(2,'0');
+}
+
+function getTodayISO(){
+  const today = new Date();
+  const y = today.getFullYear();
+  const m = String(today.getMonth()+1).padStart(2,'0');
+  const d = String(today.getDate()).padStart(2,'0');
+  return y + '-' + m + '-' + d;
+}
+
+function getTodayLabel(){
+  const today = new Date();
+  return today.toLocaleDateString('en-GB', {
+    day:'2-digit',
+    month:'long',
+    year:'numeric'
+  });
+}
+
+function attachMasks(root){
+  root.querySelectorAll('input[data-mask="time"]').forEach(el => {
+    el.addEventListener('input', () => {
+      let v = normalizeDigits(el.value).replace(/[^0-9]/g,'').slice(0,4);
+      if(v.length >= 3) v = v.slice(0,2) + ':' + v.slice(2);
+      el.value = v;
+    });
+    el.addEventListener('blur', () => {
+      if(/^(\d{1,2}):(\d{2})$/.test(el.value)) el.value = to24h(el.value);
+    });
+  });
+  root.querySelectorAll('input[data-mask="date"]').forEach(el => {
+    el.addEventListener('input', () => {
+      let v = normalizeDigits(el.value).replace(/[^0-9]/g,'').slice(0,8);
+      if(v.length >= 5) v = v.slice(0,2) + '-' + v.slice(2,4) + '-' + v.slice(4);
+      else if(v.length >= 3) v = v.slice(0,2) + '-' + v.slice(2);
+      el.value = v;
+    });
+  });
+}
+
+function showToast(msg, isError){
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'toast ' + (isError ? 'err' : 'ok');
+  el.style.display = 'block';
+  clearTimeout(showToast._t);
+  showToast._t = setTimeout(() => {
+    el.style.display = 'none';
+  }, 2800);
+}
+
+// ===== Supabase request =====
+async function insertEmployeeMaster(record){
+  const res = await fetch(SUPABASE_URL + '/rest/v1/employee_master_db', {
+    method:'POST',
+    headers: supabaseHeaders({ 'Prefer': 'return=representation' }),
+    body: JSON.stringify(record)
+  });
+  if(!res.ok){
+    const text = await res.text();
+    throw new Error(text || ('HTTP ' + res.status));
+  }
+  return await res.json();
+}
+
+
+async function fetchEmployeeMasterById(empId){
+  const id = String(empId || '').trim();
+  if(!id) throw new Error('Employee ID is required');
+  const url = `${SUPABASE_URL}/rest/v1/employee_master_db?select=*&Employee%20ID=eq.${encodeURIComponent(id)}&limit=1`;
+  const res = await fetch(url, {
+    method: 'GET',
+    headers: supabaseHeaders()
+  });
+  const txt = await res.text();
+  if(!res.ok) throw new Error(txt || ('Fetch failed: ' + res.status));
+  let data = [];
+  try { data = JSON.parse(txt || '[]'); } catch(e){ data = []; }
+  return (Array.isArray(data) && data.length) ? data[0] : null;
+}
+
+async function updateEmployeeMaster(empId, payload){
+  const id = String(empId || '').trim();
+  if(!id) throw new Error('Employee ID is required');
+  const url = `${SUPABASE_URL}/rest/v1/employee_master_db?Employee%20ID=eq.${encodeURIComponent(id)}`;
+  const res = await fetch(url, {
+    method: 'PATCH',
+    headers: supabaseHeaders({ 'Prefer': 'return=representation' }),
+    body: JSON.stringify(payload)
+  });
+  const txt = await res.text();
+  if(!res.ok) throw new Error(txt || ('Update failed: ' + res.status));
+  return txt;
+}
+
+
+// ===== Dynamic form =====
+const COLUMN_MAP = {
+  RecordDate: 'Record Date',
+  EmployeeID: 'Employee ID',
+  EmployeeName: 'Employee Name',
+  Gender: 'Gender',
+  Nationality: 'Nationality',
+  HiringDate: 'Hiring Date',
+  JobTitle: 'Job Title',
+  ActualRole: 'Actual Role',
+  Grade: 'Grade',
+  Department: 'Department',
+  PreviousDepartment: 'Previous Department',
+  CurrentDepartment: 'Current Department',
+  EmploymentActionType: 'Employment Action Type',
+  ActionEffectiveDate: 'Action Effective Date',
+  ExitReason: 'Exit Reason',
+  Note: 'Note'
+};
+
+// ===== Global state (needed for Update/Search handlers) =====
+let activeTabId = 'add';
+let loadedEmployeeId = null; // set when Update->Search loads a record
+
+
+
+
+function boot(formDef){
+  document.title = formDef.title;
+  document.getElementById('pageTitle').textContent = '👤 ' + formDef.title;
+  document.getElementById('formTitle').textContent = formDef.title;
+  document.getElementById('formDesc').textContent = formDef.description || '';
+
+  const dyn = document.getElementById('dynForm');
+  dyn.innerHTML = '';
+
+  // --- Tabs (patch): organize many fields into clear sections ---
+  dyn.classList.add('tabs-enabled');
+
+  const tabsWrap = document.createElement('div');
+  tabsWrap.className = 'tabs';
+  tabsWrap.setAttribute('role','tablist');
+
+  const panelsWrap = document.createElement('div');
+  panelsWrap.className = 'tab-panels';
+
+  dyn.appendChild(tabsWrap);
+  dyn.appendChild(panelsWrap);
+
+  const TAB_DEFS = [
+    {id:'add',    label:'Add'},
+    {id:'update', label:'Update'}
+  ];
+
+  activeTabId = 'add';
+  loadedEmployeeId = null; // Update mode
+  let sharedGrid = null;
+  let addPanel = null;
+  let updatePanel = null;
+
+
+  const panelGridByTab = {};
+  for(const t of TAB_DEFS){
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'tab-btn';
+    b.id = `tab-${t.id}`;
+    b.setAttribute('role','tab');
+    b.setAttribute('aria-controls', `panel-${t.id}`);
+    b.setAttribute('aria-selected','false');
+    b.dataset.tab = t.id;
+    b.textContent = t.label;
+
+    const p = document.createElement('section');
+    p.className = 'tab-panel';
+    p.id = `panel-${t.id}`;
+    p.setAttribute('role','tabpanel');
+    p.setAttribute('aria-labelledby', `tab-${t.id}`);
+    p.dataset.tab = t.id;
+
+    if(t.id === 'update'){
+      // Update mode header (search by Employee ID)
+      p.insertAdjacentHTML('afterbegin', `
+        <div class="card" style="margin:12px 12px 0 12px;">
+          <div class="card-body">
+            <div class="row" style="gap:10px; align-items:end;">
+              <div class="field" style="flex:1; min-width:220px;">
+                <label>Employee ID</label>
+                <input id="update_search_employee_id" type="text" class="mono" placeholder="Enter Employee ID" inputmode="numeric"/>
+              </div>
+              <button id="btn_update_search" class="btn btn-primary" type="button">Search</button>
+              <button id="btn_update_clear" class="btn" type="button">Clear</button>
+            </div>
+            <div id="update_search_msg" class="muted" style="margin-top:8px;"></div>
+          </div>
+        </div>
+      `);
+    }
+
+    const grid = document.createElement('div');
+    grid.className = 'form-grid';
+    p.appendChild(grid);
+
+    panelGridByTab[t.id] = grid;
+    tabsWrap.appendChild(b);
+    panelsWrap.appendChild(p);
+  }
+
+  // Cache panels and the shared grid (inputs are rendered once)
+  addPanel = panelsWrap.querySelector('.tab-panel[data-tab="add"]');
+  updatePanel = panelsWrap.querySelector('.tab-panel[data-tab="update"]');
+  sharedGrid = addPanel ? addPanel.querySelector('.form-grid') : null;
+
+  function tabForField(name){
+    return 'add';
+  }
+
+  function updateTabsIndicator(){
+    const activeBtn = tabsWrap.querySelector('.tab-btn[aria-selected="true"]') || tabsWrap.querySelector('.tab-btn');
+    if(!activeBtn){
+      tabsWrap.style.setProperty('--tab-indicator-o','0');
+      return;
+    }
+    const br = activeBtn.getBoundingClientRect();
+    const tr = tabsWrap.getBoundingClientRect();
+
+    const x = (br.left - tr.left) + (tabsWrap.scrollLeft || 0);
+    const y = (br.top - tr.top) + (tabsWrap.scrollTop || 0);
+
+    tabsWrap.style.setProperty('--tab-indicator-x', x + 'px');
+    tabsWrap.style.setProperty('--tab-indicator-y', y + 'px');
+    tabsWrap.style.setProperty('--tab-indicator-w', br.width + 'px');
+    tabsWrap.style.setProperty('--tab-indicator-h', br.height + 'px');
+    tabsWrap.style.setProperty('--tab-indicator-o','1');
+  }
+
+  function setActiveTab(tabId){
+    activeTabId = tabId;
+    if(activeTabId !== 'update') loadedEmployeeId = null;
+
+    // Move the shared form grid between Add / Update tabs (so inputs stay visible in both)
+    if(sharedGrid && addPanel && updatePanel){
+      if(activeTabId === 'update'){
+        // place grid after the search card
+        const card = updatePanel.querySelector('.card');
+        if(card && card.nextElementSibling !== sharedGrid){
+          card.insertAdjacentElement('afterend', sharedGrid);
+        } else if(!card && updatePanel.firstElementChild !== sharedGrid){
+          updatePanel.insertAdjacentElement('afterbegin', sharedGrid);
+        }
+      } else {
+        // back to Add tab
+        if(addPanel.firstElementChild !== sharedGrid){
+          addPanel.insertAdjacentElement('afterbegin', sharedGrid);
+        }
+      }
+    }
+
+    for(const btn of tabsWrap.querySelectorAll('.tab-btn')){
+      const on = btn.dataset.tab === tabId;
+      btn.setAttribute('aria-selected', on ? 'true' : 'false');
+    }
+    for(const panel of panelsWrap.querySelectorAll('.tab-panel')){
+      panel.classList.toggle('active', panel.dataset.tab === tabId);
+    }
+    sessionStorage.setItem('employeeMasterActiveTab', tabId);
+    updateTabsIndicator();
+  }
+
+  window.addEventListener('resize', () => { updateTabsIndicator(); });
+
+
+  tabsWrap.addEventListener('click', (e)=>{
+    const btn = e.target.closest('.tab-btn');
+    if(!btn) return;
+    setActiveTab(btn.dataset.tab);
+  });
+
+  const _savedTab = sessionStorage.getItem('employeeMasterActiveTab');
+  const _validTabs = new Set(TAB_DEFS.map(t=>t.id));
+  setActiveTab(_validTabs.has(_savedTab) ? _savedTab : 'add');
+  requestAnimationFrame(() => updateTabsIndicator());
+
+  // --- Role count selectors (patch): show 1/2 fields based on selection ---
+  function insertCountSelector(tabId, storageKey, labelText){
+    const panel = document.getElementById(`panel-${tabId}`);
+    if(!panel) return null;
+    const box = document.createElement('div');
+    box.className = 'mode-select';
+    const selId = `${tabId}-count`;
+    box.innerHTML = `
+      <label for="${selId}">${labelText}</label>
+      <select id="${selId}">
+        <option value="1">1</option>
+        <option value="2">2</option>
+      </select>
+    `;
+    panel.insertBefore(box, panel.firstChild);
+
+    const sel = box.querySelector('select');
+    const saved = sessionStorage.getItem(storageKey);
+    if(saved === '2') sel.value = '2';
+    sel.addEventListener('change', () => {
+      sessionStorage.setItem(storageKey, sel.value);
+      applyRoleVisibility();
+    });
+    return sel;
+  }
+
+  const managersCountSel = insertCountSelector('managers', 'employeeMasterManagersCount', 'Number of Duty Managers');
+  const supervisorsCountSel = insertCountSelector('supervisors', 'employeeMasterSupervisorsCount', 'Number of Supervisors');
+  const controlsCountSel = insertCountSelector('controls', 'employeeMasterControlsCount', 'Number of Controls');
+
+  function setFieldVisible(fieldName, visible){
+    const wrap = dyn.querySelector(`[data-field="${fieldName}"]`);
+    if(wrap){
+      wrap.style.display = visible ? '' : 'none';
+      if(!visible){
+        const el = document.getElementById(formDef.id + '_' + fieldName);
+        if(el) el.value = '';
+      }
+    }
+  }
+
+  function applyRoleVisibility(){
+    const m = (managersCountSel && managersCountSel.value) || sessionStorage.getItem('employeeMasterManagersCount') || '1';
+    const s = (supervisorsCountSel && supervisorsCountSel.value) || sessionStorage.getItem('employeeMasterSupervisorsCount') || '1';
+    const c = (controlsCountSel && controlsCountSel.value) || sessionStorage.getItem('employeeMasterControlsCount') || '1';
+
+    // Managers: 1 => All Halls, 2 => Domestic + International
+    setFieldVisible('DutyManagerAllHallsID', m === '1');
+    setFieldVisible('DutyManagerDomesticID', m === '2');
+    setFieldVisible('DutyManagerInternationalForeignID', m === '2');
+
+    
+    // Comments depend on Duty Managers count
+    setFieldVisible('CommentsAllHalls', m === '1');
+    setFieldVisible('CommentsDomestic', m === '2');
+    setFieldVisible('CommentsInternationalForeign', m === '2');
+// Supervisors: 1 => All Halls, 2 => Domestic + International
+    setFieldVisible('SupervisorAllHallsID', s === '1');
+    setFieldVisible('SupervisorDomesticID', s === '2');
+    setFieldVisible('SupervisorInternationalForeignID', s === '2');
+
+    // Controls: 1 => Control 1 only, 2 => Control 1 + Control 2
+    setFieldVisible('Control2ID', c === '2');
+    setFieldVisible('Control2StartTime', c === '2');
+    setFieldVisible('Control2EndTime', c === '2');
+    setFieldVisible('ControlsDivider', c === '2');
+  }
+
+
+
+  formDef.fields.forEach(f => {
+    const w = document.createElement('div');
+    w.dataset.field = f.name;
+    if(f.type === 'textarea') w.className = 'full';
+    // Keep IDs on their own row so start/end time fields sit on one line
+    if(f.name === 'Control1ID' || f.name === 'Control2ID'){
+      w.classList.add('full');
+    }
+    const id = formDef.id + '_' + f.name;
+    const reqAttr = f.required ? 'required' : '';
+    let c = '';
+
+    if(f.type === 'select'){
+      c = `<select id="${id}" ${reqAttr}>${(f.options||[]).map(v => `<option value="${v}">${v}</option>`).join('')}</select>`;
+    } else if(f.type === 'textarea'){
+      c = `<textarea id="${id}" ${reqAttr}></textarea>`;
+    } else if(f.type === 'time'){
+      c = `<input id="${id}" type="text" class="mono" data-mask="time" inputmode="numeric" maxlength="5" placeholder="${TIME_FMT}" ${reqAttr}/>`;
+    } else if(f.type === 'date'){
+      c = `<input id="${id}" type="text" class="mono" data-mask="date" inputmode="numeric" maxlength="10" placeholder="${DATE_FMT}" ${reqAttr}/>`;
+    } else if(f.type === 'number'){
+      c = `<input id="${id}" type="number" step="any" ${reqAttr}/>`;
+    } else {
+      c = `<input id="${id}" type="text" ${reqAttr}/>`;
+    }
+
+    w.innerHTML = `<label for="${id}">${f.label || f.name}${f.required ? ' *' : ''}</label>` + c;
+
+    // --- Divider between Control 1 and Control 2 ---
+    if(f.name === 'Control2ID'){
+      const g = panelGridByTab['controls'] || panelsWrap;
+      if(!g.querySelector('[data-field="ControlsDivider"]')){
+        const d = document.createElement('div');
+        d.className = 'field divider';
+        d.dataset.field = 'ControlsDivider';
+        d.innerHTML = `<div class="sep"></div>`;
+        g.appendChild(d);
+      }
+    }
+
+    const tabId = tabForField(f.name);
+    (panelGridByTab[tabId] || panelGridByTab['add']).appendChild(w);
+  });
+
+  attachMasks(dyn);
+  applyRoleVisibility();
+
+  document.getElementById('clearBtn').onclick = () => {
+    formDef.fields.forEach(f => {
+      const el = document.getElementById(formDef.id + '_' + f.name);
+      if(!el) return;
+      if(f.type === 'select'){
+        el.selectedIndex = 0;
+      } else {
+        el.value = '';
+      }
+      el.style.borderColor = 'var(--ring)';
+    });
+  };
+
+  document.getElementById('submitBtn').onclick = async () => {
+    const payload = {};
+    let ok = true;
+    const todayISO = getTodayISO();
+    const nowISO = new Date().toISOString();
+
+    formDef.fields.forEach(f => {
+      const el = document.getElementById(formDef.id + '_' + f.name);
+      if(!el) return;
+      let v = (el.value || '').trim();
+      v = normalizeDigits(v);
+
+      // Dates: allow dd-mm-yyyy input for date fields
+      if(f.type === 'date'){
+        v = ddmmToISO(toDDMMYYYY(v));
+      }
+
+      if(f.required && !v){
+        el.style.borderColor = 'crimson';
+        ok = false;
+      } else {
+        el.style.borderColor = 'var(--ring)';
+      }
+
+      const columnName = COLUMN_MAP[f.name];
+      if(columnName){
+        const numericFields = [
+          'EmployeeID'
+        ];
+        if(numericFields.includes(f.name) && v){
+          const n = parseInt(v, 10);
+          payload[columnName] = Number.isFinite(n) ? n : null;
+        } else {
+          payload[columnName] = v || null;
+        }
+      }
+    });
+
+    if(!ok){
+      showToast('الرجاء تعبئة الحقول المطلوبة بشكل صحيح', true);
+      return;
+    }
+    try{
+      if(activeTabId === 'update'){
+        const eid = loadedEmployeeId || payload['Employee ID'];
+        if(!eid) throw new Error('Search by Employee ID first (Update tab).');
+        await updateEmployeeMaster(eid, payload);
+      } else {
+        await insertEmployeeMaster(payload);
+      }
+      showToast('تم الحفظ بنجاح ✓', false);
+      document.getElementById('clearBtn').click();
+    }catch(err){
+      console.error(err);
+      showToast('خطأ في الحفظ: ' + (err.message || 'Failed'), true);
+    }
+  };
+}
+
+// ===== Form Definition =====
+const FORM_DEF = {
+  id: 'employee_master',
+  title: 'Employee Master',
+  description: 'Employee master record form.',
+  fields: [
+    {name:'RecordDate',label:'Record Date',type:'date'},
+    {name:'EmployeeID',label:'Employee ID',type:'text',required:true},
+    {name:'EmployeeName',label:'Employee Name',type:'text'},
+    {name:'Gender',label:'Gender',type:'text'},
+    {name:'Nationality',label:'Nationality',type:'text'},
+    {name:'HiringDate',label:'Hiring Date',type:'date'},
+    {name:'JobTitle',label:'Job Title',type:'text'},
+    {name:'ActualRole',label:'Actual Role',type:'text'},
+    {name:'Grade',label:'Grade',type:'text'},
+    {name:'Department',label:'Department',type:'text'},
+    {name:'PreviousDepartment',label:'Previous Department',type:'text'},
+    {name:'CurrentDepartment',label:'Current Department',type:'text'},
+    {name:'EmploymentActionType',label:'Employment Action Type',type:'text'},
+    {name:'ActionEffectiveDate',label:'Action Effective Date',type:'date'},
+    {name:'ExitReason',label:'Exit Reason',type:'text'},
+    {name:'Note',label:'Note',type:'textarea',class:'full'}
+  ]
+};
+
+// ================= Update tab: search/load by Employee ID =================
+boot(FORM_DEF);
+
+// Bind Update/Search handlers AFTER boot renders the Update tab elements.
+(function bindUpdateSearch(){
+  const searchBtn = document.getElementById('btn_update_search');
+  const clearBtn  = document.getElementById('btn_update_clear');
+  const searchInp = document.getElementById('update_search_employee_id');
+  const msgEl     = document.getElementById('update_search_msg');
+
+  if(!searchBtn || !searchInp){
+    // If elements are not present, do nothing.
+    return;
+  }
+
+  async function doSearch(){
+    try{
+      const empId = normalizeDigits((searchInp.value || '').trim());
+      if(!empId){
+        if(msgEl) msgEl.textContent = 'Please enter Employee ID to search.';
+        return;
+      }
+      if(msgEl) msgEl.textContent = 'Searching...';
+
+      const row = await fetchEmployeeMasterById(empId);
+      if(!row){
+        loadedEmployeeId = null;
+        if(msgEl) msgEl.textContent = 'No employee found for this Employee ID.';
+        return;
+      }
+
+      loadedEmployeeId = String(row['Employee ID'] ?? empId);
+
+      setFieldValue(FORM_DEF.id, 'RecordDate',           isoToDDMMYYYY(row['Record Date']));
+      setFieldValue(FORM_DEF.id, 'EmployeeID',           String(row['Employee ID'] ?? ''));
+      setFieldValue(FORM_DEF.id, 'EmployeeName',         row['Employee Name'] ?? '');
+      setFieldValue(FORM_DEF.id, 'Gender',               row['Gender'] ?? '');
+      setFieldValue(FORM_DEF.id, 'Nationality',          row['Nationality'] ?? '');
+      setFieldValue(FORM_DEF.id, 'HiringDate',           isoToDDMMYYYY(row['Hiring Date']));
+      setFieldValue(FORM_DEF.id, 'JobTitle',             row['Job Title'] ?? '');
+      setFieldValue(FORM_DEF.id, 'ActualRole',           row['Actual Role'] ?? '');
+      setFieldValue(FORM_DEF.id, 'Grade',                row['Grade'] ?? '');
+      setFieldValue(FORM_DEF.id, 'Department',           row['Department'] ?? '');
+      setFieldValue(FORM_DEF.id, 'PreviousDepartment',   row['Previous Department'] ?? '');
+      setFieldValue(FORM_DEF.id, 'CurrentDepartment',    row['Current Department'] ?? '');
+      setFieldValue(FORM_DEF.id, 'EmploymentActionType', row['Employment Action Type'] ?? '');
+      setFieldValue(FORM_DEF.id, 'ActionEffectiveDate',  isoToDDMMYYYY(row['Action Effective Date']));
+      setFieldValue(FORM_DEF.id, 'ExitReason',           row['Exit Reason'] ?? '');
+      setFieldValue(FORM_DEF.id, 'Note',                 row['Note'] ?? '');
+
+      if(msgEl) msgEl.textContent = 'Loaded. Edit the fields then press Submit to update.';
+    }catch(err){
+      loadedEmployeeId = null;
+      if(msgEl) msgEl.textContent = 'Error: ' + (err?.message || err);
+    }
+  }
+
+  function doClear(){
+    loadedEmployeeId = null;
+    searchInp.value = '';
+    if(msgEl) msgEl.textContent = '';
+    FORM_DEF.fields.forEach(f => setFieldValue(FORM_DEF.id, f.name, ''));
+  }
+
+  searchBtn.addEventListener('click', (e)=>{ e.preventDefault(); doSearch(); });
+  if(clearBtn) clearBtn.addEventListener('click', (e)=>{ e.preventDefault(); doClear(); });
+  searchInp.addEventListener('keydown', (e)=>{ if(e.key === 'Enter'){ e.preventDefault(); doSearch(); } });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,1104 @@
+<!DOCTYPE html>
+<html lang="en-GB" dir="ltr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <link rel="stylesheet" href="/assets/css/themes.css">
+<title>OAP • Forms Portal</title>
+
+<!-- Theme bootstrap (keeps parity with index.html) -->
+<script>
+(function(){
+  try{
+    const root = document.documentElement;
+
+    const params = new URLSearchParams(window.location.search || '');
+    const urlThemeRaw = params.get('theme');
+    const urlTheme = (urlThemeRaw && /^[a-z0-9_-]{1,32}$/i.test(urlThemeRaw)) ? urlThemeRaw.toLowerCase() : null;
+
+    const KEY_THEME = 'oap_theme_mode';   // light | dark | gradient
+    const KEY_INK  = 'oap_gradient_ink';  // white | black
+    const LEGACY_1 = 'pref-theme';
+    const LEGACY_2 = 'theme';
+
+    const savedTheme = urlTheme
+      || localStorage.getItem(KEY_THEME)
+      || localStorage.getItem(LEGACY_1)
+      || localStorage.getItem(LEGACY_2);
+
+    const initialTheme = (savedTheme || (matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark')).toLowerCase();
+    root.setAttribute('data-theme', initialTheme);
+
+    if(initialTheme === 'gradient'){
+      const ink = (localStorage.getItem(KEY_INK) || root.getAttribute('data-gradient-ink') || 'white').toLowerCase();
+      root.setAttribute('data-gradient-ink', (ink === 'black') ? 'black' : 'white');
+    }else{
+      root.removeAttribute('data-gradient-ink');
+    }
+
+    if(urlTheme){
+      try{ localStorage.setItem(KEY_THEME, urlTheme); }catch(e){}
+      try{ localStorage.setItem(LEGACY_1, urlTheme); }catch(e){}
+      try{ localStorage.setItem(LEGACY_2, urlTheme); }catch(e){}
+    }
+  }catch(e){}
+})();
+</script>
+
+<script src="nxs_config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script>
+// Auth + permission + theme sync (unchanged logic)
+(function(){
+  const { createClient } = supabase;
+  const sb = createClient(window.NXS_SUPABASE_URL, window.NXS_SUPABASE_ANON_KEY);
+  window.sb = sb;
+
+  const THEME_KEYS = ['oap_theme_mode','pref-theme','theme','oap-theme'];
+  const INK_KEY = 'oap_gradient_ink';
+  const root = document.documentElement;
+
+  function readTheme(){
+    try{
+      for(const k of THEME_KEYS){
+        const v = localStorage.getItem(k);
+        if(v && /^[a-z0-9_-]{1,32}$/i.test(v)) return String(v).toLowerCase();
+      }
+    }catch(_){}
+    return null;
+  }
+
+  function applyTheme(next){
+    try{
+      let v = (next && /^[a-z0-9_-]{1,32}$/i.test(next)) ? next
+        : (readTheme() || (matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark'));
+      v = String(v).toLowerCase();
+      root.setAttribute('data-theme', v);
+
+      if(v === 'gradient'){
+        const ink = String(localStorage.getItem(INK_KEY) || root.getAttribute('data-gradient-ink') || 'white').toLowerCase();
+        root.setAttribute('data-gradient-ink', (ink === 'black') ? 'black' : 'white');
+      }else{
+        root.removeAttribute('data-gradient-ink');
+      }
+    }catch(_){}
+  }
+
+  async function requireAuth(){
+    const theme = encodeURIComponent(document.documentElement.getAttribute('data-theme')||'dark');
+    const returnTo = encodeURIComponent(window.location.pathname || '/');
+
+    try{
+      const { data, error } = await sb.auth.getSession();
+      if(error || !data || !data.session){
+        window.location.href = `/Login.html?returnTo=${returnTo}&theme=${theme}`;
+        return;
+      }
+
+      const { data: accessMap, error: aerr } = await sb.rpc('get_my_page_access');
+      if (aerr) throw aerr;
+
+      const canForm = !!(accessMap && (accessMap.FORM === true || accessMap['FORM'] === true));
+      if (!canForm) {
+        window.location.href = '/pages/auth/unauthorized.html';
+        return;
+      }
+    }catch(_){
+      window.location.href = '/pages/auth/unauthorized.html';
+    }
+  }
+
+  function bindThemeSync(){
+    applyTheme(null);
+    window.addEventListener('storage', function(e){
+      if(!e || !e.key) return;
+      if(THEME_KEYS.includes(e.key) || e.key === INK_KEY) applyTheme(null);
+    });
+    window.addEventListener('focus', function(){ applyTheme(null); });
+    document.addEventListener('visibilitychange', function(){ if(!document.hidden) applyTheme(null); });
+    window.addEventListener('pageshow', function(){ applyTheme(null); });
+  }
+
+  document.addEventListener('DOMContentLoaded', function(){
+    requireAuth();
+    bindThemeSync();
+  });
+})();
+</script>
+
+<style>
+:root{
+  --bg0:#050A12;
+  --bg1:#0A1220;
+  --text:#EAF0FF;
+  --muted: rgba(234,240,255,.44);
+
+  --stroke: rgba(255,255,255,.08);
+
+  --tile: rgba(19,28,45,.66);
+  --tileHover: rgba(19,28,45,.82);
+
+  --shadow: 0 22px 58px rgba(0,0,0,.55);
+  --shadowSoft: 0 14px 40px rgba(0,0,0,.38);
+
+  --focus: rgba(97,95,255,.38);
+
+  --accent:#615FFF;
+
+  /* gradient strip colors */
+  --stripA: rgba(124,115,255,.26);
+  --stripB: rgba(255,128,181,.12);
+}
+
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;
+  padding:0;
+  color: var(--text);
+  font: 14px/1.45 "Segoe UI", Inter, Roboto, system-ui, -apple-system, sans-serif;
+  background: linear-gradient(180deg, var(--bg0), var(--bg1));
+  overflow:hidden;
+}
+
+/* Remove outer borders/frames on full page */
+.app{height:100%; display:flex; flex-direction:column;}
+.frame{
+  height: 100%;
+  margin: 0;
+  border-radius: 0;
+  overflow:hidden;
+  border: none;
+  box-shadow: none;
+  background: transparent;
+  display:flex;
+  flex-direction:column;
+}
+
+/* SINGLE full-width strip — no outer margins */
+.header-strip{
+  position: relative;
+  width: 100%;
+  border-bottom: 1px solid rgba(255,255,255,.06);
+  background: linear-gradient(180deg, rgba(18,26,40,.78), rgba(18,26,40,.52));
+  box-shadow: var(--shadowSoft);
+  backdrop-filter: blur(10px);
+  overflow:hidden;
+}
+.header-strip::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:
+    radial-gradient(1000px 240px at 18% 5%, var(--stripA), transparent 65%),
+    radial-gradient(900px 240px at 52% 90%, var(--stripB), transparent 72%);
+  pointer-events:none;
+  opacity: 1;
+}
+.header-strip > *{position:relative; z-index:1;}
+
+/* Top row = nav (no outer padding) */
+.strip-top{
+  height: 56px;
+  display:flex;
+  align-items:center;
+  padding: 0;
+}
+.strip-top-inner{
+  width: 100%;
+  margin: 0;
+  display:flex;
+  align-items:center;
+  gap: 16px;
+  padding: 0 18px; /* remove this too if you want absolutely flush edges */
+}
+
+/* Logo */
+.logo{display:flex;align-items:center;gap:10px;min-width:130px}
+.logo .mark{
+  width:36px;height:36px;display:grid;place-items:center;
+  border-radius:10px;
+  border:1px solid rgba(255,255,255,.12);
+  background: rgba(0,0,0,.16);
+  overflow:hidden;
+}
+.logo .mark img{width:100%;height:100%;object-fit:contain;display:block;padding:4px;}
+
+/* Center nav */
+.nav{flex:1; display:flex; justify-content:center; gap:34px;}
+.nav a{
+  color: rgba(234,240,255,.72);
+  text-decoration:none;
+  font-weight:700;
+  font-size:13px;
+  letter-spacing:.2px;
+  padding:8px 10px;
+  border-radius:12px;
+  transition: background .15s ease, color .15s ease, transform .12s ease;
+}
+.nav a:hover{color: rgba(234,240,255,.92); background: rgba(255,255,255,.06); transform: translateY(-1px);}
+.nav a.active{color: rgba(234,240,255,.92); background: rgba(255,255,255,.07);}
+
+/* Right icons */
+.top-actions{min-width:130px;display:flex;justify-content:flex-end;gap:10px}
+.icon-btn{
+  width:34px;height:34px;border-radius:999px;
+  border:1px solid rgba(255,255,255,.10);
+  background: rgba(0,0,0,.16);
+  display:grid;place-items:center;
+  cursor:pointer;
+  transition: transform .12s ease, background .15s ease;
+}
+.icon-btn:hover{transform: translateY(-1px); background: rgba(0,0,0,.22);}
+.icon-btn svg{width:18px;height:18px;stroke: rgba(234,240,255,.82);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.avatar{width:34px;height:34px;border-radius:999px;border:1px solid rgba(255,255,255,.14);overflow:hidden;background: rgba(0,0,0,.18)}
+.avatar img{width:100%;height:100%;object-fit:cover;display:block}
+
+/* Second row = invoice header content (no outer padding) */
+.strip-bottom{
+  padding: 0;
+  border-top: 1px solid rgba(255,255,255,.06);
+}
+.strip-bottom-inner{
+  width: 100%;
+  margin: 0;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap: 14px;
+  padding: 14px 18px 16px;
+}
+
+/* Left info */
+.hero-left{display:flex;align-items:center;gap:14px;min-width:320px}
+.hero-badge{
+  width: 44px; height: 44px;
+  border-radius: 999px;
+  background: rgba(255,255,255,.92);
+  display:grid; place-items:center;
+  box-shadow: 0 12px 30px rgba(0,0,0,.25);
+}
+.hero-badge svg{width:22px;height:22px;stroke: var(--accent); fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round}
+.hero-meta{display:flex;flex-direction:column;gap:2px}
+.hero-meta .kicker{font-size:12px;color: rgba(234,240,255,.60);font-weight:700}
+.hero-meta .title{font-size:15px;font-weight:900;letter-spacing:.2px}
+
+/* Right actions */
+.hero-right{display:flex;align-items:center;gap:14px}
+.hero-link{
+  color: rgba(234,240,255,.78);
+  text-decoration:none;
+  font-weight: 750;
+  font-size: 13px;
+  padding: 8px 10px;
+  border-radius: 12px;
+  transition: background .15s ease, transform .12s ease, color .15s ease;
+}
+.hero-link:hover{color: rgba(234,240,255,.92); background: rgba(255,255,255,.06); transform: translateY(-1px);}
+.btn{
+  height: 32px;
+  padding: 0 16px;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,.10);
+  background: rgba(0,0,0,.16);
+  color: rgba(234,240,255,.90);
+  font-weight: 800;
+  font-size: 13px;
+  cursor:pointer;
+  transition: transform .12s ease, background .15s ease;
+}
+.btn:hover{transform: translateY(-1px); background: rgba(0,0,0,.22);}
+.btn-primary{
+  border: 1px solid rgba(97,95,255,.55);
+  background: linear-gradient(180deg, rgba(97,95,255,.92), rgba(97,95,255,.72));
+  color: #0A1020;
+}
+.btn-primary:hover{background: linear-gradient(180deg, rgba(124,115,255,.95), rgba(97,95,255,.78));}
+
+/* Main content */
+.main{
+  flex: 1;
+  overflow:auto;
+  padding: 18px 18px 26px;
+}
+.main::-webkit-scrollbar{width:10px;}
+.main::-webkit-scrollbar-track{background: rgba(255,255,255,.03);}
+.main::-webkit-scrollbar-thumb{background: rgba(255,255,255,.12); border-radius: 999px;}
+.main::-webkit-scrollbar-thumb:hover{background: rgba(255,255,255,.18);}
+
+.container{width: min(1320px, 100%); margin: 0 auto;}
+
+.stage{padding: 34px 0 30px;}
+.panel{
+  width: min(1240px, 100%);
+  margin: 0 auto;
+  border-radius: 22px;
+  border: 1px solid var(--stroke);
+  background: rgba(0,0,0,.12);
+  box-shadow: none;
+overflow:hidden;
+}
+.grid{display:grid; grid-template-columns: 1fr 1fr;}
+@media (max-width: 1080px){
+  .nav{justify-content:flex-start; gap: 14px;}
+  .grid{grid-template-columns: 1fr;}
+}
+
+/* Tiles */
+.tile{
+  position:relative;
+  display:block;
+  text-decoration:none;
+  color: var(--text);
+  background: var(--tile);
+  padding: 24px 22px 22px;
+  min-height: 126px;
+  border-bottom: 1px solid var(--stroke);
+  transition: background .15s ease, transform .12s ease;
+}
+.tile:nth-child(odd){border-right: 1px solid var(--stroke);}
+@media (max-width: 1080px){ .tile:nth-child(odd){border-right:none;} }
+.tile:hover{background: var(--tileHover); transform: translateY(-1px);}
+.tile:focus-visible{outline:none; box-shadow: 0 0 0 4px var(--focus) inset;}
+
+.row{display:flex; gap:16px; align-items:flex-start}
+.badge{
+  width: 42px; height: 42px;
+  border-radius: 12px;
+  display:grid; place-items:center;
+  border: 1px solid rgba(255,255,255,.10);
+  flex:0 0 auto;
+  box-shadow: 0 10px 24px rgba(0,0,0,.18);
+  --icon-color: rgba(234,240,255,.96);
+}
+.badge svg{
+  width:20px;height:20px;
+  stroke: var(--icon-color);
+  fill:none;
+  stroke-width:2;
+  stroke-linecap:round;
+  stroke-linejoin:round
+}
+.meta{min-width:0;padding-top:3px}
+.meta h3{margin:0 56px 8px 0; font-size:15px; font-weight:900; letter-spacing:.2px}
+.meta p{margin:0; color: var(--muted); font-size: 12.5px; line-height:1.6; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden}
+
+/* Arrow */
+.go{
+  position:absolute;
+  right: 16px; top: 16px;
+  width: 30px; height: 30px;
+  border-radius: 11px;
+  border: 1px solid rgba(255,255,255,.10);
+  background: rgba(0,0,0,.12);
+  display:grid; place-items:center;
+  opacity:.88;
+  transition: opacity .15s ease, transform .12s ease, background .15s ease;
+}
+.go svg{width:15px;height:15px;stroke: rgba(234,240,255,.82);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.tile:hover .go{opacity:1; transform: translateY(-1px); background: rgba(0,0,0,.18);}
+
+/* Colors + vivid icon colors */
+.c-teal   { background: rgba(34,211,166,.16); --icon-color: #22F0D2; }
+.c-purple { background: rgba(167,84,255,.16); --icon-color: #B56CFF; }
+.c-blue   { background: rgba(56,189,248,.16); --icon-color: #42CFFF; }
+.c-amber  { background: rgba(250,204,21,.14); --icon-color: #FFD84D; }
+.c-rose   { background: rgba(244,63,94,.14); --icon-color: #FF5A7A; }
+.c-indigo { background: rgba(99,102,241,.16); --icon-color: #7C73FF; }
+.c-cyan   { background: rgba(34,211,238,.14); --icon-color: #34E6FF; }
+.c-lime   { background: rgba(183,226,25,.14); --icon-color: #D8FF3D; }
+.c-orange { background: rgba(254,98,30,.14); --icon-color: #FF8A4D; }
+.c-slate  { background: rgba(148,163,184,.14); --icon-color: #D1D5DB; }
+
+/* --- Override: icon badges unified color --- */
+.badge{
+  background: #615FFF !important;
+  --icon-color: #FFFFFF !important;
+}
+.badge svg{
+  stroke: #FFFFFF !important;
+}
+
+</style>
+
+<script src="/auth.js"></script>
+  <script src="/assets/js/theme-manager.js" defer></script>
+</head>
+
+<body>
+<div class="app">
+  <div class="frame">
+
+    <header class="header-strip" role="banner">
+      <div class="strip-top">
+        <div class="strip-top-inner">
+          <div class="logo" aria-label="Brand">
+            <div class="mark" aria-hidden="true">
+              <img src="/OAP-Form-32x32.png" alt="OAP Form"/>
+            </div>
+          </div>
+
+          <nav class="nav" aria-label="Top navigation">
+            <a class="active" href="/index.html">Home</a>
+            <a href="/invoices.html">Invoices</a>
+            <a href="/clients.html">Clients</a>
+            <a href="/expenses.html">Expenses</a>
+          </nav>
+
+          <div class="top-actions">
+            <button class="icon-btn" type="button" aria-label="Notifications">
+              <svg viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 7h18s-3 0-3-7"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+            </button>
+            <div class="avatar" title="Account">
+              <img alt="Avatar" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64'%3E%3Crect width='64' height='64' fill='%23000000' fill-opacity='.18'/%3E%3Ccircle cx='32' cy='26' r='10' fill='%23EAF0FF' fill-opacity='.70'/%3E%3Cpath d='M14 54c3-10 33-10 36 0' fill='%23EAF0FF' fill-opacity='.55'/%3E%3C/svg%3E"/>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="strip-bottom">
+        <div class="strip-bottom-inner">
+          <div class="hero-left">
+            <div class="hero-meta">
+              <div class="kicker">OAP</div>
+              <div class="title">Forms Portal</div>
+            </div>
+          </div>
+
+          <div class="hero-right">
+            <a class="icon-btn" href="/index.html" aria-label="Home" title="Home">
+              <svg viewBox="0 0 24 24"><path d="M3 10.5L12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/><path d="M9 21v-6h6v6"/></svg>
+            </a>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main class="main" role="main">
+      <div class="container">
+        <section class="stage" aria-label="Forms">
+          <div class="panel">
+            <div id="grid" class="grid"></div>
+          </div>
+        </section>
+      </div>
+    </main>
+
+  </div>
+</div>
+
+<script>
+const SVG = {
+  arrowNE: '<svg viewBox="0 0 24 24"><path d="M7 17L17 7"/><path d="M10 7h7v7"/></svg>',
+  users:   '<svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
+  delay:   '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>',
+  report:  '<svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M8 13h8"/><path d="M8 17h6"/></svg>',
+  overtime:'<svg viewBox="0 0 24 24"><path d="M12 8v5l3 3"/><circle cx="12" cy="12" r="9"/><path d="M20 12h2"/><path d="M2 12h2"/></svg>',
+  sick:    '<svg viewBox="0 0 24 24"><path d="M20 10c0 6-8 12-8 12S4 16 4 10a4 4 0 0 1 8-2 4 4 0 0 1 8 2z"/><path d="M12 6v6"/><path d="M9 9h6"/></svg>',
+  absence: '<svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 11l-6 6"/><path d="M16 11l6 6"/></svg>',
+  productivity:'<svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M7 14l3-3 3 2 5-6"/></svg>',
+  event:   '<svg viewBox="0 0 24 24"><path d="M8 2v2"/><path d="M16 2v2"/><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M3 10h18"/><path d="M12 14l2 2 4-4"/></svg>'
+};
+
+const FORMS = [
+  { id:'employee_master_db',        title:'Employee Master DB',   desc:'Unified employee master database view.',               icon:'users',        color:'c-teal',   href:'/employee_master_db.html' },
+  { id:'sgs_flight_delay',          title:'SGS Flight Delay',      desc:'All Riyadh station delays (station-level).',          icon:'delay',        color:'c-purple', href:'/sgs_flight_delay.html' },
+  { id:'tcc_flight_delay',          title:'TCC Flight Delay',      desc:'Department delays (TCC) with investigation tracking.', icon:'delay',        color:'c-blue',   href:'/tcc_flight_delay.html' },
+  { id:'shift_report',              title:'Shift Report',          desc:'Shift coverage, resources, and operational summary.',  icon:'report',       color:'c-indigo', href:'/shift_report.html' },
+  { id:'employee_overtime',         title:'Employee Overtime',     desc:'Overtime assignments, reasons, and approvals.',        icon:'overtime',     color:'c-amber',  href:'/employee_overtime.html' },
+  { id:'employee_sick_leave',       title:'Employee Sick Leave',   desc:'Sick leave periods with department and shift context.', icon:'sick',         color:'c-rose',   href:'/employee_sick_leave.html' },
+  { id:'employee_absence',          title:'Employee Absence',      desc:'Absence records and investigation workflow.',           icon:'absence',      color:'c-orange', href:'/employee_absence.html' },
+  { id:'employee_delay',            title:'Employee Delay',        desc:'Late arrival minutes and reasons with follow-up.',      icon:'delay',        color:'c-cyan',   href:'/employee_delay.html' },
+  { id:'operational_event',         title:'Operational Event',     desc:'Operational event reporting with disciplinary action.', icon:'event',        color:'c-slate',  href:'/employee_productivity.html#operational_event' },
+  { id:'employee_productivity_all', title:'Employee Productivity', desc:'ARR + DEP productivity tracking per employee.',         icon:'productivity', color:'c-lime',   href:'/employee_productivity.html' }
+];
+
+function escapeHtml(s){
+  return String(s ?? '')
+    .replaceAll('&','&amp;')
+    .replaceAll('<','&lt;')
+    .replaceAll('>','&gt;')
+    .replaceAll('"','&quot;')
+    .replaceAll("'","&#39;");
+}
+
+function buildTiles(){
+  const grid = document.getElementById('grid');
+  if(!grid) return;
+  grid.innerHTML = FORMS.map(f => {
+    const iconSvg = SVG[f.icon] || SVG.event;
+    return `
+      <a class="tile" href="${f.href}" data-form="${f.id}">
+        <span class="go" aria-hidden="true">${SVG.arrowNE}</span>
+        <div class="row">
+          <span class="badge ${f.color}" aria-hidden="true">${iconSvg}</span>
+          <div class="meta">
+            <h3>${escapeHtml(f.title)}</h3>
+            <p>${escapeHtml(f.desc)}</p>
+          </div>
+        </div>
+      </a>
+    `;
+  }).join('');
+}
+
+function bindHeroActions(){}
+
+document.addEventListener('DOMContentLoaded', () => {
+  buildTiles();
+});
+</script>
+</body>
+</html>
+<!DOCTYPE html>
+<html lang="en-GB" dir="ltr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>OAP • Forms Portal</title>
+
+<!-- Theme bootstrap (keeps parity with index.html) -->
+<script>
+(function(){
+  try{
+    const root = document.documentElement;
+
+    const params = new URLSearchParams(window.location.search || '');
+    const urlThemeRaw = params.get('theme');
+    const urlTheme = (urlThemeRaw && /^[a-z0-9_-]{1,32}$/i.test(urlThemeRaw)) ? urlThemeRaw.toLowerCase() : null;
+
+    const KEY_THEME = 'oap_theme_mode';   // light | dark | gradient
+    const KEY_INK  = 'oap_gradient_ink';  // white | black
+    const LEGACY_1 = 'pref-theme';
+    const LEGACY_2 = 'theme';
+
+    const savedTheme = urlTheme
+      || localStorage.getItem(KEY_THEME)
+      || localStorage.getItem(LEGACY_1)
+      || localStorage.getItem(LEGACY_2);
+
+    const initialTheme = (savedTheme || (matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark')).toLowerCase();
+    root.setAttribute('data-theme', initialTheme);
+
+    if(initialTheme === 'gradient'){
+      const ink = (localStorage.getItem(KEY_INK) || root.getAttribute('data-gradient-ink') || 'white').toLowerCase();
+      root.setAttribute('data-gradient-ink', (ink === 'black') ? 'black' : 'white');
+    }else{
+      root.removeAttribute('data-gradient-ink');
+    }
+
+    if(urlTheme){
+      try{ localStorage.setItem(KEY_THEME, urlTheme); }catch(e){}
+      try{ localStorage.setItem(LEGACY_1, urlTheme); }catch(e){}
+      try{ localStorage.setItem(LEGACY_2, urlTheme); }catch(e){}
+    }
+  }catch(e){}
+})();
+</script>
+
+<script src="nxs_config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script>
+// Auth + permission + theme sync (unchanged logic)
+(function(){
+  const { createClient } = supabase;
+  const sb = createClient(window.NXS_SUPABASE_URL, window.NXS_SUPABASE_ANON_KEY);
+  window.sb = sb;
+
+  const THEME_KEYS = ['oap_theme_mode','pref-theme','theme','oap-theme'];
+  const INK_KEY = 'oap_gradient_ink';
+  const root = document.documentElement;
+
+  function readTheme(){
+    try{
+      for(const k of THEME_KEYS){
+        const v = localStorage.getItem(k);
+        if(v && /^[a-z0-9_-]{1,32}$/i.test(v)) return String(v).toLowerCase();
+      }
+    }catch(_){}
+    return null;
+  }
+
+  function applyTheme(next){
+    try{
+      let v = (next && /^[a-z0-9_-]{1,32}$/i.test(next)) ? next
+        : (readTheme() || (matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark'));
+      v = String(v).toLowerCase();
+      root.setAttribute('data-theme', v);
+
+      if(v === 'gradient'){
+        const ink = String(localStorage.getItem(INK_KEY) || root.getAttribute('data-gradient-ink') || 'white').toLowerCase();
+        root.setAttribute('data-gradient-ink', (ink === 'black') ? 'black' : 'white');
+      }else{
+        root.removeAttribute('data-gradient-ink');
+      }
+    }catch(_){}
+  }
+
+  async function requireAuth(){
+    const theme = encodeURIComponent(document.documentElement.getAttribute('data-theme')||'dark');
+    const returnTo = encodeURIComponent(window.location.pathname || '/');
+
+    try{
+      const { data, error } = await sb.auth.getSession();
+      if(error || !data || !data.session){
+        window.location.href = `/Login.html?returnTo=${returnTo}&theme=${theme}`;
+        return;
+      }
+
+      const { data: accessMap, error: aerr } = await sb.rpc('get_my_page_access');
+      if (aerr) throw aerr;
+
+      const canForm = !!(accessMap && (accessMap.FORM === true || accessMap['FORM'] === true));
+      if (!canForm) {
+        window.location.href = '/pages/auth/unauthorized.html';
+        return;
+      }
+    }catch(_){
+      window.location.href = '/pages/auth/unauthorized.html';
+    }
+  }
+
+  function bindThemeSync(){
+    applyTheme(null);
+    window.addEventListener('storage', function(e){
+      if(!e || !e.key) return;
+      if(THEME_KEYS.includes(e.key) || e.key === INK_KEY) applyTheme(null);
+    });
+    window.addEventListener('focus', function(){ applyTheme(null); });
+    document.addEventListener('visibilitychange', function(){ if(!document.hidden) applyTheme(null); });
+    window.addEventListener('pageshow', function(){ applyTheme(null); });
+  }
+
+  document.addEventListener('DOMContentLoaded', function(){
+    requireAuth();
+    bindThemeSync();
+  });
+})();
+</script>
+
+<style>
+:root{
+  --bg0:#050A12;
+  --bg1:#0A1220;
+  --text:#EAF0FF;
+  --muted: rgba(234,240,255,.44);
+
+  --stroke: rgba(255,255,255,.08);
+
+  --tile: rgba(19,28,45,.66);
+  --tileHover: rgba(19,28,45,.82);
+
+  --shadow: 0 22px 58px rgba(0,0,0,.55);
+  --shadowSoft: 0 14px 40px rgba(0,0,0,.38);
+
+  --focus: rgba(97,95,255,.38);
+
+  --accent:#615FFF;
+
+  /* gradient strip colors */
+  --stripA: rgba(124,115,255,.26);
+  --stripB: rgba(255,128,181,.12);
+}
+
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;
+  padding:0;
+  color: var(--text);
+  font: 14px/1.45 "Segoe UI", Inter, Roboto, system-ui, -apple-system, sans-serif;
+  background: linear-gradient(180deg, var(--bg0), var(--bg1));
+  overflow:hidden;
+}
+
+/* Remove outer borders/frames on full page */
+.app{height:100%; display:flex; flex-direction:column;}
+.frame{
+  height: 100%;
+  margin: 0;
+  border-radius: 0;
+  overflow:hidden;
+  border: none;
+  box-shadow: none;
+  background: transparent;
+  display:flex;
+  flex-direction:column;
+}
+
+/* SINGLE full-width strip — no outer margins */
+.header-strip{
+  position: relative;
+  width: 100%;
+  border-bottom: 1px solid rgba(255,255,255,.06);
+  background: linear-gradient(180deg, rgba(18,26,40,.78), rgba(18,26,40,.52));
+  box-shadow: var(--shadowSoft);
+  backdrop-filter: blur(10px);
+  overflow:hidden;
+}
+.header-strip::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:
+    radial-gradient(1000px 240px at 18% 5%, var(--stripA), transparent 65%),
+    radial-gradient(900px 240px at 52% 90%, var(--stripB), transparent 72%);
+  pointer-events:none;
+  opacity: 1;
+}
+.header-strip > *{position:relative; z-index:1;}
+
+/* Top row = nav (no outer padding) */
+.strip-top{
+  height: 56px;
+  display:flex;
+  align-items:center;
+  padding: 0;
+}
+.strip-top-inner{
+  width: 100%;
+  margin: 0;
+  display:flex;
+  align-items:center;
+  gap: 16px;
+  padding: 0 18px; /* remove this too if you want absolutely flush edges */
+}
+
+/* Logo */
+.logo{display:flex;align-items:center;gap:10px;min-width:130px}
+.logo .mark{
+  width:36px;height:36px;display:grid;place-items:center;
+  border-radius:10px;
+  border:1px solid rgba(255,255,255,.12);
+  background: rgba(0,0,0,.16);
+  overflow:hidden;
+}
+.logo .mark img{width:100%;height:100%;object-fit:contain;display:block;padding:4px;}
+
+/* Center nav */
+.nav{flex:1; display:flex; justify-content:center; gap:34px;}
+.nav a{
+  color: rgba(234,240,255,.72);
+  text-decoration:none;
+  font-weight:700;
+  font-size:13px;
+  letter-spacing:.2px;
+  padding:8px 10px;
+  border-radius:12px;
+  transition: background .15s ease, color .15s ease, transform .12s ease;
+}
+.nav a:hover{color: rgba(234,240,255,.92); background: rgba(255,255,255,.06); transform: translateY(-1px);}
+.nav a.active{color: rgba(234,240,255,.92); background: rgba(255,255,255,.07);}
+
+/* Right icons */
+.top-actions{min-width:130px;display:flex;justify-content:flex-end;gap:10px}
+.icon-btn{
+  width:34px;height:34px;border-radius:999px;
+  border:1px solid rgba(255,255,255,.10);
+  background: rgba(0,0,0,.16);
+  display:grid;place-items:center;
+  cursor:pointer;
+  transition: transform .12s ease, background .15s ease;
+}
+.icon-btn:hover{transform: translateY(-1px); background: rgba(0,0,0,.22);}
+.icon-btn svg{width:18px;height:18px;stroke: rgba(234,240,255,.82);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.avatar{width:34px;height:34px;border-radius:999px;border:1px solid rgba(255,255,255,.14);overflow:hidden;background: rgba(0,0,0,.18)}
+.avatar img{width:100%;height:100%;object-fit:cover;display:block}
+
+/* Second row = invoice header content (no outer padding) */
+.strip-bottom{
+  padding: 0;
+  border-top: 1px solid rgba(255,255,255,.06);
+}
+.strip-bottom-inner{
+  width: 100%;
+  margin: 0;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap: 14px;
+  padding: 14px 18px 16px;
+}
+
+/* Left info */
+.hero-left{display:flex;align-items:center;gap:14px;min-width:320px}
+.hero-badge{
+  width: 44px; height: 44px;
+  border-radius: 999px;
+  background: rgba(255,255,255,.92);
+  display:grid; place-items:center;
+  box-shadow: 0 12px 30px rgba(0,0,0,.25);
+}
+.hero-badge svg{width:22px;height:22px;stroke: var(--accent); fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round}
+.hero-meta{display:flex;flex-direction:column;gap:2px}
+.hero-meta .kicker{font-size:12px;color: rgba(234,240,255,.60);font-weight:700}
+.hero-meta .title{font-size:15px;font-weight:900;letter-spacing:.2px}
+
+/* Right actions */
+.hero-right{display:flex;align-items:center;gap:14px}
+.hero-link{
+  color: rgba(234,240,255,.78);
+  text-decoration:none;
+  font-weight: 750;
+  font-size: 13px;
+  padding: 8px 10px;
+  border-radius: 12px;
+  transition: background .15s ease, transform .12s ease, color .15s ease;
+}
+.hero-link:hover{color: rgba(234,240,255,.92); background: rgba(255,255,255,.06); transform: translateY(-1px);}
+.btn{
+  height: 32px;
+  padding: 0 16px;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,.10);
+  background: rgba(0,0,0,.16);
+  color: rgba(234,240,255,.90);
+  font-weight: 800;
+  font-size: 13px;
+  cursor:pointer;
+  transition: transform .12s ease, background .15s ease;
+}
+.btn:hover{transform: translateY(-1px); background: rgba(0,0,0,.22);}
+.btn-primary{
+  border: 1px solid rgba(97,95,255,.55);
+  background: linear-gradient(180deg, rgba(97,95,255,.92), rgba(97,95,255,.72));
+  color: #0A1020;
+}
+.btn-primary:hover{background: linear-gradient(180deg, rgba(124,115,255,.95), rgba(97,95,255,.78));}
+
+/* Main content */
+.main{
+  flex: 1;
+  overflow:auto;
+  padding: 18px 18px 26px;
+}
+.main::-webkit-scrollbar{width:10px;}
+.main::-webkit-scrollbar-track{background: rgba(255,255,255,.03);}
+.main::-webkit-scrollbar-thumb{background: rgba(255,255,255,.12); border-radius: 999px;}
+.main::-webkit-scrollbar-thumb:hover{background: rgba(255,255,255,.18);}
+
+.container{width: min(1320px, 100%); margin: 0 auto;}
+
+.stage{padding: 34px 0 30px;}
+.panel{
+  width: min(1240px, 100%);
+  margin: 0 auto;
+  border-radius: 22px;
+  border: 1px solid var(--stroke);
+  background: rgba(0,0,0,.12);
+  box-shadow: none;
+overflow:hidden;
+}
+.grid{display:grid; grid-template-columns: 1fr 1fr;}
+@media (max-width: 1080px){
+  .nav{justify-content:flex-start; gap: 14px;}
+  .grid{grid-template-columns: 1fr;}
+}
+
+/* Tiles */
+.tile{
+  position:relative;
+  display:block;
+  text-decoration:none;
+  color: var(--text);
+  background: var(--tile);
+  padding: 24px 22px 22px;
+  min-height: 126px;
+  border-bottom: 1px solid var(--stroke);
+  transition: background .15s ease, transform .12s ease;
+}
+.tile:nth-child(odd){border-right: 1px solid var(--stroke);}
+@media (max-width: 1080px){ .tile:nth-child(odd){border-right:none;} }
+.tile:hover{background: var(--tileHover); transform: translateY(-1px);}
+.tile:focus-visible{outline:none; box-shadow: 0 0 0 4px var(--focus) inset;}
+
+.row{display:flex; gap:16px; align-items:flex-start}
+.badge{
+  width: 42px; height: 42px;
+  border-radius: 12px;
+  display:grid; place-items:center;
+  border: 1px solid rgba(255,255,255,.10);
+  flex:0 0 auto;
+  box-shadow: 0 10px 24px rgba(0,0,0,.18);
+  --icon-color: rgba(234,240,255,.96);
+}
+.badge svg{
+  width:20px;height:20px;
+  stroke: var(--icon-color);
+  fill:none;
+  stroke-width:2;
+  stroke-linecap:round;
+  stroke-linejoin:round
+}
+.meta{min-width:0;padding-top:3px}
+.meta h3{margin:0 56px 8px 0; font-size:15px; font-weight:900; letter-spacing:.2px}
+.meta p{margin:0; color: var(--muted); font-size: 12.5px; line-height:1.6; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden}
+
+/* Arrow */
+.go{
+  position:absolute;
+  right: 16px; top: 16px;
+  width: 30px; height: 30px;
+  border-radius: 11px;
+  border: 1px solid rgba(255,255,255,.10);
+  background: rgba(0,0,0,.12);
+  display:grid; place-items:center;
+  opacity:.88;
+  transition: opacity .15s ease, transform .12s ease, background .15s ease;
+}
+.go svg{width:15px;height:15px;stroke: rgba(234,240,255,.82);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.tile:hover .go{opacity:1; transform: translateY(-1px); background: rgba(0,0,0,.18);}
+
+/* Colors + vivid icon colors */
+.c-teal   { background: rgba(34,211,166,.16); --icon-color: #22F0D2; }
+.c-purple { background: rgba(167,84,255,.16); --icon-color: #B56CFF; }
+.c-blue   { background: rgba(56,189,248,.16); --icon-color: #42CFFF; }
+.c-amber  { background: rgba(250,204,21,.14); --icon-color: #FFD84D; }
+.c-rose   { background: rgba(244,63,94,.14); --icon-color: #FF5A7A; }
+.c-indigo { background: rgba(99,102,241,.16); --icon-color: #7C73FF; }
+.c-cyan   { background: rgba(34,211,238,.14); --icon-color: #34E6FF; }
+.c-lime   { background: rgba(183,226,25,.14); --icon-color: #D8FF3D; }
+.c-orange { background: rgba(254,98,30,.14); --icon-color: #FF8A4D; }
+.c-slate  { background: rgba(148,163,184,.14); --icon-color: #D1D5DB; }
+
+/* --- Override: icon badges unified color --- */
+.badge{
+  background: #615FFF !important;
+  --icon-color: #FFFFFF !important;
+}
+.badge svg{
+  stroke: #FFFFFF !important;
+}
+
+</style>
+
+<script src="/auth.js"></script>
+</head>
+
+<body>
+<div class="app">
+  <div class="frame">
+
+    <header class="header-strip" role="banner">
+      <div class="strip-top">
+        <div class="strip-top-inner">
+          <div class="logo" aria-label="Brand">
+            <div class="mark" aria-hidden="true">
+              <img src="/OAP-Form-32x32.png" alt="OAP Form"/>
+            </div>
+          </div>
+
+          <nav class="nav" aria-label="Top navigation">
+            <a class="active" href="/index.html">Home</a>
+            <a href="/invoices.html">Invoices</a>
+            <a href="/clients.html">Clients</a>
+            <a href="/expenses.html">Expenses</a>
+          </nav>
+
+          <div class="top-actions">
+            <button class="icon-btn" type="button" aria-label="Notifications">
+              <svg viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 7h18s-3 0-3-7"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+            </button>
+            <div class="avatar" title="Account">
+              <img alt="Avatar" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64'%3E%3Crect width='64' height='64' fill='%23000000' fill-opacity='.18'/%3E%3Ccircle cx='32' cy='26' r='10' fill='%23EAF0FF' fill-opacity='.70'/%3E%3Cpath d='M14 54c3-10 33-10 36 0' fill='%23EAF0FF' fill-opacity='.55'/%3E%3C/svg%3E"/>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="strip-bottom">
+        <div class="strip-bottom-inner">
+          <div class="hero-left">
+            <div class="hero-meta">
+              <div class="kicker">OAP</div>
+              <div class="title">Forms Portal</div>
+            </div>
+          </div>
+
+          <div class="hero-right">
+            <a class="icon-btn" href="/index.html" aria-label="Home" title="Home">
+              <svg viewBox="0 0 24 24"><path d="M3 10.5L12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/><path d="M9 21v-6h6v6"/></svg>
+            </a>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main class="main" role="main">
+      <div class="container">
+        <section class="stage" aria-label="Forms">
+          <div class="panel">
+            <div id="grid" class="grid"></div>
+          </div>
+        </section>
+      </div>
+    </main>
+
+  </div>
+</div>
+
+<script>
+const SVG = {
+  arrowNE: '<svg viewBox="0 0 24 24"><path d="M7 17L17 7"/><path d="M10 7h7v7"/></svg>',
+  users:   '<svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
+  delay:   '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>',
+  report:  '<svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M8 13h8"/><path d="M8 17h6"/></svg>',
+  overtime:'<svg viewBox="0 0 24 24"><path d="M12 8v5l3 3"/><circle cx="12" cy="12" r="9"/><path d="M20 12h2"/><path d="M2 12h2"/></svg>',
+  sick:    '<svg viewBox="0 0 24 24"><path d="M20 10c0 6-8 12-8 12S4 16 4 10a4 4 0 0 1 8-2 4 4 0 0 1 8 2z"/><path d="M12 6v6"/><path d="M9 9h6"/></svg>',
+  absence: '<svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 11l-6 6"/><path d="M16 11l6 6"/></svg>',
+  productivity:'<svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M7 14l3-3 3 2 5-6"/></svg>',
+  event:   '<svg viewBox="0 0 24 24"><path d="M8 2v2"/><path d="M16 2v2"/><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M3 10h18"/><path d="M12 14l2 2 4-4"/></svg>'
+};
+
+const FORMS = [
+  { id:'employee_master_db',        title:'Employee Master DB',   desc:'Unified employee master database view.',               icon:'users',        color:'c-teal',   href:'/employee_master_db.html' },
+  { id:'sgs_flight_delay',          title:'SGS Flight Delay',      desc:'All Riyadh station delays (station-level).',          icon:'delay',        color:'c-purple', href:'/sgs_flight_delay.html' },
+  { id:'tcc_flight_delay',          title:'TCC Flight Delay',      desc:'Department delays (TCC) with investigation tracking.', icon:'delay',        color:'c-blue',   href:'/tcc_flight_delay.html' },
+  { id:'shift_report',              title:'Shift Report',          desc:'Shift coverage, resources, and operational summary.',  icon:'report',       color:'c-indigo', href:'/shift_report.html' },
+  { id:'employee_overtime',         title:'Employee Overtime',     desc:'Overtime assignments, reasons, and approvals.',        icon:'overtime',     color:'c-amber',  href:'/employee_overtime.html' },
+  { id:'employee_sick_leave',       title:'Employee Sick Leave',   desc:'Sick leave periods with department and shift context.', icon:'sick',         color:'c-rose',   href:'/employee_sick_leave.html' },
+  { id:'employee_absence',          title:'Employee Absence',      desc:'Absence records and investigation workflow.',           icon:'absence',      color:'c-orange', href:'/employee_absence.html' },
+  { id:'employee_delay',            title:'Employee Delay',        desc:'Late arrival minutes and reasons with follow-up.',      icon:'delay',        color:'c-cyan',   href:'/employee_delay.html' },
+  { id:'operational_event',         title:'Operational Event',     desc:'Operational event reporting with disciplinary action.', icon:'event',        color:'c-slate',  href:'/employee_productivity.html#operational_event' },
+  { id:'employee_productivity_all', title:'Employee Productivity', desc:'ARR + DEP productivity tracking per employee.',         icon:'productivity', color:'c-lime',   href:'/employee_productivity.html' }
+];
+
+function escapeHtml(s){
+  return String(s ?? '')
+    .replaceAll('&','&amp;')
+    .replaceAll('<','&lt;')
+    .replaceAll('>','&gt;')
+    .replaceAll('"','&quot;')
+    .replaceAll("'","&#39;");
+}
+
+function buildTiles(){
+  const grid = document.getElementById('grid');
+  if(!grid) return;
+  grid.innerHTML = FORMS.map(f => {
+    const iconSvg = SVG[f.icon] || SVG.event;
+    return `
+      <a class="tile" href="${f.href}" data-form="${f.id}">
+        <span class="go" aria-hidden="true">${SVG.arrowNE}</span>
+        <div class="row">
+          <span class="badge ${f.color}" aria-hidden="true">${iconSvg}</span>
+          <div class="meta">
+            <h3>${escapeHtml(f.title)}</h3>
+            <p>${escapeHtml(f.desc)}</p>
+          </div>
+        </div>
+      </a>
+    `;
+  }).join('');
+}
+
+function bindHeroActions(){}
+
+document.addEventListener('DOMContentLoaded', () => {
+  buildTiles();
+});
+</script>
+</body>
+</html>

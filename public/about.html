@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <script>
+(function(){
+  try{
+    var root = document.documentElement;
+    var sp = new URLSearchParams(window.location.search);
+    var t = sp.get('theme');
+    if(!t){
+      try{ t = localStorage.getItem('oap_theme'); }catch(_){}
+    }
+    if(t) root.setAttribute('data-theme', t);
+
+    var ink = sp.get('gink') || sp.get('gradientInk');
+    if(!ink){
+      try{ ink = localStorage.getItem('oap_gradient_ink'); }catch(_){}
+    }
+    if(ink) root.setAttribute('data-gradient-ink', ink);
+  }catch(_){}
+})();
+</script>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="/assets/css/themes.css">
+
+  <title>About OAP — Operations • Analytics • Performance</title>
+
+  <meta name="description" content="Learn about OAP (Operations • Analytics • Performance), a secure internal operations platform designed for enterprise-grade airport ground services. Built by kas." />
+  <meta name="keywords" content="OAP, Operations Analytics Performance, kas, KAS, enterprise operations platform, airport ground services, operational analytics" />
+  <link rel="canonical" href="https://oap-kas.com/about.html" />
+  <meta name="robots" content="index,follow" />
+
+  <!-- Social -->
+  <meta property="og:title" content="About OAP — Operations • Analytics • Performance" />
+  <meta property="og:description" content="A trusted internal operations platform built for real-world airport ground services. Designed and built by kas." />
+  <meta property="og:url" content="https://oap-kas.com/about.html" />
+  <meta property="og:type" content="website" />
+  <script src="/assets/js/theme-manager.js" defer></script>
+</head>
+
+<body style="margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;line-height:1.6;background:#0b0f16;color:#e9eef7;">
+  <main style="max-width:980px;margin:0 auto;padding:48px 20px;">
+
+    <header style="margin-bottom:32px;">
+      <div style="font-size:14px;opacity:.8;letter-spacing:.12em;text-transform:uppercase;">About OAP</div>
+      <h1 style="margin:10px 0 10px;font-size:40px;line-height:1.15;">
+        Operations • Analytics • Performance
+      </h1>
+      <p style="margin:0;max-width:820px;opacity:.9;">
+        OAP is a secure, internal-first operations platform built to support real operational environments where accuracy,
+        accountability, and speed matter.
+      </p>
+    </header>
+
+    <section style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:20px;margin-bottom:20px;">
+      <h2 style="margin:0 0 10px;font-size:20px;">What is OAP?</h2>
+      <p style="margin:0;">
+        OAP (Operations • Analytics • Performance) is a web-based platform designed to centralize operational records,
+        performance metrics, and analytical insights into a single trusted system.
+        It is purpose-built for complex environments such as airport ground services, where operations span multiple teams,
+        shifts, and responsibilities.
+      </p>
+    </section>
+
+    <section style="display:grid;grid-template-columns:1fr;gap:16px;margin-bottom:20px;">
+      <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:20px;">
+        <h2 style="margin:0 0 10px;font-size:20px;">Who is it for?</h2>
+        <ul style="margin:0;padding-left:18px;">
+          <li>Operational teams managing daily activities</li>
+          <li>Supervisors tracking incidents, delays, and performance</li>
+          <li>Managers reviewing trends, accountability, and outcomes</li>
+          <li>Organizations requiring structured, auditable operational data</li>
+        </ul>
+      </div>
+
+      <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:20px;">
+        <h2 style="margin:0 0 10px;font-size:20px;">Why OAP exists</h2>
+        <p style="margin:0;">
+          Many operational environments rely on fragmented spreadsheets, emails, and manual reports.
+          OAP was created to eliminate this fragmentation by providing a single source of truth,
+          enabling teams to move from reactive reporting to proactive decision-making.
+        </p>
+      </div>
+    </section>
+
+    <section style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:20px;margin-bottom:20px;">
+      <h2 style="margin:0 0 10px;font-size:20px;">Trust & Architecture</h2>
+      <ul style="margin:0;padding-left:18px;">
+        <li>Frontend hosted on Cloudflare Pages</li>
+        <li>Secure access control via Cloudflare routing and functions</li>
+        <li>Backend services separated from the user interface</li>
+        <li>Data protected using role-based access and row-level security</li>
+      </ul>
+      <p style="margin:10px 0 0;opacity:.9;">
+        This architecture ensures scalability, security, and operational integrity.
+      </p>
+    </section>
+
+    <section style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:20px;margin-bottom:20px;">
+      <h2 style="margin:0 0 10px;font-size:20px;">Who is behind OAP?</h2>
+      <p style="margin:0;">
+        OAP is designed and built by <strong>kas</strong>, with direct experience in operational environments
+        and a focus on building systems that reflect real-world workflows rather than generic software assumptions.
+      </p>
+    </section>
+
+    <footer style="margin-top:28px;opacity:.8;font-size:13px;">
+      © OAP — Operations • Analytics • Performance • Built by <strong>kas</strong>
+    </footer>
+
+  </main>
+</body>
+</html>

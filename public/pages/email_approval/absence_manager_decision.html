@@ -1,0 +1,305 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <script>
+(function(){
+  try{
+    var root = document.documentElement;
+    var sp = new URLSearchParams(window.location.search);
+    var t = sp.get('theme');
+    if(!t){
+      try{ t = localStorage.getItem('oap_theme'); }catch(_){}
+    }
+    if(t) root.setAttribute('data-theme', t);
+
+    var ink = sp.get('gink') || sp.get('gradientInk');
+    if(!ink){
+      try{ ink = localStorage.getItem('oap_gradient_ink'); }catch(_){}
+    }
+    if(ink) root.setAttribute('data-gradient-ink', ink);
+  }catch(_){}
+})();
+</script>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link rel="stylesheet" href="/assets/css/themes.css">
+  <title>قرار المدير – تحقيق الغياب</title>
+  <style>
+    body{margin:0;background:#0b1220;color:#e5e7eb;font-family:system-ui,-apple-system,"Segoe UI",Arial,sans-serif}
+    .wrap{max-width:720px;margin:32px auto;padding:0 14px}
+    .card{background:linear-gradient(180deg,rgba(30,41,59,.9),rgba(15,23,42,.9));
+      border:1px solid rgba(148,163,184,.18);border-radius:16px;padding:20px 18px;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+    h1{margin:0 0 10px;font-size:18px}
+    p{margin:8px 0;font-size:14px;line-height:1.7}
+    .small{font-size:12px;color:#9ca3af;margin-top:12px}
+    #state{margin-bottom:8px}
+    .ok,.err{display:inline-block;padding:4px 10px;border-radius:999px;font-size:11px;background:rgba(148,163,184,.12);color:#cbd5f5}
+    .ok{color:#22c55e}
+    .err{color:#f97373}
+  </style>
+  <script src="/assets/js/theme-manager.js" defer></script>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <h1>قرار مدير الإدارة بشأن تحقيق الغياب</h1>
+      <p id="state">جاري التحقق من الرابط…</p>
+      <p id="msg">نقوم الآن بمعالجة طلبك.</p>
+      <p class="small">سيتم تحديث هذه الصفحة بعد تنفيذ الإجراء.</p>
+    </div>
+  </div>
+
+  <script type="module">
+    import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+    const SUPABASE_URL = "https://inuqlhkoaoeiycefvjyj.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImludXFsaGtvYW9laXljZWZ2anlqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMxMTUxODEsImV4cCI6MjA3ODY5MTE4MX0.DCAY9rN0noaBoE_T-6eDsb_79szK91af989f9TqjEow";
+    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    const msgEl   = document.getElementById("msg");
+    const stateEl = document.getElementById("state");
+
+    function state(type, text) {
+      stateEl.className = type === "ok" ? "ok" : "err";
+      stateEl.textContent = text;
+    }
+
+    function makeToken() {
+      if (crypto && "randomUUID" in crypto) return crypto.randomUUID();
+      return Math.random().toString(36).slice(2) + Date.now().toString(36);
+    }
+
+    // ✅ الحل النهائي: نقرأ من # ثم من ? (حتى لا تظهر صفحة الفحص)
+    function getParams() {
+      const url = new URL(window.location.href);
+      const hashParams = new URLSearchParams((window.location.hash || "").replace(/^#/, ""));
+      const action = (hashParams.get("action") || url.searchParams.get("action") || "").trim();
+      const invId  = (hashParams.get("inv_id") || url.searchParams.get("inv_id") || "").trim();
+      return { action, invId };
+    }
+
+    function normalizeAction(a) {
+      const x = (a || "").toLowerCase().trim();
+      // ✅ نقبل أكثر من اسم حتى لا ينهار النظام لو تغيّر الرابط
+      if (["approve","ok","accept"].includes(x)) return "approve";
+      if (["close","reject","deny"].includes(x)) return "close";
+      if (["hr","escalate","escalate_hr","hr_escalation","hr-escalation"].includes(x)) return "hr";
+      if (["close_case","closecase","case_close","close-file","closefile","final_close"].includes(x)) return "close_case";
+      return x;
+    }
+
+    async function rpc(fn, args) {
+      const { data, error } = await supabase.rpc(fn, args);
+      if (error) throw error;
+      return data;
+    }
+
+    async function start() {
+      const { action: rawAction, invId } = getParams();
+      const action = normalizeAction(rawAction);
+
+      if (!action || !invId) {
+        state("err", "رابط غير صالح");
+        msgEl.textContent = "تأكد أن الرابط يحتوي action و inv_id.";
+        return;
+      }
+
+      // ✅ (1) إجراءات HR / إغلاق ملف التحقيق (تعمل على absence_investigation)
+      if (action === "hr" || action === "close_case") {
+        const { data: inv, error: invErr } = await supabase
+          .from("absence_investigation")
+          .select(`id,"Employee ID","Employee Name",absence_date,status,employee_reply_text,manager_email,employee_email`)
+          .eq("id", invId)
+          .maybeSingle();
+
+        if (invErr || !inv) {
+          state("err", "تعذر تحميل بيانات التحقيق.");
+          return;
+        }
+
+        const currentStatus = (inv.status ?? "").toString();
+
+        // منع التكرار
+        if (action === "hr" && (currentStatus === "hr_escalated" || currentStatus === "closed")) {
+          state("ok", "تم تنفيذ الإجراء مسبقاً.");
+          msgEl.textContent = `الموظف: ${inv["Employee Name"]} (${inv["Employee ID"]}) – تاريخ الغياب: ${inv.absence_date}`;
+          return;
+        }
+        if (action === "close_case" && currentStatus === "closed") {
+          state("ok", "تم إغلاق الملف مسبقاً.");
+          msgEl.textContent = `الموظف: ${inv["Employee Name"]} (${inv["Employee ID"]}) – تاريخ الغياب: ${inv.absence_date}`;
+          return;
+        }
+
+        try {
+          if (action === "hr") {
+            // ✅ المطلوب: استدعاء RPC واحد فقط (بدون أي تحديث مباشر للجداول من الواجهة)
+            await supabase.rpc("oap_hr_escalate_absence_investigation", { p_inv_id: invId });
+
+            state("ok", "تم رفع ملف التحقيق للشؤون القانونية وإرسال البريد بنجاح.");
+            msgEl.textContent = `الموظف: ${inv["Employee Name"]} (${inv["Employee ID"]}) – تاريخ الغياب: ${inv.absence_date}`;
+            return;
+          }
+
+          if (action === "close_case") {
+            const { error: stErr } = await supabase
+              .from("absence_investigation")
+              .update({ status: "closed", updated_at: new Date().toISOString() })
+              .eq("id", invId);
+            if (stErr) throw stErr;
+
+            await rpc("enqueue_absence_close_case_email", { p_inv_id: invId });
+
+            state("ok", "تم إغلاق ملف التحقيق وإرسال إشعار الإغلاق.");
+            msgEl.textContent = `الموظف: ${inv["Employee Name"]} (${inv["Employee ID"]}) – تاريخ الغياب: ${inv.absence_date}`;
+            return;
+          }
+        } catch (e) {
+          console.error(e);
+          state("err", "تعذر تنفيذ الإجراء. تحقق من صلاحيات الـ RPC/السياسات.");
+          return;
+        }
+      }
+
+      // ✅ (2) إجراءات موافقة/رفض المدير (تعمل على employee_absence)
+      const { data: row, error } = await supabase
+        .from("employee_absence")
+        .select("*")
+        .eq("InvestigationID", invId)
+        .maybeSingle();
+
+      if (error || !row) {
+        state("err", "خطأ في جلب بيانات الغياب");
+        return;
+      }
+
+      const employeeId    = row["Employee ID"];
+      const employeeName  = row["Employee Name"];
+      const absenceDate   = row["Date"];
+      const currentStatus = row["Investigation status"];
+
+      if (action === "approve" && currentStatus === "sent_to_employee") {
+        state("ok", "تمت معالجة هذا التحقيق مسبقًا، لن يتم إرسال إشعار مكرر للموظف.");
+        msgEl.textContent = `الموظف: ${employeeName} (${employeeId}) – تاريخ الغياب: ${absenceDate}`;
+        return;
+      }
+
+      let newStatus, consent;
+      if (action === "approve") {
+        newStatus = "sent_to_employee";
+        consent   = "approved";
+      } else if (action === "close") {
+        newStatus = "closed_without_investigation";
+        consent   = "rejected";
+      } else {
+        state("err", "إجراء غير معروف");
+        msgEl.textContent = `action=${rawAction}`;
+        return;
+      }
+
+      const { error: upErr } = await supabase
+        .from("employee_absence")
+        .update({
+          "Investigation status": newStatus,
+          "Consent to send investigation": consent,
+          "Last Update": new Date().toISOString()
+        })
+        .eq("InvestigationID", invId);
+
+      if (upErr) {
+        state("err", "مشكلة أثناء تحديث الغياب");
+        return;
+      }
+
+      if (action === "approve") {
+        const { data: invRow, error: invErr } = await supabase
+          .from("absence_investigation")
+          .select("employee_email, employee_action_token")
+          .eq("id", invId)
+          .maybeSingle();
+
+        if (invErr || !invRow || !invRow.employee_email) {
+          state("err", "تمت الموافقة لكن لم يتم العثور على بريد الموظف في سجل التحقيق");
+          return;
+        }
+
+        let employeeToken = invRow.employee_action_token;
+        if (!employeeToken) {
+          employeeToken = makeToken();
+          await supabase
+            .from("absence_investigation")
+            .update({ employee_action_token: employeeToken })
+            .eq("id", invId);
+        }
+
+        // منع الإزدواج
+        const { data: exists } = await supabase
+          .from("oap_email_outbox")
+          .select("id")
+          .eq("inv_id", invId)
+          .eq("type", "absence_investigation_employee_v2")
+          .maybeSingle();
+
+        if (exists) {
+          state("ok", "تمت الموافقة مسبقًا، ولن يتم إرسال إشعار مكرر للموظف.");
+          msgEl.textContent = `الموظف: ${employeeName} (${employeeId}) – تاريخ الغياب: ${absenceDate}`;
+          return;
+        }
+
+        const replyUrl =
+          "https://oap-kas.com/absence_investigation_reply.html?inv_id=" +
+          encodeURIComponent(invId) +
+          "&token=" +
+          encodeURIComponent(employeeToken);
+
+        const empEmail = invRow.employee_email;
+        const subject  = `إشعار تحقيق غياب – ${employeeName} (${employeeId})`;
+        const preview  = `تحقيق غياب بتاريخ ${absenceDate}`;
+
+        const bodyHtml = `
+          <div dir="rtl" style="font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;">
+            <p>عزيزي الموظف ${employeeName} (${employeeId}),</p>
+            <p>تم فتح تحقيق بخصوص سجل الغياب بتاريخ <strong>${absenceDate}</strong>.</p>
+            <p>الرجاء الضغط على الزر التالي لتعبئة نموذج التحقيق:</p>
+            <p>
+              <a href="${replyUrl}"
+                style="padding:10px 14px;background:#2563eb;color:#fff;text-decoration:none;border-radius:8px;">
+                فتح نموذج التحقيق
+              </a>
+            </p>
+          </div>
+        `;
+
+        const { error: emErr } = await supabase
+          .from("oap_email_outbox")
+          .insert({
+            inv_id: invId,
+            to: empEmail,
+            subject,
+            body_html: bodyHtml,
+            body_preview: preview,
+            type: "absence_investigation_employee_v2",
+            role: "system",
+            sent_at: null
+          });
+
+        if (emErr) {
+          state("err", "تمت الموافقة لكن حدثت مشكلة في إنشاء بريد الموظف");
+          return;
+        }
+
+        state("ok", "تمت الموافقة وتم جدولة بريد التحقيق للموظف بنجاح ✔️");
+      } else {
+        state("ok", "تم إغلاق ملف الغياب بدون تحقيق ✔️");
+      }
+
+      msgEl.textContent = `الموظف: ${employeeName} (${employeeId}) – تاريخ الغياب: ${absenceDate}`;
+    }
+
+    start().catch((e) => {
+      console.error(e);
+      state("err", "حدث خطأ غير متوقع أثناء تنفيذ العملية.");
+    });
+  </script>
+</body>
+</html>

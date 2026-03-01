@@ -1,0 +1,770 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <script>
+(function(){
+  try{
+    var root = document.documentElement;
+    var sp = new URLSearchParams(window.location.search);
+    var t = sp.get('theme');
+    if(!t){
+      try{ t = localStorage.getItem('oap_theme'); }catch(_){}
+    }
+    if(t) root.setAttribute('data-theme', t);
+
+    var ink = sp.get('gink') || sp.get('gradientInk');
+    if(!ink){
+      try{ ink = localStorage.getItem('oap_gradient_ink'); }catch(_){}
+    }
+    if(ink) root.setAttribute('data-gradient-ink', ink);
+  }catch(_){}
+})();
+</script>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="/assets/css/themes.css">
+  <title>OAP — اعتماد طلب الانضمام</title>
+
+  <!-- Fonts (same family used across OAP pages) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root{
+      --bg:#06070b;
+      --panel:#0b0f16cc;
+      --panel2:#0b0f16f2;
+      --line:#1a2232;
+      --text:#e9edf6;
+      --muted:#a9b4c8;
+      --good:#29c26a;
+      --bad:#ff4d4d;
+      --warn:#ffcc66;
+      --btn:#111b2c;
+      --btn2:#0f1626;
+      --shadow: 0 30px 90px rgba(0,0,0,.55);
+      --radius: 22px;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      color:var(--text);
+      font-family: "Cairo","Inter",system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      background:
+        radial-gradient(900px 500px at 20% 20%, rgba(65,120,255,.10), transparent 60%),
+        radial-gradient(700px 500px at 80% 20%, rgba(41,194,106,.08), transparent 65%),
+        radial-gradient(900px 700px at 50% 100%, rgba(255,204,102,.06), transparent 70%),
+        var(--bg);
+      overflow-x:hidden;
+    }
+
+    .wrap{
+      min-height:100%;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:28px 16px;
+    }
+
+    .card{
+      width:min(1100px, 100%);
+      background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02));
+      border:1px solid rgba(255,255,255,.08);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+      position:relative;
+    }
+    .card::before{
+      content:"";
+      position:absolute; inset:-1px;
+      background: radial-gradient(600px 300px at 30% 0%, rgba(65,120,255,.14), transparent 55%),
+                  radial-gradient(500px 280px at 85% 30%, rgba(41,194,106,.10), transparent 60%);
+      pointer-events:none;
+      filter: blur(0px);
+    }
+
+    .inner{
+      position:relative;
+      display:grid;
+      grid-template-columns: 1.1fr .9fr;
+      gap:18px;
+      padding:22px;
+    }
+    @media (max-width: 980px){
+      .inner{grid-template-columns:1fr}
+    }
+
+    .left, .right{
+      background: rgba(11,15,22,.55);
+      border:1px solid rgba(255,255,255,.07);
+      border-radius: 18px;
+      padding:18px;
+    }
+
+    .brand{
+      display:flex; align-items:center; gap:10px;
+      margin-bottom:10px;
+      color:var(--muted);
+      font-weight:700;
+    }
+    .dot{
+      width:10px; height:10px; border-radius:50%;
+      background: rgba(65,120,255,.8);
+      box-shadow: 0 0 0 4px rgba(65,120,255,.12);
+    }
+    h1{
+      margin:0 0 8px 0;
+      font-size: 22px;
+      letter-spacing:.2px;
+    }
+    .sub{
+      margin:0 0 14px 0;
+      color:var(--muted);
+      line-height:1.7;
+      font-size:14px;
+    }
+
+    .pill{
+      display:inline-flex;
+      gap:8px;
+      align-items:center;
+      padding:7px 12px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.18);
+      color: var(--muted);
+      font-size: 12.5px;
+      margin-top:6px;
+    }
+    .pill b{color:var(--text)}
+    .pill .k{opacity:.9}
+    .sep{height:1px; background:rgba(255,255,255,.08); margin:14px 0}
+
+    .grid{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:10px;
+    }
+    @media (max-width: 720px){
+      .grid{grid-template-columns:1fr}
+    }
+
+    .kv{
+      border:1px solid rgba(255,255,255,.08);
+      border-radius: 14px;
+      padding:10px 12px;
+      background: rgba(0,0,0,.16);
+    }
+    .kv .k{
+      color:var(--muted);
+      font-size:12px;
+      margin-bottom:4px;
+    }
+    .kv .v{
+      font-size:14px;
+      line-height:1.6;
+      word-break:break-word;
+    }
+
+    .status{
+      display:flex; align-items:center; justify-content:space-between;
+      gap:10px;
+      border:1px solid rgba(255,255,255,.08);
+      border-radius: 14px;
+      padding:10px 12px;
+      background: rgba(0,0,0,.16);
+      margin-top:10px;
+    }
+    .badge{
+      padding:6px 10px;
+      border-radius:999px;
+      font-size:12px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.06);
+      color: var(--muted);
+      white-space:nowrap;
+    }
+    .badge.good{border-color: rgba(41,194,106,.25); background: rgba(41,194,106,.12); color:#bff3d5}
+    .badge.bad{border-color: rgba(255,77,77,.25); background: rgba(255,77,77,.12); color:#ffd0d0}
+    .badge.warn{border-color: rgba(255,204,102,.25); background: rgba(255,204,102,.12); color:#ffe6b0}
+
+    .right h2{
+      margin:0 0 10px 0;
+      font-size:16px;
+    }
+    .hint{
+      margin:0 0 10px 0;
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.7;
+    }
+
+    .permBox{
+      border:1px solid rgba(255,255,255,.08);
+      border-radius: 16px;
+      padding:12px;
+      background: rgba(0,0,0,.14);
+      max-height: 320px;
+      overflow:auto;
+    }
+    .permRow{
+      display:flex; align-items:flex-start; gap:10px;
+      padding:10px 8px;
+      border-bottom:1px solid rgba(255,255,255,.06);
+    }
+    .permRow:last-child{border-bottom:none}
+    .permRow input{margin-top:4px}
+    .permRow .t{font-weight:700; font-size:13.5px}
+    .permRow .d{color:var(--muted); font-size:12.5px; line-height:1.6}
+
+    .actions{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-top:14px;
+    }
+    .btn{
+      border:1px solid rgba(255,255,255,.12);
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+      color:var(--text);
+      padding:10px 14px;
+      border-radius: 14px;
+      cursor:pointer;
+      font-family: inherit;
+      font-weight:700;
+      font-size:13.5px;
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      user-select:none;
+    }
+    .btn:hover{border-color: rgba(255,255,255,.18)}
+    .btn:disabled{opacity:.55; cursor:not-allowed}
+    .btn.good{border-color: rgba(41,194,106,.35); background: rgba(41,194,106,.12)}
+    .btn.bad{border-color: rgba(255,77,77,.35); background: rgba(255,77,77,.12)}
+    .btn.ghost{background: rgba(0,0,0,.12)}
+    .btn.small{padding:8px 12px; font-size:13px; border-radius:12px}
+
+    .msg{
+      margin-top:12px;
+      padding:10px 12px;
+      border-radius: 14px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.14);
+      color: var(--muted);
+      font-size: 13px;
+      line-height:1.7;
+      display:none;
+    }
+    .msg.show{display:block}
+    .msg.good{border-color: rgba(41,194,106,.25); background: rgba(41,194,106,.10); color:#c8f7dc}
+    .msg.bad{border-color: rgba(255,77,77,.25); background: rgba(255,77,77,.10); color:#ffd4d4}
+    .msg.warn{border-color: rgba(255,204,102,.25); background: rgba(255,204,102,.10); color:#ffe6b0}
+
+    .footer{
+      padding:14px 22px 20px;
+      color: rgba(255,255,255,.35);
+      font-size:12px;
+      border-top:1px solid rgba(255,255,255,.06);
+      position:relative;
+    }
+
+    a.link{color:#bcd2ff; text-decoration:none}
+    a.link:hover{text-decoration:underline}
+  </style>
+
+  <!-- Project config + Supabase client -->
+  <script src="/assets/js/oap_config.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="/assets/js/nxs_supabase_client.js"></script>
+  <script src="/assets/js/auth.js"></script>
+  <script src="/assets/js/theme-manager.js" defer></script>
+</head>
+
+<body>
+  <div class="wrap">
+    <div class="card">
+      <div class="inner">
+        <section class="left">
+          <div class="brand"><span class="dot"></span><span>OAP • Email Approval</span></div>
+          <h1>طلب اعتماد — انضمام جديد</h1>
+          <p class="sub">
+            هذه الصفحة مخصّصة للمالك/الإدارة لاعتماد طلبات الانضمام.
+            إذا لم تكن مسجّل دخولًا سيتم تحويلك لتسجيل الدخول ثم العودة تلقائيًا.
+          </p>
+
+          <div class="pill" id="reqPill">
+            <span class="k">Request ID:</span> <b id="reqIdText">—</b>
+            <span style="opacity:.5">•</span>
+            <span class="k">Tenant:</span> <b id="tenantText">—</b>
+          </div>
+
+          <div class="sep"></div>
+
+          <div class="grid" id="kvGrid" aria-live="polite">
+            <div class="kv"><div class="k">الموظف</div><div class="v" id="vName">—</div></div>
+            <div class="kv"><div class="k">الرقم الوظيفي</div><div class="v" id="vEmp">—</div></div>
+            <div class="kv"><div class="k">البريد</div><div class="v" id="vEmail">—</div></div>
+            <div class="kv"><div class="k">اسم المستخدم</div><div class="v" id="vUser">—</div></div>
+            <div class="kv"><div class="k">الدور المطلوب</div><div class="v" id="vReqRole">—</div></div>
+            <div class="kv"><div class="k">تاريخ الطلب</div><div class="v" id="vDate">—</div></div>
+            <div class="kv" style="grid-column:1/-1">
+              <div class="k">ملاحظة</div><div class="v" id="vNote">—</div>
+            </div>
+          </div>
+
+          <div class="status">
+            <div>
+              <div style="color:var(--muted); font-size:12px; margin-bottom:2px;">حالة الطلب</div>
+              <div style="font-weight:800" id="statusText">—</div>
+            </div>
+            <div class="badge warn" id="statusBadge">...</div>
+          </div>
+
+          <div class="msg" id="mainMsg"></div>
+        </section>
+
+        <aside class="right">
+          <h2>الصلاحيات</h2>
+          <p class="hint">
+            اختر الصلاحيات المطلوبة لهذا المستخدم.
+            (إذا لم يكن لدى الطلب <b>auth_user_id</b> سيتم حفظ الصلاحيات داخل ملاحظة الطلب ليتم تطبيقها لاحقًا بعد إنشاء حساب الدخول).
+          </p>
+
+          <div class="permBox" id="permBox">
+            <div style="color:var(--muted); font-size:13px;">جاري تحميل الصلاحيات…</div>
+          </div>
+
+          <div class="actions">
+            <button class="btn good" id="btnApprove" disabled>✅ اعتماد</button>
+            <button class="btn bad" id="btnReject" disabled>❌ رفض</button>
+            <button class="btn ghost" id="btnRefresh">🔄 تحديث</button>
+            <button class="btn small" id="btnLogin" style="display:none">🔐 تسجيل الدخول</button>
+          </div>
+
+          <div class="msg" id="sideMsg"></div>
+
+          <div class="sep"></div>
+
+          <div class="hint">
+            ملاحظة تقنية: إن ظهرت مشكلة صلاحيات (RLS) أو لم يتم جلب البيانات، تأكد أن حسابك في جدول <b>public.users</b> يمتلك <b>app_role = owner/admin</b> وأن الطلب <b>status = pending</b>.
+          </div>
+        </aside>
+      </div>
+
+      <div class="footer">
+        OAP • Secure approval page • <span id="footState">—</span>
+      </div>
+    </div>
+  </div>
+
+  <script>
+  (function(){
+    'use strict';
+
+    // ---------- small helpers ----------
+    const $ = (id) => document.getElementById(id);
+    const qs = new URLSearchParams(location.search);
+    const requestId = qs.get('request_id') || qs.get('id') || '';
+    $('reqIdText').textContent = requestId || '—';
+
+    function setMsg(el, text, type){
+      el.classList.remove('show','good','bad','warn');
+      if (!text){ return; }
+      el.textContent = text;
+      el.classList.add('show');
+      if (type) el.classList.add(type);
+    }
+    function setStatus(label){
+      $('statusText').textContent = label || '—';
+      const b = $('statusBadge');
+      b.classList.remove('good','bad','warn');
+      b.classList.add(label === 'approved' ? 'good' : (label === 'rejected' ? 'bad' : 'warn'));
+      b.textContent = label || '—';
+    }
+    function nowIso(){
+      // keep server-side now() when possible; for client fallbacks use ISO
+      return new Date().toISOString();
+    }
+
+    function getClient(){
+      // Prefer project client (already configured by /assets/js/nxs_supabase_client.js)
+      if (window.NXS_Supabase && window.NXS_Supabase.client) return window.NXS_Supabase.client;
+      // Fallback (best-effort)
+      if (window.supabase && window.supabase.createClient){
+        const url = window.NXS_SUPABASE_URL || window.OAP_SUPABASE_URL || window.SUPABASE_URL || '';
+        const anon = window.NXS_SUPABASE_ANON_KEY || window.OAP_SUPABASE_ANON_KEY || window.SUPABASE_ANON_KEY || '';
+        if (url && anon) return window.supabase.createClient(url, anon);
+      }
+      return null;
+    }
+
+    const sb = getClient();
+    if (!sb){
+      setMsg($('mainMsg'), 'Supabase is not ready. Please check config and reload.', 'bad');
+      $('footState').textContent = 'Supabase: NOT READY';
+      return;
+    }
+
+    // ---------- auth gate ----------
+    function loginUrl(){
+      const rt = encodeURIComponent(location.pathname + location.search + location.hash);
+      // keep your existing login page behavior
+      return '/Login.html?return_to=' + rt;
+    }
+
+    async function ensureSession(){
+      const { data } = await sb.auth.getSession();
+      const session = data && data.session ? data.session : null;
+      if (!session){
+        $('btnLogin').style.display = '';
+        $('btnApprove').disabled = true;
+        $('btnReject').disabled = true;
+        setMsg($('sideMsg'), 'غير مسجّل دخولًا. اضغط "تسجيل الدخول" ثم ستعود تلقائيًا لهذه الصفحة.', 'warn');
+        $('footState').textContent = 'Auth: SIGNED OUT';
+        return null;
+      }
+      $('btnLogin').style.display = 'none';
+      $('footState').textContent = 'Auth: OK';
+      return session;
+    }
+
+    // ---------- data loaders ----------
+    let currentUserRow = null;
+    let joinReq = null;
+    let permissions = [];
+    let selectedPerms = new Set();
+
+    function renderPerms(){
+      const box = $('permBox');
+      if (!permissions.length){
+        box.innerHTML = '<div style="color:var(--muted); font-size:13px;">لا توجد صلاحيات فعّالة.</div>';
+        return;
+      }
+      box.innerHTML = '';
+      permissions.forEach(p => {
+        const key = p.permission_key;
+        const title = p.title_ar || p.title_en || key;
+        const desc = p.title_en ? (p.title_ar ? (p.title_en + ' • ' + p.title_ar) : p.title_en) : (p.title_ar || '');
+
+        const row = document.createElement('label');
+        row.className = 'permRow';
+        row.style.cursor = 'pointer';
+
+        const chk = document.createElement('input');
+        chk.type = 'checkbox';
+        chk.value = key;
+        chk.checked = selectedPerms.has(key);
+        chk.addEventListener('change', () => {
+          if (chk.checked) selectedPerms.add(key);
+          else selectedPerms.delete(key);
+        });
+
+        const info = document.createElement('div');
+        info.style.flex = '1';
+
+        const t = document.createElement('div');
+        t.className = 't';
+        t.textContent = title;
+
+        const d = document.createElement('div');
+        d.className = 'd';
+        d.textContent = key + (desc ? (' • ' + desc) : '');
+
+        info.appendChild(t);
+        info.appendChild(d);
+
+        row.appendChild(chk);
+        row.appendChild(info);
+        box.appendChild(row);
+      });
+    }
+
+    function renderRequest(r){
+      joinReq = r || null;
+      if (!r){
+        $('tenantText').textContent = '—';
+        $('vName').textContent = '—';
+        $('vEmp').textContent = '—';
+        $('vEmail').textContent = '—';
+        $('vUser').textContent = '—';
+        $('vReqRole').textContent = '—';
+        $('vDate').textContent = '—';
+        $('vNote').textContent = '—';
+        setStatus('—');
+        return;
+      }
+
+      $('tenantText').textContent = String(r.tenant_id ?? '—');
+      $('vName').textContent = r.full_name || '—';
+      $('vEmp').textContent = r.employee_id != null ? String(r.employee_id) : '—';
+      $('vEmail').textContent = r.email || '—';
+      $('vUser').textContent = r.username || '—';
+      $('vReqRole').textContent = r.requested_role || '—';
+      $('vDate').textContent = (r.created_at || r.updated_at || '').toString().replace('T',' ').replace('Z','') || '—';
+      $('vNote').textContent = r.note || '—';
+      setStatus(r.status || 'pending');
+
+      // default permissions suggestion
+      selectedPerms.clear();
+      if ((r.requested_role || '').toLowerCase() === 'admin'){
+        ['admin_panel_access','approve_join_requests','users_manage','audit_view'].forEach(k => selectedPerms.add(k));
+      } else {
+        // minimal default (can be empty)
+      }
+      renderPerms();
+    }
+
+    async function loadCurrentUser(session){
+      // Need BIGINT user_id (public.users) because join_requests.approved_by_user_id is bigint
+      const { data, error } = await sb
+        .from('users')
+        .select('user_id, tenant_id, email, username, app_role, role, is_active')
+        .eq('auth_user_id', session.user.id)
+        .maybeSingle();
+
+      if (error){
+        currentUserRow = null;
+        setMsg($('sideMsg'), 'تعذر قراءة ملف المستخدم (users). تحقق من صلاحيات RLS لحسابك.', 'bad');
+        return null;
+      }
+      currentUserRow = data || null;
+      return data || null;
+    }
+
+    async function loadJoinRequest(){
+      if (!requestId){
+        setMsg($('mainMsg'), 'لا يوجد request_id في الرابط.', 'bad');
+        return null;
+      }
+      const idNum = Number(requestId);
+      if (!Number.isFinite(idNum)){
+        setMsg($('mainMsg'), 'request_id غير صالح.', 'bad');
+        return null;
+      }
+      const { data, error } = await sb
+        .from('join_requests')
+        .select('*')
+        .eq('join_request_id', idNum)
+        .maybeSingle();
+
+      if (error){
+        renderRequest(null);
+        setMsg($('mainMsg'), 'تعذر جلب الطلب. (RLS أو request_id غير موجود)', 'bad');
+        return null;
+      }
+      renderRequest(data);
+      setMsg($('mainMsg'), '', null);
+      return data;
+    }
+
+    async function loadPermissions(){
+      const box = $('permBox');
+      box.innerHTML = '<div style="color:var(--muted); font-size:13px;">جاري تحميل الصلاحيات…</div>';
+      const { data, error } = await sb
+        .from('permissions')
+        .select('permission_key, title_ar, title_en, is_active')
+        .eq('is_active', true)
+        .order('permission_key', { ascending: true });
+
+      if (error){
+        permissions = [];
+        box.innerHTML = '<div style="color:var(--muted); font-size:13px;">تعذر جلب الصلاحيات.</div>';
+        return;
+      }
+      permissions = data || [];
+      renderPerms();
+    }
+
+    // ---------- actions ----------
+    async function approve(){
+      setMsg($('sideMsg'), '', null);
+      if (!joinReq){ setMsg($('sideMsg'), 'لا يوجد طلب محمّل.', 'bad'); return; }
+      if (!currentUserRow || !currentUserRow.user_id){
+        setMsg($('sideMsg'), 'حسابك غير مكتمل في جدول users (يلزم user_id).', 'bad');
+        return;
+      }
+
+      $('btnApprove').disabled = true;
+      $('btnReject').disabled = true;
+
+      // If request has no auth_user_id, store perms in note to apply later.
+      const permsArr = Array.from(selectedPerms);
+      const permsNote = permsArr.length ? ('[APPROVAL_PERMS] ' + JSON.stringify(permsArr)) : '';
+
+      // 1) update join request status
+      const upd = {
+        status: 'approved',
+        approved_by_user_id: currentUserRow.user_id,
+        approved_at: nowIso(),
+        updated_at: nowIso()
+      };
+      if (!joinReq.auth_user_id && permsNote){
+        // keep existing note and append safely
+        const base = joinReq.note ? String(joinReq.note).trim() : '';
+        upd.note = base ? (base + '\n' + permsNote) : permsNote;
+      }
+
+      let r1 = await sb.from('join_requests').update(upd).eq('join_request_id', joinReq.join_request_id);
+      if (r1.error){
+        setMsg($('sideMsg'), 'فشل الاعتماد (join_requests). تحقق من سياسة RLS.', 'bad');
+        $('btnApprove').disabled = false;
+        $('btnReject').disabled = false;
+        return;
+      }
+
+      // 2) try to grant permissions immediately if auth_user_id exists
+      if (joinReq.auth_user_id && permsArr.length){
+        // user_permissions.user_id is uuid (auth uid) حسب مخططك
+        const rows = permsArr.map(k => ({
+          user_id: joinReq.auth_user_id,
+          permission_key: k,
+          granted_by: (sb.auth && sb.auth.getUser ? undefined : undefined), // keep null if DB handles it
+        }));
+        // keep granted_by from session user id if column accepts uuid
+        const sess = (await sb.auth.getSession()).data.session;
+        if (sess && sess.user && sess.user.id){
+          rows.forEach(x => x.granted_by = sess.user.id);
+        }
+        const ins = await sb.from('user_permissions').insert(rows);
+        if (ins.error){
+          // do not block approval; just show warning
+          setMsg($('sideMsg'), 'تم الاعتماد، لكن لم يتم حفظ الصلاحيات (user_permissions). سيتم حفظها داخل ملاحظة الطلب أو طبقها لاحقًا.', 'warn');
+        }
+      }
+
+      // 3) enqueue email (best-effort)
+      try{
+        const emailTo = joinReq.email || '';
+        if (emailTo){
+          const link = location.origin + '/pages/auth/password.html?request_id=' + encodeURIComponent(joinReq.join_request_id);
+          const subj = '✅ تمت الموافقة على طلب الانضمام — OAP';
+          const bodyHtml =
+            '<div style="font-family:Arial,sans-serif;line-height:1.8">' +
+            '<h2>تمت الموافقة على طلب الانضمام</h2>' +
+            '<p>مرحبًا ' + (joinReq.full_name || '') + '،</p>' +
+            '<p>تمت الموافقة على طلبك. لإكمال التسجيل، الرجاء تعيين كلمة المرور عبر الرابط التالي:</p>' +
+            '<p><a href="' + link + '" style="display:inline-block;padding:10px 14px;background:#1f6feb;color:#fff;border-radius:10px;text-decoration:none">تعيين كلمة المرور</a></p>' +
+            '<p style="color:#666">إذا لم تعمل الزر، انسخ الرابط: ' + link + '</p>' +
+            '</div>';
+
+          const out = await sb.from('oap_email_outbox').insert([{
+            to: emailTo,
+            subject: subj,
+            body_preview: 'تمت الموافقة على طلب الانضمام. الرجاء تعيين كلمة المرور لإكمال الحساب.',
+            type: 'join_approved',
+            triggered_by: (await sb.auth.getSession()).data.session?.user?.id || null,
+            role: joinReq.requested_role || joinReq.app_role || null,
+            body_html: bodyHtml
+          }]);
+          // ignore out.error
+        }
+      }catch(e){}
+
+      setMsg($('sideMsg'), '✅ تم اعتماد الطلب بنجاح.', 'good');
+      await refreshAll();
+    }
+
+    async function reject(){
+      setMsg($('sideMsg'), '', null);
+      if (!joinReq){ setMsg($('sideMsg'), 'لا يوجد طلب محمّل.', 'bad'); return; }
+      if (!currentUserRow || !currentUserRow.user_id){
+        setMsg($('sideMsg'), 'حسابك غير مكتمل في جدول users (يلزم user_id).', 'bad');
+        return;
+      }
+
+      $('btnApprove').disabled = true;
+      $('btnReject').disabled = true;
+
+      const upd = {
+        status: 'rejected',
+        rejected_by_user_id: currentUserRow.user_id,
+        rejected_at: nowIso(),
+        updated_at: nowIso()
+      };
+
+      let r1 = await sb.from('join_requests').update(upd).eq('join_request_id', joinReq.join_request_id);
+      if (r1.error){
+        setMsg($('sideMsg'), 'فشل الرفض (join_requests). تحقق من سياسة RLS.', 'bad');
+        $('btnApprove').disabled = false;
+        $('btnReject').disabled = false;
+        return;
+      }
+
+      // email (best-effort)
+      try{
+        const emailTo = joinReq.email || '';
+        if (emailTo){
+          const subj = '❌ تم رفض طلب الانضمام — OAP';
+          const bodyHtml =
+            '<div style="font-family:Arial,sans-serif;line-height:1.8">' +
+            '<h2>تم رفض طلب الانضمام</h2>' +
+            '<p>مرحبًا ' + (joinReq.full_name || '') + '،</p>' +
+            '<p>نأسف لإبلاغك بأنه تم رفض طلب الانضمام.</p>' +
+            '</div>';
+
+          await sb.from('oap_email_outbox').insert([{
+            to: emailTo,
+            subject: subj,
+            body_preview: 'تم رفض طلب الانضمام.',
+            type: 'join_rejected',
+            triggered_by: (await sb.auth.getSession()).data.session?.user?.id || null,
+            role: joinReq.requested_role || null,
+            body_html: bodyHtml
+          }]);
+        }
+      }catch(e){}
+
+      setMsg($('sideMsg'), 'تم رفض الطلب.', 'warn');
+      await refreshAll();
+    }
+
+    async function refreshAll(){
+      const session = await ensureSession();
+      if (!session) return;
+
+      await loadCurrentUser(session);
+      await loadPermissions();
+      await loadJoinRequest();
+
+      // enable action buttons only if request exists and still pending/unknown
+      const ok = !!joinReq && (joinReq.status === 'pending' || !joinReq.status);
+      $('btnApprove').disabled = !ok;
+      $('btnReject').disabled = !ok;
+    }
+
+    // ---------- wire up ----------
+    $('btnLogin').addEventListener('click', () => { location.href = loginUrl(); });
+    $('btnRefresh').addEventListener('click', () => { refreshAll(); });
+    $('btnApprove').addEventListener('click', () => { approve(); });
+    $('btnReject').addEventListener('click', () => { reject(); });
+
+    // keep stable: only react to explicit auth sign-out
+    sb.auth.onAuthStateChange((evt) => {
+      if (evt === 'SIGNED_OUT'){
+        location.href = loginUrl();
+      }
+    });
+
+    // auto-redirect to login only if not signed in (no loops)
+    (async function init(){
+      if (!requestId){
+        setMsg($('mainMsg'), 'لا يوجد request_id في الرابط. مثال: ?request_id=39', 'bad');
+        $('footState').textContent = 'Missing request_id';
+        return;
+      }
+      const session = await ensureSession();
+      if (!session){
+        // no forced redirect; user can click login
+        return;
+      }
+      await refreshAll();
+    })();
+
+  })();
+  </script>
+</body>
+</html>

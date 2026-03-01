@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <script>
+(function(){
+  try{
+    var root = document.documentElement;
+    var sp = new URLSearchParams(window.location.search);
+    var t = sp.get('theme');
+    if(!t){
+      try{ t = localStorage.getItem('oap_theme'); }catch(_){}
+    }
+    if(t) root.setAttribute('data-theme', t);
+
+    var ink = sp.get('gink') || sp.get('gradientInk');
+    if(!ink){
+      try{ ink = localStorage.getItem('oap_gradient_ink'); }catch(_){}
+    }
+    if(ink) root.setAttribute('data-gradient-ink', ink);
+  }catch(_){}
+})();
+</script>
+  <meta charset="utf-8" />
+  <title>مراجعة رد التحقيق واتخاذ القرار</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link rel="stylesheet" href="/assets/css/themes.css">
+  <style>
+    body{
+      margin:0;
+      font-family:system-ui,-apple-system,"Segoe UI",sans-serif;
+      background:#020617;
+      color:#f9fafb;
+      direction:rtl;
+    }
+    .wrap{
+      min-height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:24px;
+    }
+    .card{
+      background:#020617;
+      border-radius:18px;
+      padding:24px 22px;
+      max-width:640px;
+      width:100%;
+      box-shadow:0 24px 60px rgba(15,23,42,.7);
+      border:1px solid rgba(148,163,184,.4);
+    }
+    h1{
+      margin:0 0 12px;
+      font-size:20px;
+    }
+    p{
+      margin:6px 0;
+      font-size:14px;
+      color:#e5e7eb;
+    }
+    .reply-box{
+      white-space:pre-wrap;
+      border-radius:10px;
+      border:1px solid #374151;
+      padding:10px;
+      background:#020617;
+      margin-top:6px;
+      font-size:14px;
+    }
+    .small{
+      font-size:12px;
+      color:#9ca3af;
+      margin-top:16px;
+    }
+    #state{
+      margin-bottom:8px;
+      font-size:13px;
+    }
+    .ok{ color:#22c55e; }
+    .err{ color:#f97373; }
+  </style>
+  <script src="/assets/js/theme-manager.js" defer></script>
+</head>
+<body>
+<div class="wrap">
+  <div class="card">
+    <h1>مراجعة رد التحقيق واتخاذ القرار</h1>
+    <p id="state">جاري تحميل بيانات التحقيق…</p>
+    <p id="info"></p>
+    <div id="replyBox" class="reply-box"></div>
+    <p class="small" id="note">سيتم تنفيذ الإجراء الذي تم اختياره (إغلاق الملف أو رفعه إلى الشؤون القانونية HR).</p>
+  </div>
+</div>
+
+<script type="module">
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+const SUPABASE_URL = "https://inuqlhkoaoeiycefvjyj.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImludXFsaGtvYW9laXljZWZ2anlqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMxMTUxODEsImV4cCI6MjA3ODY5MTE4MX0.DCAY9rN0noaBoE_T-6eDsb_79szK91af989f9TqjEow";
+
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+const url = new URL(window.location.href);
+const action = url.searchParams.get("action");
+const invId  = url.searchParams.get("inv_id");
+
+const stateEl = document.getElementById("state");
+const infoEl  = document.getElementById("info");
+const replyBoxEl = document.getElementById("replyBox");
+const noteEl  = document.getElementById("note");
+
+function setState(type, text) {
+  stateEl.className = type;
+  stateEl.textContent = text;
+}
+
+async function start() {
+  if (!action || !invId) {
+    setState("err", "رابط غير صالح.");
+    return;
+  }
+
+  const { data: inv, error } = await supabase
+    .from("absence_investigation")
+    .select("id, \"Employee ID\", \"Employee Name\", absence_date, employee_reply_text, status")
+    .eq("id", invId)
+    .maybeSingle();
+
+  if (error || !inv) {
+    setState("err", "تعذر جلب بيانات التحقيق.");
+    return;
+  }
+
+  const empId   = inv["Employee ID"];
+  const empName = inv["Employee Name"];
+  const absDate = inv.absence_date;
+  const reply   = inv.employee_reply_text || "(لا يوجد رد محفوظ)";
+
+  infoEl.textContent = `الموظف: ${empName} (${empId}) – تاريخ الغياب: ${absDate}`;
+  replyBoxEl.textContent = reply;
+
+  let newStatusForInv = inv.status;
+  let newStatusForAbs = null;
+  let finalAction     = null;
+
+  if (action === "close") {
+    newStatusForInv = "closed_by_manager";
+    newStatusForAbs = "closed";
+    finalAction     = "closed_by_manager";
+  } else if (action === "escalate_hr") {
+    newStatusForInv = "sent_to_hr";
+    newStatusForAbs = "sent_to_hr";
+    finalAction     = "sent_to_hr";
+  } else {
+    setState("err", "إجراء غير معروف.");
+    return;
+  }
+
+  // تحديث جدول التحقيق
+  await supabase
+    .from("absence_investigation")
+    .update({
+      status: newStatusForInv,
+      updated_at: new Date().toISOString()
+    })
+    .eq("id", invId);
+
+  // تحديث جدول الغياب
+  const updateAbs = {
+    "Investigation status": newStatusForAbs,
+    "Last Update": new Date().toISOString()
+  };
+  if (finalAction) {
+    updateAbs["Final action"] = finalAction;
+  }
+
+  await supabase
+    .from("employee_absence")
+    .update(updateAbs)
+    .eq("InvestigationID", invId);
+
+  // لو رفع لـ HR: إرسال التحقيق إلى البريد التجريبي
+  if (action === "escalate_hr") {
+    const hrEmail = "15013814@saudiags.com"; // بريد تجريبي
+    const subject = `تحقيق غياب – إحالة إلى الشؤون القانونية – ${empName} (${empId})`;
+    const preview = `تحقيق غياب بتاريخ ${absDate} – إحالة إلى HR`;
+    const bodyHtml = `
+      <div dir="rtl" style="font-family: system-ui, -apple-system, 'Segoe UI', sans-serif; background:#020617; color:#e5e7eb; padding:20px; border-radius:16px;">
+        <h2 style="margin-top:0;color:#f9fafb;">تحقيق غياب – إحالة إلى الشؤون القانونية (HR)</h2>
+        <p>الموظف: <strong>${empName} (${empId})</strong></p>
+        <p>تاريخ الغياب: <strong>${absDate}</strong></p>
+        <hr style="border-color:#374151;margin:16px 0;" />
+        <p><strong>رد الموظف على التحقيق:</strong></p>
+        <div style="white-space:pre-wrap;border-radius:10px;border:1px solid #374151;padding:10px;background:#020617;margin-top:6px;">
+          ${reply.replace(/</g,"&lt;")}
+        </div>
+      </div>
+    `;
+
+    await supabase
+      .from("oap_email_outbox")
+      .insert({
+        inv_id: invId,
+        to: hrEmail,
+        subject,
+        body_html: bodyHtml,
+        body_preview: preview,
+        type: "absence_investigation_hr_escalation",
+        role: "system",
+        sent_at: null
+      });
+
+    setState("ok", "تم رفع التحقيق إلى الشؤون القانونية (HR) بنجاح.");
+  } else {
+    setState("ok", "تم إغلاق ملف التحقيق بنجاح.");
+  }
+
+  noteEl.textContent = "تم تنفيذ الإجراء المطلوب، لا حاجة لاتخاذ أي إجراء إضافي من قبلكم على هذه الصفحة.";
+}
+
+start().catch(err => {
+  console.error(err);
+  setState("err", "حدث خطأ غير متوقع أثناء تنفيذ العملية.");
+});
+</script>
+</body>
+</html>

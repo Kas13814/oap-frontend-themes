@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <script>
+(function(){
+  try{
+    var root = document.documentElement;
+    var sp = new URLSearchParams(window.location.search);
+    var t = sp.get('theme');
+    if(!t){
+      try{ t = localStorage.getItem('oap_theme'); }catch(_){}
+    }
+    if(t) root.setAttribute('data-theme', t);
+
+    var ink = sp.get('gink') || sp.get('gradientInk');
+    if(!ink){
+      try{ ink = localStorage.getItem('oap_gradient_ink'); }catch(_){}
+    }
+    if(ink) root.setAttribute('data-gradient-ink', ink);
+  }catch(_){}
+})();
+</script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link rel="stylesheet" href="/assets/css/themes.css">
+
+  <!-- Favicons (force new icon + cache-bust) -->
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png?v=11">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png?v=11">
+  <link rel="icon" type="image/png" sizes="48x48" href="/favicon-48x48.png?v=11">
+  <link rel="icon" type="image/png" href="/favicon-96x96.png?v=11" sizes="96x96" />
+  <!-- <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=9" /> -->
+  <link rel="shortcut icon" href="/favicon.ico?v=11" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=11" />
+  <link rel="manifest" href="/site.webmanifest?v=11" />
+
+  <title>OAP Join</title>
+  <meta name="robots" content="index, follow" />
+  <meta name="googlebot" content="index, follow" />
+
+  <!-- Basic hardening (client-side). Real security must be enforced server-side too. -->
+  <meta http-equiv="X-Content-Type-Options" content="nosniff">
+  <meta name="referrer" content="no-referrer">
+  <meta http-equiv="Permissions-Policy" content="geolocation=(), microphone=(), camera=()">
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net https://static.cloudflareinsights.com 'unsafe-inline'; connect-src 'self' https://*.supabase.co https://*.supabase.in https://*.supabase.com https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; base-uri 'self'; form-action 'self'; object-src 'none'; frame-ancestors 'none'; upgrade-insecure-requests">
+
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+  <style>
+    html, body {
+      margin: 0;
+      font-family: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      background: #F0EFE8;
+    }
+    body {
+      margin: 0;
+      font-family: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      background: #F0EFE8;
+    }
+
+    /* From Uiverse.io by glisovic01 */
+    .login-box {
+      position: relative;
+      width: 400px;
+      padding: 62px 40px 40px 40px;
+      box-sizing: border-box;
+      background: rgba(0,0,0,.9);
+      box-shadow: 0 15px 25px rgba(0,0,0,.6);
+      border-radius: 10px;
+    }
+
+    /* OAP label (top-left inside the box) */
+    .oap-tag{
+      position:absolute;
+      top: 14px;
+      left: 14px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.25);
+      color: rgba(255,255,255,.9);
+      font-size: 12px;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      background: rgba(255,255,255,.04);
+      user-select: none;
+      pointer-events: none;
+    }
+
+    .login-box .login-title {
+      margin: 0 0 30px;
+      padding: 0;
+      color: #ffffff;
+      text-align: center;
+      font-size: 1.5rem;
+      font-weight: bold;
+      letter-spacing: 1px;
+    }
+
+    .login-box .user-box { position: relative; }
+
+    .login-box .user-box input,
+    .login-box .user-box select{
+      width: 100%;
+      box-sizing: border-box;
+      padding: 10px 0;
+      font-size: 16px;
+      color: #fff;
+      margin-bottom: 30px;
+      border: none;
+      border-bottom: 1px solid #fff;
+      outline: none;
+      background: transparent;
+    }
+
+    /* dropdown background requested */
+    .login-box .user-box select{
+      background: transparent;
+      cursor: pointer;
+      appearance: none;
+      padding-left: 12px;   /* margin-like space inside the field */
+      padding-right: 12px;
+      font-size: 14px;      /* smaller text */
+    }
+    .login-box .user-box select option{
+      background: #000;
+      color: #fff;
+      padding-left: 12px;   /* space from left edge */
+      font-size: 14px;      /* smaller list items */
+    }
+
+    .login-box .user-box label {
+      position: absolute;
+      top: 0;
+      left: 0;
+      padding: 10px 0;
+      font-size: 16px;
+      color: #fff;
+      pointer-events: none;
+      transition: .5s;
+    }
+
+    .login-box .user-box input:focus ~ label,
+    .login-box .user-box input:valid ~ label,
+    .login-box .user-box input:not(:placeholder-shown) ~ label,
+    .login-box .user-box select:focus ~ label,
+    .login-box .user-box select:valid ~ label {
+      top: -20px;
+      left: 0;
+      color: #fff;
+      font-size: 12px;
+    }
+
+    /* Submit button (same animation as original <a>) */
+    .login-box .btn-submit {
+      position: relative;
+      display: block;
+      width: 100%;
+      box-sizing: border-box;
+      text-align: center;
+      padding: 10px 20px;
+      font-weight: bold;
+      color: #fff;
+      font-size: 16px;
+      text-decoration: none;
+      text-transform: uppercase;
+      overflow: hidden;
+      transition: .5s;
+      margin-top: 10px;
+      letter-spacing: 3px;
+      background: transparent;
+      border: none;
+      cursor: pointer;
+    }
+
+    .login-box .btn-submit:hover {
+      background: #fff;
+      color: #272727;
+      border-radius: 5px;
+    }
+
+    .login-box .btn-submit span {
+      position: absolute;
+      display: block;
+    }
+
+    .login-box .btn-submit span:nth-child(1) {
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, #fff);
+      animation: btn-anim1 1.5s linear infinite;
+    }
+
+    @keyframes btn-anim1 {
+      0% { left: -100%; }
+      50%,100% { left: 100%; }
+    }
+
+    .login-box .btn-submit span:nth-child(2) {
+      top: -100%;
+      right: 0;
+      width: 2px;
+      height: 100%;
+      background: linear-gradient(180deg, transparent, #fff);
+      animation: btn-anim2 1.5s linear infinite;
+      animation-delay: .375s
+    }
+
+    @keyframes btn-anim2 {
+      0% { top: -100%; }
+      50%,100% { top: 100%; }
+    }
+
+    .login-box .btn-submit span:nth-child(3) {
+      bottom: 0;
+      right: -100%;
+      width: 100%;
+      height: 2px;
+      background: linear-gradient(270deg, transparent, #fff);
+      animation: btn-anim3 1.5s linear infinite;
+      animation-delay: .75s
+    }
+
+    @keyframes btn-anim3 {
+      0% { right: -100%; }
+      50%,100% { right: 100%; }
+    }
+
+    .login-box .btn-submit span:nth-child(4) {
+      bottom: -100%;
+      left: 0;
+      width: 2px;
+      height: 100%;
+      background: linear-gradient(360deg, transparent, #fff);
+      animation: btn-anim4 1.5s linear infinite;
+      animation-delay: 1.125s
+    }
+
+    @keyframes btn-anim4 {
+      0% { bottom: -100%; }
+      50%,100% { bottom: 100%; }
+    }
+
+    /* Links row (Clear / Back) — same style as login page to unify height */
+    .links-row{
+      display:flex;
+      gap:10px;
+      justify-content:space-between;
+      flex-wrap:wrap;
+      margin-top: 18px;
+    }
+    .link-btn{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.25);
+      color:#fff;
+      text-decoration:none;
+      font-size: 13px;
+      transition: .2s;
+      background: rgba(255,255,255,.04);
+      cursor: pointer;
+    }
+    .link-btn:hover{
+      background: rgba(255,255,255,.12);
+      color:#fff;
+    }
+    .link-btn.btn-reset{
+      border: 1px solid rgba(255,255,255,.25);
+    }
+
+    .status-box {
+      margin-top: 14px;
+      font-size: 13px;
+      min-height: 18px;
+      color: #aaa;
+      line-height: 1.6;
+      white-space: pre-line;
+    }
+    .status-ok { color: #22c55e; }
+    .status-error { color: #ef4444; }
+  
+    /* PATCH: match input text with dropdown (spacing + size) */
+    .login-box .user-box input{
+      padding-left: 12px;
+      padding-right: 12px;
+      font-size: 14px;
+      background: transparent;
+    }
+
+    /* PATCH: remove browser autofill background */
+    .login-box .user-box input:-webkit-autofill,
+    .login-box .user-box input:-webkit-autofill:hover,
+    .login-box .user-box input:-webkit-autofill:focus,
+    .login-box .user-box input:-webkit-autofill:active{
+      -webkit-text-fill-color: #fff;
+      caret-color: #fff;
+      transition: background-color 9999s ease-in-out 0s;
+      box-shadow: 0 0 0 1000px rgba(0,0,0,.9) inset;
+      border-bottom: 1px solid #fff;
+    }
+
+</style>
+  <script src="/assets/js/theme-manager.js" defer></script>
+</head>
+
+<body>
+  <div class="login-box" role="dialog" aria-label="OAP Join request">
+    <div class="oap-tag">OAP</div>
+
+    <p class="login-title">Join request</p>
+
+    <form id="joinForm" autocomplete="on" novalidate>
+      <input id="tenantInput" type="hidden" value="1" />
+
+      <div class="user-box">
+        <input id="employeeInput" name="email" type="email"
+               autocomplete="email"
+               inputmode="email"
+               required
+               aria-label="Email" /
+               placeholder=" " />
+        <label>Email</label>
+      </div>
+      <button id="submitBtn" class="btn-submit" type="submit">
+        <span></span><span></span><span></span><span></span>
+        Submit
+      </button>
+
+      <div class="links-row" aria-label="Additional actions">
+        <button class="link-btn btn-reset" type="button" id="clearBtn">
+          <span aria-hidden="true">⟳</span>
+          <span>Clear</span>
+        </button>
+        <a class="link-btn" href="/Login.html">
+          <span aria-hidden="true">←</span>
+          <span>Back to login</span>
+        </a>
+      </div>
+
+      <div id="status_box" class="status-box" role="status" aria-live="polite"></div>
+    </form>
+  </div>
+
+  <script>
+    // PATCH: ensure PUBLIC_PATHS match when the pretty URL /joining is used
+    // Cloudflare rewrites /joining -> /pages/auth/joining.html without changing the browser URL.
+    // This normalizes the visible URL so the access controller treats it as a public page.
+    (function(){
+      try{
+        var p = window.location.pathname || "";
+        if (p === "/joining" || p === "/joining.html") {
+          // Keep the URL on the public joining route to avoid auth-redirect loops.
+          window.history.replaceState(null, "", "/joining" + window.location.search + window.location.hash);
+        }
+      } catch (e) {}
+    })();
+  </script>
+
+    <!-- Required scripts (order matters) -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="/assets/js/oap_config.js"></script>
+  <script src="/assets/js/nxs_supabase_client.js"></script>
+  <script>
+    // Use the single shared Supabase client (created in /assets/js/nxs_supabase_client.js)
+    // IMPORTANT: config is loaded async, so we must initialize lazily.
+    let sbClient = null;
+
+    async function ensureSupabaseConfig() {
+      if (window.NXS_SUPABASE_URL && window.NXS_SUPABASE_ANON_KEY) return true;
+      try {
+        const r = await fetch('/api/public-config', { cache: 'no-store' });
+        const j = await r.json().catch(() => null);
+        if (j && j.ok && j.supabaseUrl && j.supabaseAnonKey) {
+          window.NXS_SUPABASE_URL = j.supabaseUrl;
+          window.NXS_SUPABASE_ANON_KEY = j.supabaseAnonKey;
+          return true;
+        }
+      } catch (_) {}
+      return Boolean(window.NXS_SUPABASE_URL && window.NXS_SUPABASE_ANON_KEY);
+    }
+
+    async function getSupabaseClient() {
+      if (sbClient) return sbClient;
+      const ok = await ensureSupabaseConfig();
+      if (!ok) {
+        console.error('[NXS] Supabase config missing (joining)');
+        return null;
+      }
+      if (window.NXS_Supabase && window.NXS_Supabase.client) {
+        sbClient = window.NXS_Supabase.client;
+        return sbClient;
+      }
+      sb = supabase.createClient(window.NXS_SUPABASE_URL, window.NXS_SUPABASE_ANON_KEY);
+      return sbClient;
+    }
+
+
+    const tenantInput = document.getElementById("tenantInput");
+    const employeeInput = document.getElementById("employeeInput");
+    const btnSubmit = document.getElementById("submitBtn");
+    const btnClear = document.getElementById("clearBtn");
+    const statusBox = document.getElementById("status_box");
+    const form = document.getElementById("joinForm");
+
+    function setStatus(message, type) {
+      statusBox.textContent = message || "";
+      statusBox.classList.remove("status-ok", "status-error");
+      if (message) statusBox.classList.add(type === "error" ? "status-error" : "status-ok");
+    }
+
+    function cleanDigits(value) {
+      return (value || "").replace(/[^\d]/g, "").trim();
+    }
+
+    
+    // PATCH: Email field behavior
+    // - Only allow IDs that start with 150
+    // - Limit to exactly 8 digits (150xxxxx)
+    // - When 8 digits are completed, auto-append @saudiags.com
+    const EMAIL_DOMAIN = "@saudiags.com";
+    const REQUIRED_PREFIX = "150";
+    const MAX_ID_LEN = 8;
+
+    function enforceEmailInput(){
+      if (!employeeInput) return;
+      const raw = (employeeInput.value || "").trim();
+
+      // If user typed a full email, keep it as-is (we validate on submit)
+      if (raw.includes("@")) return;
+
+      // Support plus-alias like: 15013814+test  -> 15013814+test@saudiags.com
+      if (raw.includes("+")) {
+        const parts = raw.split("+");
+        const baseDigits = cleanDigits(parts[0] || "");
+        let tag = (parts.slice(1).join("+") || "").trim();
+
+        // sanitize tag (keep common safe chars)
+        tag = tag.replace(/[^a-zA-Z0-9._-]/g, "");
+
+        // enforce prefix + length on the base ID
+        let fixed = baseDigits;
+        if (fixed.length >= 1 && fixed[0] !== "1") fixed = "";
+        if (fixed.length >= 2 && fixed.slice(0,2) !== "15") fixed = "1";
+        if (fixed.length >= 3 && fixed.slice(0,3) !== REQUIRED_PREFIX) fixed = "15";
+        if (fixed.length > MAX_ID_LEN) fixed = fixed.slice(0, MAX_ID_LEN);
+
+        // build display
+        let display = fixed;
+        if (tag) display = display + "+" + tag;
+
+        // auto-append domain only when base is complete
+        if (fixed.length === MAX_ID_LEN && fixed.startsWith(REQUIRED_PREFIX)) {
+          display = display + EMAIL_DOMAIN;
+        }
+
+        if (employeeInput.value !== display) employeeInput.value = display;
+        return;
+      }
+
+      // Default behavior: numeric ID only
+      const digits = cleanDigits(raw);
+
+      // If user started typing, force the prefix progressively: 1 -> 15 -> 150
+      let fixed = digits;
+      if (fixed.length >= 1 && fixed[0] !== "1") fixed = "";
+      if (fixed.length >= 2 && fixed.slice(0,2) !== "15") fixed = "1";
+      if (fixed.length >= 3 && fixed.slice(0,3) !== REQUIRED_PREFIX) fixed = "15";
+
+      // Limit to 8 digits max
+      if (fixed.length > MAX_ID_LEN) fixed = fixed.slice(0, MAX_ID_LEN);
+
+      // Build display value
+      let display = fixed;
+      if (fixed.length === MAX_ID_LEN && fixed.startsWith(REQUIRED_PREFIX)) {
+        display = fixed + EMAIL_DOMAIN;
+      }
+
+      // Update only if needed (keeps cursor stable most of the time)
+      if (employeeInput.value !== display) {
+        employeeInput.value = display;
+      }
+    }
+
+    // Enforce on every change
+    employeeInput.addEventListener("input", enforceEmailInput);
+    employeeInput.addEventListener("blur", enforceEmailInput);
+
+    function clearForm(){
+      if (tenantInput) tenantInput.value = "1";
+      if (employeeInput) employeeInput.value = "";
+      setStatus("", "ok");
+    }
+
+    async function submitJoin(){
+      const tenantId = parseInt((tenantInput && tenantInput.value) || "0", 10);
+      const rawEmailInput = (employeeInput.value || '').trim();
+if (!rawEmailInput){
+        setStatus("❌ يرجى إدخال البريد الإلكتروني.", "error");
+        return;
+      }
+      if (!tenantId){
+        setStatus("❌ تعذر تنفيذ الطلب. يرجى المحاولة مرة أخرى.", "error");
+        return;
+      }
+
+      // Derive base Employee ID (must be 150xxxxx) + final email
+      const lower = rawEmailInput.toLowerCase();
+
+      // Accept:
+      // 1) full email ending with @saudiags.com
+      // 2) 8 digits (150xxxxx) -> 150xxxxx@saudiags.com
+      // 3) 8 digits + +tag -> 150xxxxx+tag@saudiags.com
+      let email = "";
+      let baseIdStr = "";
+
+      if (lower.includes("@")) {
+        // full email typed
+        email = lower;
+        if (!email.endsWith(EMAIL_DOMAIN)) {
+          setStatus("❌ البريد يجب أن يكون على نطاق @saudiags.com", "error");
+          return;
+        }
+        baseIdStr = (email.split("@")[0] || "").split("+")[0] || "";
+      } else {
+        // no @, build it
+        const beforeAt = lower; // could include +tag
+        const beforeParts = beforeAt.split("+");
+        baseIdStr = cleanDigits(beforeParts[0] || "");
+        let tag = (beforeParts.slice(1).join("+") || "").trim().replace(/[^a-z0-9._-]/g, "");
+
+        if (tag) {
+          email = baseIdStr + "+" + tag + EMAIL_DOMAIN;
+        } else {
+          email = baseIdStr + EMAIL_DOMAIN;
+        }
+      }
+
+      // Validate base ID
+      if (baseIdStr.length != MAX_ID_LEN || !baseIdStr.startsWith(REQUIRED_PREFIX)) {
+        setStatus("❌ البريد الإلكتروني يجب أن يبدأ بـ 150 ويتكون من 8 أرقام فقط.", "error");
+        return;
+      }
+
+      const employeeId = parseInt(baseIdStr, 10);
+      const username = baseIdStr;
+      btnSubmit.disabled = true;
+      setStatus("جاري إرسال الطلب…", "ok");
+
+      try{
+        const client = await getSupabaseClient();
+        if (!client) {
+          setStatus('❌ تعذر الاتصال بالنظام. يرجى إعادة المحاولة.', 'error');
+          btnSubmit.disabled = false;
+          return;
+        }
+
+        const { error } = await client
+          .from("join_requests")
+          .insert({
+            tenant_id: tenantId,
+            employee_id: employeeId,
+            email: email,
+            username: username,
+            });
+
+        if (error){
+          console.error("join_requests insert error:", error);
+          setStatus("❌ تعذر إرسال الطلب. يرجى المحاولة مرة أخرى، أو التواصل مع المسؤول وإبلاغه بالمشكلة.", "error");
+          return;
+        }
+
+        setStatus("✅ تم إرسال طلب الانضمام بنجاح.", "ok");
+        // Clear fields only after successful send
+        clearForm();
+        setStatus("✅ تم إرسال طلب الانضمام بنجاح.", "ok");
+      } catch (err){
+        console.error(err);
+        setStatus("❌ تعذر إرسال الطلب. يرجى المحاولة مرة أخرى، أو التواصل مع المسؤول وإبلاغه بالمشكلة.", "error");
+      } finally{
+        btnSubmit.disabled = false;
+      }
+    }
+
+    btnClear.addEventListener("click", (e) => {
+      e.preventDefault();
+      clearForm();
+    });
+
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+      submitJoin();
+    });
+  </script>
+</body>
+</html>

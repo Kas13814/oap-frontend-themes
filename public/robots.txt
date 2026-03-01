@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+
+# Keep internal/protected areas out of indexes
+Disallow: /AI
+Disallow: /AI.html
+Disallow: /app/
+Disallow: /pages/
+
+Sitemap: https://oap-kas.com/sitemap.xml

@@ -1,0 +1,50 @@
+/                 /index.html          200
+/index            /index.html          200
+/index.html       /index.html          200
+
+# Login (ONLY canonical login page)
+/Login.html       /Login.html          200
+
+# AI shortcuts
+# IMPORTANT: Cloudflare Pages (Pretty URLs) already maps /AI -> /AI.html and 308-redirects /AI.html -> /AI.
+# لذلك لا تضع rewrite من /AI إلى /AI.html حتى لا يحدث loop.
+/AI.html          /AI.html             200
+
+# Joining (PUBLIC)
+/joining               /pages/auth/joining.html  200
+/joining.html          /pages/auth/joining.html  200
+/joining.html*         /pages/auth/joining.html  200
+
+# Admin joining
+/joining_admin          /pages/auth/joining_admin.html  200
+/joining_admin.html     /pages/auth/joining_admin.html  200
+/joining_admin.html*    /pages/auth/joining_admin.html  200
+
+/pages/auth/*     /pages/auth/:splat   200
+
+# Service Worker (avoid /app/sw.js being rewritten to index.html)
+/app/sw.js         /sw.js              200
+
+/app/*            /app/:splat          200
+
+/sw.js              /sw.js               200
+/manifest.webmanifest /manifest.webmanifest 200
+
+/assets/*         /assets/:splat       200
+/api/*            /api/:splat          200
+
+# SEO / Crawlers (must stay public)
+/robots.txt         /robots.txt          200
+/sitemap.xml        /sitemap.xml         200
+
+# Favicon (must stay public)
+/favicon.ico              /favicon.ico              200
+/favicon.svg              /favicon.svg              200
+/favicon-96x96.png        /favicon-96x96.png        200
+/apple-touch-icon.png     /apple-touch-icon.png     200
+/site.webmanifest         /site.webmanifest         200
+/web-app-manifest-192x192.png  /web-app-manifest-192x192.png  200
+/web-app-manifest-512x512.png  /web-app-manifest-512x512.png  200
+
+# Catch-all LAST
+/*                /index.html          200

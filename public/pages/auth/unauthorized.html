@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <script>
+(function(){
+  try{
+    var root = document.documentElement;
+    var sp = new URLSearchParams(window.location.search);
+    var t = sp.get('theme');
+    if(!t){
+      try{ t = localStorage.getItem('oap_theme'); }catch(_){}
+    }
+    if(t) root.setAttribute('data-theme', t);
+
+    var ink = sp.get('gink') || sp.get('gradientInk');
+    if(!ink){
+      try{ ink = localStorage.getItem('oap_gradient_ink'); }catch(_){}
+    }
+    if(ink) root.setAttribute('data-gradient-ink', ink);
+  }catch(_){}
+})();
+</script>
+  <meta charset="UTF-8" />
+  <title>OAP - Unauthorized</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="/assets/css/themes.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+
+    * { box-sizing: border-box; }
+    html, body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      min-height: 100vh;
+      font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #F0EFE8;
+      display: grid;
+      place-items: center;
+      padding: 16px;
+      color: #fff;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ===== Card (same style family as Join/Login) ===== */
+    .login-box {
+      position: relative;
+      width: 400px;
+      padding: 62px 40px 40px 40px; /* keeps OAP tag separate; content slightly lower */
+      background: rgba(0,0,0,.9);
+      box-sizing: border-box;
+      box-shadow: 0 15px 25px rgba(0,0,0,.6);
+      border-radius: 10px;
+    }
+
+    /* OAP badge (top-left) */
+    .oap-tag{
+      position: absolute;
+      top: 14px;
+      left: 14px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.25);
+      background: rgba(255,255,255,.04);
+      color: rgba(255,255,255,.95);
+      font-size: 12px;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      user-select: none;
+      pointer-events: none;
+    }
+
+    .title {
+      text-align: center;
+      margin-bottom: 18px;
+    }
+    .title-main {
+      font-size: 1.5rem;
+      font-weight: 700;
+      letter-spacing: 1px;
+      margin: 0 0 6px;
+      color: #fff;
+    }
+    .title-sub {
+      font-size: 13px;
+      color: #aaa;
+      margin: 0;
+      line-height: 1.6;
+    }
+
+    /* ===== Floating label inputs (RTL-friendly labels) ===== */
+    .user-box { position: relative; }
+    .user-box input {
+      width: 100%;
+      padding: 10px 12px;
+      font-size: 14px;
+      color: #fff;
+      margin-bottom: 26px;
+      border: none;
+      border-bottom: 1px solid #fff;
+      outline: none;
+      background: transparent;
+      direction: ltr;
+      text-align: left;
+    }
+
+    /* Error underline when required field is empty */
+    .user-box input.input-error{
+      border-bottom-color: #ff0000 !important;
+    }
+    .user-box input[type="password"]{
+      letter-spacing: 0.12em;
+    }
+    .user-box label {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: auto;
+      padding: 10px 0;
+      font-size: 14px;
+      color: #fff;
+      pointer-events: none;
+      transition: .5s;
+      text-align: left;
+      width: 100%;
+    }
+    .user-box input:focus ~ label,
+    .user-box input:valid ~ label {
+      top: -20px;
+      left: 0;
+      color: #fff;
+      font-size: 12px;
+    }
+
+    /* Autofill fix */
+    .user-box input:-webkit-autofill,
+    .user-box input:-webkit-autofill:hover,
+    .user-box input:-webkit-autofill:focus,
+    .user-box input:-webkit-autofill:active{
+      -webkit-text-fill-color: #fff;
+      caret-color: #fff;
+      transition: background-color 9999s ease-in-out 0s;
+      box-shadow: 0 0 0 1000px rgba(0,0,0,.9) inset;
+      border-bottom: 1px solid #fff;
+    }
+
+    /* ===== Steps ===== */
+    .step { display: none; animation: fadeIn 0.18s ease-out; }
+    .step.active { display: block; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* ===== Animated primary button ===== */
+    .btn-submit {
+      position: relative;
+      display: inline-block;
+      width: 100%;
+      padding: 10px 20px;
+      font-weight: 700;
+      color: #fff;
+      font-size: 14px;
+      text-decoration: none;
+      text-transform: uppercase;
+      overflow: hidden;
+      transition: .5s;
+      letter-spacing: 2px;
+      background: transparent;
+      border: 0;
+      cursor: pointer;
+      margin-top: 6px;
+    }
+    .btn-submit:hover {
+      background: #fff;
+      color: #272727;
+      border-radius: 5px;
+    }
+    .btn-submit span { position: absolute; display: block; }
+    .btn-submit span:nth-child(1) {
+      top: 0; left: -100%; width: 100%; height: 2px;
+      background: linear-gradient(90deg, transparent, #fff);
+      animation: btn-anim1 1.5s linear infinite;
+    }
+    @keyframes btn-anim1 { 0% { left: -100%; } 50%,100% { left: 100%; } }
+    .btn-submit span:nth-child(2) {
+      top: -100%; right: 0; width: 2px; height: 100%;
+      background: linear-gradient(180deg, transparent, #fff);
+      animation: btn-anim2 1.5s linear infinite;
+      animation-delay: .375s;
+    }
+    @keyframes btn-anim2 { 0% { top: -100%; } 50%,100% { top: 100%; } }
+    .btn-submit span:nth-child(3) {
+      bottom: 0; right: -100%; width: 100%; height: 2px;
+      background: linear-gradient(270deg, transparent, #fff);
+      animation: btn-anim3 1.5s linear infinite;
+      animation-delay: .75s;
+    }
+    @keyframes btn-anim3 { 0% { right: -100%; } 50%,100% { right: 100%; } }
+    .btn-submit span:nth-child(4) {
+      bottom: -100%; left: 0; width: 2px; height: 100%;
+      background: linear-gradient(360deg, transparent, #fff);
+      animation: btn-anim4 1.5s linear infinite;
+      animation-delay: 1.125s;
+    }
+    @keyframes btn-anim4 { 0% { bottom: -100%; } 50%,100% { bottom: 100%; } }
+
+    .hint {
+      margin-top: 10px;
+      font-size: 12px;
+      color: #aaa;
+      line-height: 1.7;
+    }
+
+    .message {
+      margin-top: 14px;
+      font-size: 13px;
+      border-radius: 10px;
+      padding: 10px 12px;
+      line-height: 1.6;
+      word-break: break-word;
+      white-space: pre-wrap;
+    }
+    .message.ok {
+      background: rgba(34, 197, 94, 0.10);
+      border: 1px solid rgba(34, 197, 94, 0.60);
+      color: #bbf7d0;
+    }
+    .message.err {
+      background: rgba(239, 68, 68, 0.10);
+      border: 1px solid rgba(248, 113, 113, 0.80);
+      color: #fecaca;
+    }
+
+    .footer {
+      margin-top: 14px;
+      font-size: 11px;
+      color: #6b7280;
+      text-align: center;
+      line-height: 1.6;
+    }
+
+    @media (max-width: 480px){
+      body{ padding: 14px; }
+      .login-box{ width: 100%; }
+    }
+
+  </style>
+  <script src="/assets/js/theme-manager.js" defer></script>
+</head>
+<body>
+
+  <div class="login-box">
+    <div class="oap-tag">OAP</div>
+
+    <div class="title">
+      <div class="title-main">Unauthorized</div>
+      <p class="title-sub">Access denied</p>
+    </div>
+
+    <div class="message err" style="display:block;margin-top:12px;">
+      You do not have permission to access this page.<br/>
+      If you believe this is a mistake, please contact the system administrator.
+    </div>
+
+    <div style="margin-top:18px;text-align:center;">
+      <a href="/index.html" class="btn-submit" style="text-decoration:none;">
+        <span></span><span></span><span></span><span></span>
+        Go to Dashboard
+      </a>
+    </div>
+
+    <div class="footer" style="margin-top:18px;">
+      OAP • Security
+    </div>
+  </div>
+
+</body>
+</html>

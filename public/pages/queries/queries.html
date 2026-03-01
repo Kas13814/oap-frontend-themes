@@ -1,0 +1,1325 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <script>
+(function(){
+  try{
+    var root = document.documentElement;
+    var sp = new URLSearchParams(window.location.search);
+    var t = sp.get('theme');
+    if(!t){
+      try{ t = localStorage.getItem('oap_theme'); }catch(_){}
+    }
+    if(t) root.setAttribute('data-theme', t);
+
+    var ink = sp.get('gink') || sp.get('gradientInk');
+    if(!ink){
+      try{ ink = localStorage.getItem('oap_gradient_ink'); }catch(_){}
+    }
+    if(ink) root.setAttribute('data-gradient-ink', ink);
+  }catch(_){}
+})();
+</script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="/assets/css/themes.css">
+    <title>OAP KSA | لوحة تحكم الاستعلامات KAS</title>
+    <meta name="description" content="لوحة تحكم OAP المتقدمة لإدارة عمليات وتحليلات KAS. تتبع البيانات والتقارير بدقة عالية.">
+    <meta name="keywords" content="OAP, KAS, اوبريشن, تحليلات, استعلامات">
+<style>
+    :root {
+      --bg-main: #111827;
+      --bg-sidebar: #020617;
+      --bg-card: #0f172a;
+      --bg-input: #020617;
+      --text-main: #e5e7eb;
+      --text-muted: #9ca3af;
+      --border-subtle: #1f2937;
+      --accent: #10b981;
+      --accent-soft: rgba(16,185,129,0.12);
+      --accent-strong: #22c55e;
+      --danger: #ef4444;
+      --table-bg: #020617;
+      --table-row-alt: #020617;
+      --table-border: #1f2937;
+    
+      --shell-bg: radial-gradient(circle at top, #1f2937 0, #020617 55%, #020617 100%);
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--shell-bg);
+      color: var(--text-main);
+      min-height: 100vh;
+    }
+
+    .shell {
+      display: flex;
+      min-height: 100vh;
+      width: 100%;
+      position: relative;
+      border-radius: 14px 0 0 14px;
+      overflow: hidden;
+    }
+
+    .sidebar {
+      width: 260px;
+      background: rgba(2,6,23,0.95);
+      border-right: 1px solid rgba(15,23,42,0.9);
+      padding: 14px 12px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      box-shadow: 12px 0 40px rgba(0,0,0,0.5);
+      backdrop-filter: blur(12px);
+      z-index: 10;
+    }
+
+    .brand-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding-inline: 4px;
+      margin-bottom: 4px;
+    }
+
+    .brand-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 999px;
+      background: var(--accent);
+      box-shadow: 0 0 0 5px var(--accent-soft);
+    }
+
+    .brand-title {
+      font-size: 14px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+
+    .nav-section-title {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      margin-top: 2px;
+      margin-bottom: 4px;
+      padding-inline: 4px;
+    }
+
+    .nav-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      padding: 0;
+      margin: 0;
+      list-style: none;
+      flex: 1;
+      overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(55,65,81,0.7) transparent;
+    }
+
+    .nav-list::-webkit-scrollbar {
+      width: 6px;
+    }
+    .nav-list::-webkit-scrollbar-thumb {
+      background: rgba(55,65,81,0.7);
+      border-radius: 999px;
+    }
+    .nav-list::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .nav-item {
+      border-radius: 10px;
+      padding: 7px 10px;
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border: 1px solid transparent;
+      background: transparent;
+      color: var(--text-main);
+      cursor: pointer;
+      transition: 0.12s ease;
+    }
+
+    .nav-item span.icon {
+      width: 18px;
+      height: 18px;
+      border-radius: 999px;
+      background: #020617;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      color: var(--accent-strong);
+    }
+
+    .nav-item small {
+      color: var(--text-muted);
+      font-size: 11px;
+    }
+
+    .nav-item:hover {
+      background: rgba(15,23,42,0.85);
+      border-color: rgba(31,41,55,0.9);
+      color: #ffffff;
+    }
+
+    .nav-item.active {
+      background: linear-gradient(135deg, rgba(16,185,129,0.16), rgba(8,47,73,0.9));
+      border-color: rgba(45,212,191,0.5);
+      color: #ffffff;
+    }
+
+    .sidebar-footer {
+      border-top: 1px solid rgba(15,23,42,0.9);
+      padding-top: 8px;
+      margin-top: 8px;
+      font-size: 11px;
+      color: var(--text-muted);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .user-pill {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .user-avatar {
+      width: 20px;
+      height: 20px;
+      border-radius: 999px;
+      background: #f97316;
+      color: #111827;
+      font-size: 11px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+    }
+
+    .main {
+      flex: 1;
+      padding: 16px 22px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .top-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 4px;
+    }
+
+    .top-left {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .title {
+      font-size: 18px;
+      font-weight: 500;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+
+    .sub {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .top-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .mini-btn {
+      border-radius: 999px;
+      border: 1px solid var(--border-subtle);
+      background: rgba(15,23,42,0.9);
+      color: var(--text-muted);
+      font-size: 11px;
+      padding: 6px 14px;
+      min-height: 30px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .mini-btn:hover {
+      border-color: rgba(148,163,184,0.7);
+      color: #e5e7eb;
+    }
+
+    .run-btn {
+      border-radius: 999px;
+      border: none;
+      background: linear-gradient(135deg, #22c55e, #16a34a);
+      color: #022c22;
+      font-size: 13px;
+      padding: 7px 18px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 500;
+      box-shadow: 0 10px 30px rgba(22,163,74,0.45);
+    }
+
+    .run-btn:hover {
+      filter: brightness(1.05);
+      transform: translateY(-0.5px);
+    }
+
+    .run-btn:disabled {
+      opacity: 0.55;
+      cursor: default;
+      box-shadow: none;
+    }
+
+    .card {
+      background: radial-gradient(circle at top left, rgba(15,23,42,1) 0, rgba(15,23,42,0.96) 55%, rgba(15,23,42,0.96) 100%);
+      border-radius: 16px;
+      border: 1px solid rgba(15,23,42,1);
+      padding: 12px 12px 10px;
+      box-shadow: 0 16px 45px rgba(0,0,0,0.65);
+      margin-bottom: 12px;
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+
+    .card-title {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+    }
+
+    .filters-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .field label {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .field input,
+    .field select {
+      border-radius: 999px;
+      border: 1px solid var(--border-subtle);
+      background: var(--bg-input);
+      color: var(--text-main);
+      padding: 6px 9px;
+      font-size: 12px;
+      outline: none;
+    }
+
+    .field input::placeholder {
+      color: var(--text-muted);
+    }
+
+    .field input:focus,
+    .field select:focus {
+      border-color: rgba(56,189,248,0.9);
+      box-shadow: 0 0 0 1px rgba(56,189,248,0.45);
+    }
+
+    .filters-row {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 8px;
+      margin-top: 4px;
+    }
+
+    .toggle-group {
+      display: inline-flex;
+      border-radius: 999px;
+      border: 1px solid var(--border-subtle);
+      overflow: hidden;
+      font-size: 11px;
+    }
+
+    .toggle-group button {
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      padding: 4px 8px;
+      cursor: pointer;
+    }
+
+    .toggle-group button.active {
+      background: rgba(15,118,110,0.9);
+      color: #ecfeff;
+    }
+
+    .results-card {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .results-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .results-toolbar-left {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .pill {
+      border-radius: 999px;
+      border: 1px solid var(--border-subtle);
+      padding: 2px 8px;
+      font-size: 11px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(15,23,42,0.9);
+    }
+
+    .pill span.dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 999px;
+      background: var(--accent);
+    }
+
+    .results-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .small-btn {
+      border-radius: 999px;
+      border: 1px solid var(--border-subtle);
+      background: transparent;
+      color: var(--text-muted);
+      font-size: 11px;
+      padding: 2px 8px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .small-btn:hover {
+      border-color: rgba(148,163,184,0.7);
+      color: #e5e7eb;
+    }
+
+    .table-wrap {
+      margin-top: 4px;
+      border-radius: 12px;
+      border: 1px solid var(--table-border);
+      overflow: hidden;
+      background: var(--table-bg);
+      max-height: calc(100vh - 260px);
+      display: flex;
+      flex-direction: column;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+      table-layout: fixed;
+    }
+
+    thead {
+      background: #020617;
+      position: sticky;
+      top: 0;
+      z-index: 1;
+    }
+
+    th, td {
+      padding: 6px 8px;
+      border-bottom: 1px solid var(--table-border);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    th {
+      text-align: left;
+      font-weight: 500;
+      font-size: 11px;
+      color: #9ca3af;
+      border-bottom-color: #1f2937;
+    }
+
+    tbody tr:nth-child(2n) {
+      background: #020617;
+    }
+
+    tbody tr:hover {
+      background: rgba(15,23,42,0.85);
+    }
+
+    .table-body-scroll {
+      overflow: auto;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(55,65,81,0.7) transparent;
+      flex: 1;
+    }
+
+    .table-body-scroll::-webkit-scrollbar {
+      height: 8px;
+      width: 8px;
+    }
+    .table-body-scroll::-webkit-scrollbar-thumb {
+      background: rgba(55,65,81,0.7);
+      border-radius: 999px;
+    }
+    .table-body-scroll::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .empty-state {
+      padding: 30px 12px;
+      text-align: center;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .badge {
+      border-radius: 999px;
+      padding: 2px 7px;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      border: 1px solid rgba(148,163,184,0.5);
+    }
+
+    .badge-green {
+      border-color: rgba(22,163,74,0.7);
+      color: #bbf7d0;
+    }
+
+    .badge-sky {
+      border-color: rgba(56,189,248,0.7);
+      color: #bae6fd;
+    }
+
+    .loading-bar {
+      width: 100%;
+      height: 2px;
+      background: transparent;
+      overflow: hidden;
+      border-radius: 999px;
+      margin-top: 4px;
+      display: none;
+    }
+
+    .loading-bar-inner {
+      width: 35%;
+      height: 100%;
+      background: linear-gradient(90deg, #22c55e, #0ea5e9);
+      animation: loading 1.2s infinite;
+    }
+
+    @keyframes loading {
+      0%   { transform: translateX(-110%); }
+      100% { transform: translateX(320%); }
+    }
+
+    @media (max-width: 1024px) {
+      .shell {
+        flex-direction: column;
+      }
+      .sidebar {
+        width: 100%;
+        flex-direction: row;
+        align-items: center;
+        gap: 10px;
+        padding-inline: 14px;
+        padding-block: 12px;
+        border-right: none;
+        border-bottom: 1px solid rgba(15,23,42,0.9);
+        box-shadow: 0 8px 32px rgba(0,0,0,0.8);
+      }
+      .nav-list {
+        flex-direction: row;
+        overflow-x: auto;
+        overflow-y: hidden;
+        max-height: 52px;
+      }
+      .nav-item {
+        white-space: nowrap;
+      }
+      .main {
+        padding-inline: 12px;
+      }
+      .table-wrap {
+        max-height: calc(100vh - 300px);
+      }
+
+
+    .nav-item small{
+      display:none;
+    }
+
+
+    #btnToday span,
+    #btnThisMonth span {
+      color:#ffffff;
+    }
+
+    #rowsCountBadge,
+    #queryKeyLabel {
+      color:#000000;
+    }
+</style>
+<script src="/auth.js"></script>
+  <script src="/assets/js/theme-manager.js" defer></script>
+</head>
+<body>
+<div class="shell">
+  <aside class="sidebar">
+    <div class="brand-row">
+      <span class="brand-dot"></span>
+      <span class="brand-title">OAP Analytics</span>
+    </div>
+
+    <div class="nav-section-title">Datasets</div>
+    <ul class="nav-list" id="datasetList">
+      <li class="nav-item active" data-dataset="tcc_flight_delay">
+        <span class="icon">✈</span>
+        <div>
+          <div>Flight delays (TCC)</div>
+          <small>dep_flight_delay + sgs_flight_delay</small>
+        </div>
+      </li>
+      <li class="nav-item" data-dataset="sgs_flight_delay">
+        <span class="icon">⏱</span>
+        <div>
+          <div>All SGS delays</div>
+          <small>sgs_flight_delay</small>
+        </div>
+      </li>
+      <li class="nav-item" data-dataset="employee_delays">
+        <span class="icon">👤</span>
+        <div>
+          <div>Employee delays</div>
+          <small>employee_delay</small>
+        </div>
+      </li>
+      <li class="nav-item" data-dataset="employee_attendance">
+        <span class="icon">📅</span>
+        <div>
+          <div>Absence / sick leave</div>
+          <small>employee_absence + sick_leave</small>
+        </div>
+      </li>
+      <li class="nav-item" data-dataset="overtime">
+        <span class="icon">⏲</span>
+        <div>
+          <div>Overtime</div>
+          <small>employee_overtime</small>
+        </div>
+      </li>
+      <li class="nav-item" data-dataset="shift_report">
+        <span class="icon">📊</span>
+        <div>
+          <div>Shift report</div>
+          <small>shift_report</small>
+        </div>
+      </li>
+    </ul>
+
+    <div class="sidebar-footer">
+      <div class="user-pill">
+        <div class="user-avatar">KA</div>
+        <span>Analytics</span>
+      </div>
+      <span>v1.0</span>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="top-bar">
+      <div class="top-left">
+        <div class="title">Search & Analytics</div>
+        <div class="sub" id="currentDatasetLabel">OAP Queries</div>
+      </div>
+      <div class="top-right">
+<button class="mini-btn" type="button" id="btnBack"
+        onclick="window.history.back()">
+  <span>Back</span>
+</button>
+
+<button class="mini-btn" type="button" id="btnToday">
+          <span>Today</span>
+        </button>
+        <button class="mini-btn" type="button" id="btnThisMonth">
+          <span>This month</span>
+        </button>
+        <button class="run-btn" type="button" id="btnRun">
+          <span>Run</span>
+          <span>▶</span>
+        </button>
+      </div>
+    </div>
+
+    <section class="card">
+      <div class="card-header">
+        <div class="card-title">Filters</div>
+        <span class="badge badge-sky" id="queryKeyLabel">OAP_QUERY_CONSOLE</span>
+      </div>
+
+      <div class="filters-grid">
+        <div class="field">
+          <label>Query</label>
+          <select id="querySelect">
+            <option value="tcc_delay_summary">TCC delay summary</option>
+            <option value="tcc_delay_detail">TCC delay details</option>
+            <option value="sgs_delay_summary">SGS delay summary</option>
+            <option value="employee_delay_summary">Employee delay summary</option>
+            <option value="employee_absence_summary">Employee absence summary</option>
+            <option value="employee_sick_detail">Employee sick detail</option>
+            <option value="overtime_summary">Overtime summary</option>
+            <option value="shift_report_summary">Shift report summary</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>From</label>
+          <input type="date" id="dateFrom">
+        </div>
+
+        <div class="field">
+          <label>To</label>
+          <input type="date" id="dateTo">
+        </div>
+      </div>
+
+      <div class="filters-row">
+        <div class="field">
+          <label>Airline</label>
+          <input type="text" id="airlineInput">
+        </div>
+
+        <div class="field">
+          <label>Flight no.</label>
+          <input type="text" id="flightInput">
+        </div>
+
+        <div class="field">
+          <label>Delay code</label>
+          <input type="text" id="delayCodeInput">
+        </div>
+
+        <div class="field">
+          <label>Department</label>
+          <input type="text" id="deptInput">
+        </div>
+      </div>
+
+      <div class="filters-row" style="margin-top:6px;">
+        <div class="field">
+          <label>Employee ID</label>
+          <input type="text" id="empIdInput">
+        </div>
+
+        <div class="field">
+          <label>Direction</label>
+          <select id="directionSelect">
+            <option value="">All</option>
+            <option value="Arrival">Arrival</option>
+            <option value="Departure">Departure</option>
+            <option value="Turnaround">Turnaround</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>Time mode</label>
+          <div class="toggle-group" id="timeModeGroup">
+            <button type="button" data-mode="range" class="active">Range</button>
+            <button type="button" data-mode="month">Month</button>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Month / Year</label>
+          <div style="display:flex;gap:4px;">
+            <select id="monthSelect" style="flex:1;">
+              <option value="">-</option>
+              <option value="1">Jan</option>
+              <option value="2">Feb</option>
+              <option value="3">Mar</option>
+              <option value="4">Apr</option>
+              <option value="5">May</option>
+              <option value="6">Jun</option>
+              <option value="7">Jul</option>
+              <option value="8">Aug</option>
+              <option value="9">Sep</option>
+              <option value="10">Oct</option>
+              <option value="11">Nov</option>
+              <option value="12">Dec</option>
+            </select>
+            <input type="number" id="yearInput" style="flex:1;border-radius:999px;border:1px solid var(--border-subtle);background:var(--bg-input);color:var(--text-main);padding:6px 9px;font-size:12px;outline:none;">
+          </div>
+        </div>
+      </div>
+
+      <div class="loading-bar" id="loadingBar">
+        <div class="loading-bar-inner"></div>
+      </div>
+    </section>
+
+    <section class="card results-card">
+      <div class="card-header">
+        <div class="card-title">Results</div>
+        <span class="badge badge-green" id="rowsCountBadge">0 rows</span>
+      </div>
+
+      <div class="results-toolbar">
+        <div class="results-toolbar-left">
+          <div class="pill">
+            <span class="dot"></span>
+            <span id="summaryTag">Waiting</span>
+          </div>
+        </div>
+        <div class="results-actions">
+          <button class="small-btn" type="button" id="btnCopy">
+            <span>Copy</span>
+          </button>
+          <button class="small-btn" type="button" id="btnExportCsv">
+            <span>CSV</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <div style="overflow:hidden;">
+          <table>
+            <thead id="tableHead">
+            <tr>
+              <th>Date</th>
+              <th>Flight</th>
+              <th>Airlines</th>
+              <th>Dept</th>
+              <th>Delay (min)</th>
+            </tr>
+            </thead>
+          </table>
+        </div>
+        <div class="table-body-scroll">
+          <table>
+            <tbody id="tableBody">
+            <tr>
+              <td colspan="5">
+                <div class="empty-state">No data loaded</div>
+              </td>
+            </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  const { createClient } = supabase;
+  const sb = createClient(
+    "https://inuqlhkoaoeiycefvjyj.supabase.co",
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImludXFsaGtvYW9laXljZWZ2anlqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMxMTUxODEsImV4cCI6MjA3ODY5MTE4MX0.DCAY9rN0noaBoE_T-6eDsb_79szK91af989f9TqjEow"
+  );
+</script>
+
+<script>
+  // حماية الصفحة: إذا لم يكن هناك جلسة دخول، ارجع لصفحة تسجيل الدخول فوراً
+  if (!localStorage.getItem('isLoggedIn')) { 
+    window.location.href = 'index.html'; 
+  }
+
+  const API_ANALYTICS_URL = "/api/analytics/run"; // عدّلها إذا لزم
+
+  const datasetList = document.getElementById("datasetList");
+  const datasetItems = datasetList.querySelectorAll(".nav-item");
+  const currentDatasetLabel = document.getElementById("currentDatasetLabel");
+  const querySelect = document.getElementById("querySelect");
+  const queryKeyLabel = document.getElementById("queryKeyLabel");
+  const btnRun = document.getElementById("btnRun");
+  const btnToday = document.getElementById("btnToday");
+  const btnThisMonth = document.getElementById("btnThisMonth");
+  const dateFrom = document.getElementById("dateFrom");
+  const dateTo = document.getElementById("dateTo");
+  const airlineInput = document.getElementById("airlineInput");
+  const flightInput = document.getElementById("flightInput");
+  const delayCodeInput = document.getElementById("delayCodeInput");
+  const deptInput = document.getElementById("deptInput");
+  const empIdInput = document.getElementById("empIdInput");
+  const directionSelect = document.getElementById("directionSelect");
+  const timeModeGroup = document.getElementById("timeModeGroup");
+  const monthSelect = document.getElementById("monthSelect");
+  const yearInput = document.getElementById("yearInput");
+  const loadingBar = document.getElementById("loadingBar");
+  const tableHead = document.getElementById("tableHead");
+  const tableBody = document.getElementById("tableBody");
+  const rowsCountBadge = document.getElementById("rowsCountBadge");
+  const summaryTag = document.getElementById("summaryTag");
+  const btnCopy = document.getElementById("btnCopy");
+  const btnExportCsv = document.getElementById("btnExportCsv");
+
+  let currentDataset = "tcc_flight_delay";
+  let currentTimeMode = "range";
+  const USE_DEMO = true; // اجعلها false عند الربط مع الـ Backend
+
+const DATASET_DEFAULT_QUERY = {
+  "tcc_flight_delay": "tcc_delay_summary",
+  "sgs_flight_delay": "sgs_delay_summary",
+  "employee_delays": "employee_delay_summary",
+  "employee_attendance": "employee_absence_summary",
+  "overtime": "overtime_summary",
+  "shift_report": "shift_report_summary"
+};
+
+function updateFiltersForDataset(){
+  const isFlightDataset = currentDataset === "tcc_flight_delay" || currentDataset === "sgs_flight_delay";
+
+  const airlineField = airlineInput.closest(".field");
+  const flightField = flightInput.closest(".field");
+  const delayCodeField = delayCodeInput.closest(".field");
+  const directionField = directionSelect.closest(".field");
+
+  if(isFlightDataset){
+    if(airlineField) airlineField.style.display = "";
+    if(flightField) flightField.style.display = "";
+    if(delayCodeField) delayCodeField.style.display = "";
+    if(directionField) directionField.style.display = "";
+  } else {
+    if(airlineField) airlineField.style.display = "none";
+    if(flightField) flightField.style.display = "none";
+    if(delayCodeField) delayCodeField.style.display = "none";
+    if(directionField) directionField.style.display = "none";
+  }
+}
+
+function setDataset(dataset){
+  currentDataset = dataset;
+  const defaultQuery = DATASET_DEFAULT_QUERY[dataset];
+  if(defaultQuery){
+    querySelect.value = defaultQuery;
+    const key = querySelect.value;
+    queryKeyLabel.textContent = QUERY_LABELS[key] || key;
+  }
+  updateFiltersForDataset();
+}
+
+  const QUERY_LABELS = {
+    "tcc_delay_summary": "TCC_DELAY_SUMMARY",
+    "tcc_delay_detail": "TCC_DELAY_DETAIL",
+    "sgs_delay_summary": "SGS_DELAY_SUMMARY",
+    "employee_delay_summary": "EMPLOYEE_DELAY_SUMMARY",
+    "employee_absence_summary": "EMPLOYEE_ABSENCE_SUMMARY",
+    "employee_sick_detail": "EMPLOYEE_SICK_DETAIL",
+    "overtime_summary": "OVERTIME_SUMMARY",
+    "shift_report_summary": "SHIFT_REPORT_SUMMARY"
+  };
+
+  datasetItems.forEach(item => {
+    item.addEventListener("click", () => {
+      datasetItems.forEach(i => i.classList.remove("active"));
+      item.classList.add("active");
+      setDataset(item.dataset.dataset);
+      currentDatasetLabel.textContent = item.querySelector("div > div").textContent;
+    });
+  });
+
+querySelect.addEventListener("change", () => {
+    const key = querySelect.value;
+    queryKeyLabel.textContent = QUERY_LABELS[key] || key;
+  });
+
+  timeModeGroup.addEventListener("click", (e) => {
+    const btn = e.target.closest("button");
+    if (!btn) return;
+    const mode = btn.dataset.mode;
+    currentTimeMode = mode;
+    timeModeGroup.querySelectorAll("button").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+  });
+
+  btnToday.addEventListener("click", () => {
+    const today = new Date();
+    const iso = today.toISOString().slice(0, 10);
+    dateFrom.value = iso;
+    dateTo.value = iso;
+  });
+
+  btnThisMonth.addEventListener("click", () => {
+    const today = new Date();
+    const y = today.getFullYear();
+    const m = today.getMonth();
+    const first = new Date(y, m, 1);
+    const last = new Date(y, m + 1, 0);
+    dateFrom.value = first.toISOString().slice(0, 10);
+    dateTo.value = last.toISOString().slice(0, 10);
+  });
+
+  btnRun.addEventListener("click", () => {
+    runQuery();
+  });
+
+  function buildPayload() {
+    return {
+      dataset: currentDataset,
+      query_key: querySelect.value,
+      time_mode: currentTimeMode,
+      date_from: dateFrom.value || null,
+      date_to: dateTo.value || null,
+      month: monthSelect.value || null,
+      year: yearInput.value || null,
+      airline: airlineInput.value || null,
+      flight_number: flightInput.value || null,
+      delay_code: delayCodeInput.value || null,
+      department: deptInput.value || null,
+      employee_id: empIdInput.value || null,
+      direction: directionSelect.value || null
+    };
+  }
+
+  function setLoading(isLoading) {
+    loadingBar.style.display = isLoading ? "block" : "none";
+    btnRun.disabled = isLoading;
+    if (isLoading) summaryTag.textContent = "Running...";
+  }
+
+  
+  async function runQuery() {
+    const payload = buildPayload();
+    setLoading(true);
+
+    try {
+      let data;
+      if (payload.dataset === "overtime") {
+        data = await runOvertimeFromSupabase(payload);
+      } else if (USE_DEMO) {
+        data = demoData(payload);
+        await new Promise(r => setTimeout(r, 400));
+      } else {
+        const res = await fetch(API_ANALYTICS_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        data = await res.json();
+      }
+      renderTable(data);
+    } catch (e) {
+      console.error(e);
+      renderError(e.message || "Error");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function runOvertimeFromSupabase(payload) {
+    const emp = payload.employee_id || null;
+    const from = payload.date_from;
+    const to = payload.date_to;
+
+    let query = sb
+      .from("employee_overtime")
+      .select(`
+        "Employee ID",
+        "Employee Name",
+        "Total Hours",
+        "Assignment Date"
+      `);
+
+    if (emp) {
+      query = query.eq('"Employee ID"', emp);
+    }
+    if (from) {
+      query = query.gte('"Assignment Date"', from);
+    }
+    if (to) {
+      query = query.lte('"Assignment Date"', to);
+    }
+
+    const { data, error } = await query;
+    if (error) {
+      console.error(error);
+      throw new Error(error.message || "Overtime query failed");
+    }
+
+    if (!data || !data.length) {
+      return {
+        columns: ["Employee ID", "Name", "Total hours", "Last assignment"],
+        rows: []
+      };
+    }
+
+    let total = 0;
+    let name = data[0]["Employee Name"] || "";
+    let empId = data[0]["Employee ID"];
+    let lastAssignment = data[0]["Assignment Date"];
+
+    data.forEach(row => {
+      if (row["Total Hours"]) {
+        total += Number(row["Total Hours"]);
+      }
+      if (row["Assignment Date"] && row["Assignment Date"] > lastAssignment) {
+        lastAssignment = row["Assignment Date"];
+      }
+    });
+
+    return {
+      columns: ["Employee ID", "Name", "Total hours", "Last assignment"],
+      rows: [
+        [empId, name, total, lastAssignment]
+      ]
+    };
+  }
+
+  function renderTable(data) {
+    const cols = data.columns || [];
+    const rows = data.rows || [];
+
+    tableHead.innerHTML = "";
+    const trHead = document.createElement("tr");
+    cols.forEach(c => {
+      const th = document.createElement("th");
+      th.textContent = c;
+      trHead.appendChild(th);
+    });
+    tableHead.appendChild(trHead);
+
+    tableBody.innerHTML = "";
+    if (!rows.length) {
+      const tr = document.createElement("tr");
+      const td = document.createElement("td");
+      td.colSpan = Math.max(cols.length, 1);
+      td.innerHTML = "<div class='empty-state'>No data</div>";
+      tr.appendChild(td);
+      tableBody.appendChild(tr);
+    } else {
+      rows.forEach(row => {
+        const tr = document.createElement("tr");
+        row.forEach(cell => {
+          const td = document.createElement("td");
+          td.textContent = cell == null ? "" : cell;
+          tr.appendChild(td);
+        });
+        tableBody.appendChild(tr);
+      });
+    }
+
+    rowsCountBadge.textContent = rows.length + " rows";
+    summaryTag.textContent = "Done";
+  }
+
+  function renderError(msg) {
+    tableBody.innerHTML = "";
+    const tr = document.createElement("tr");
+    const td = document.createElement("td");
+    td.colSpan = 1;
+    td.innerHTML = "<div class='empty-state' style='color:#fca5a5;'>Error: " + msg + "</div>";
+    tr.appendChild(td);
+    tableBody.appendChild(tr);
+    rowsCountBadge.textContent = "0 rows";
+    summaryTag.textContent = "Error";
+  }
+
+  function filterDemoByEmployee(payload, data){
+  if (!payload.employee_id) return data;
+  if (!data || !Array.isArray(data.columns) || !Array.isArray(data.rows)) return data;
+  const idx = data.columns.indexOf("Employee ID");
+  if (idx === -1) return data;
+  const id = String(payload.employee_id).trim();
+  return {
+    columns: data.columns,
+    rows: data.rows.filter(row => String(row[idx]).trim() === id)
+  };
+}
+
+function demoData(payload) {
+  let data;
+  if (payload.dataset === "tcc_flight_delay") {
+    data = {
+      columns: ["Date", "Flight", "Airlines", "Dept", "Delay (min)", "Delay Code"],
+      rows: [
+        ["2025-01-01", "SV123", "Saudia", "TCC", 25, "15I"],
+        ["2025-01-01", "SV456", "Saudia", "LC Saudia", 40, "15F"],
+        ["2025-01-02", "XY789", "Flynas", "TCC", 18, "15X"]
+      ]
+    };
+    return data;
+  }
+  if (payload.dataset === "employee_delays") {
+    data = {
+      columns: ["Employee ID", "Employee Name", "Department", "Total delay (min)", "Delay count"],
+      rows: [
+        ["15013814", "Khaled Sharahili", "TCC", 215, 6],
+        ["15000001", "Omar H", "LC Saudia", 140, 3]
+      ]
+    };
+    return filterDemoByEmployee(payload, data);
+  }
+  if (payload.dataset === "employee_attendance") {
+    data = {
+      columns: ["Employee ID", "Name", "Absence days", "Sick days", "Last record"],
+      rows: [
+        ["15013814", "Khaled Sharahili", 2, 1, "2025-01-03"],
+        ["15000001", "Omar H", 0, 3, "2025-01-02"]
+      ]
+    };
+    return filterDemoByEmployee(payload, data);
+  }
+  if (payload.dataset === "overtime") {
+    data = {
+      columns: ["Employee ID", "Name", "Total hours", "Last assignment"],
+      rows: [
+        ["15013814", "Khaled Sharahili", 14, "2025-01-05"],
+        ["15000001", "Omar H", 8, "2025-01-04"]
+      ]
+    };
+    return filterDemoByEmployee(payload, data);
+  }
+  if (payload.dataset === "shift_report") {
+    data = {
+      columns: ["Date", "Shift", "Dept", "On Duty", "No Show", "Delayed ARR DOM", "Delayed DEP INT"],
+      rows: [
+        ["2025-01-01", "A", "TCC", 12, 0, 3, 2],
+        ["2025-01-01", "B", "TCC", 10, 1, 1, 1]
+      ]
+    };
+    return data;
+  }
+  if (payload.dataset === "sgs_flight_delay") {
+    data = {
+      columns: ["Date", "Flight", "Airlines", "Delay (min)", "Delay Code"],
+      rows: [
+        ["2025-01-01", "SV100", "Saudia", 55, "33A"],
+        ["2025-01-01", "XY200", "Flynas", 20, "2R"]
+      ]
+    };
+    return data;
+  }
+  data = {
+    columns: ["Info"],
+    rows: [["No demo data for this dataset"]]
+  };
+  return data;
+}
+
+function getTableText() {
+    const rows = [];
+    const headCells = Array.from(tableHead.querySelectorAll("th")).map(th => th.textContent);
+    if (headCells.length) rows.push(headCells.join("\t"));
+
+    tableBody.querySelectorAll("tr").forEach(tr => {
+      const cells = Array.from(tr.querySelectorAll("td")).map(td => td.textContent);
+      if (cells.length) rows.push(cells.join("\t"));
+    });
+    return rows.join("\n");
+  }
+
+  btnCopy.addEventListener("click", () => {
+    const txt = getTableText();
+    if (!txt.trim()) return;
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(txt).catch(console.error);
+    }
+  });
+
+  btnExportCsv.addEventListener("click", () => {
+    const rows = [];
+    const headCells = Array.from(tableHead.querySelectorAll("th")).map(th => th.textContent.replace(/"/g,'""'));
+    if (headCells.length) rows.push('"' + headCells.join('","') + '"');
+
+    tableBody.querySelectorAll("tr").forEach(tr => {
+      const cells = Array.from(tr.querySelectorAll("td")).map(td => (td.textContent || "").replace(/"/g,'""'));
+      if (cells.length) rows.push('"' + cells.join('","') + '"');
+    });
+
+    const csv = rows.join("\r\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "analytics_export.csv";
+    a.click();
+    URL.revokeObjectURL(url);
+  });
+
+  (function init() {
+    const today = new Date();
+    const y = today.getFullYear();
+    yearInput.value = y;
+    const key = querySelect.value;
+    queryKeyLabel.textContent = QUERY_LABELS[key] || key;
+    summaryTag.textContent = "Waiting";
+    updateFiltersForDataset();
+  })();
+</script>
+
+<script>
+  (function(){
+    const root = document.documentElement;
+    const KEY  = 'pref-theme';
+
+    function applyTheme(theme){
+      if(!theme) return;
+      root.setAttribute('data-theme', theme);
+    }
+
+    const saved = localStorage.getItem(KEY);
+    const initial = saved || (window.matchMedia && matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+    applyTheme(initial);
+
+    window.addEventListener('storage', function(e){
+      if(e.key === KEY){
+        applyTheme(e.newValue);
+      }
+    });
+  })();
+</script>
+
+</body>
+</html>

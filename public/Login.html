@@ -1,0 +1,1002 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link rel="stylesheet" href="/assets/css/themes.css">
+
+  <!-- Favicons (force green background variant + cache-bust) -->
+  <link rel="icon" type="image/png" href="/favicon-96x96.png?v=11" sizes="96x96" />
+  <!-- SVG is optional; keep disabled to avoid Chrome choosing a cached/transparent variant -->
+  <!-- <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=9" /> -->
+  <link rel="shortcut icon" href="/favicon.ico?v=11" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=11" />
+  <link rel="manifest" href="/site.webmanifest?v=11" />
+
+  <!-- SEO (login entry) -->
+  <meta name="description" content="OAP Login — secure employee sign-in to Operations • Analytics • Performance platform." />
+  <meta name="keywords" content="OAP Login, OAP, oap, KAS, kas, Operations, Analytics, Performance" />
+<link rel="canonical" href="https://oap-kas.com/" />
+<meta name="robots" content="noindex,nofollow" />
+
+  <title>OAP</title>
+
+  <!-- Basic hardening (client-side). Real security must be enforced server-side too. -->
+  <meta http-equiv="X-Content-Type-Options" content="nosniff">
+  <meta name="referrer" content="no-referrer">
+  <meta http-equiv="Permissions-Policy" content="geolocation=(), microphone=(), camera=()">
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self';
+                 script-src 'self' https://cdn.jsdelivr.net https://static.cloudflareinsights.com 'unsafe-inline';
+                 connect-src 'self' https:;
+                 style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+                 font-src https://fonts.gstatic.com;
+                 img-src 'self' data:;
+                 base-uri 'self';
+                 form-action 'self';">
+
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+    <style>
+    :root{
+      --bg: #ffffff;
+      --card: transparent;
+      --text: #0f172a;
+      --muted: #64748b;
+      --border: #cbd5e1;
+      --field-bg: #ffffff;
+      --field-text: #0f172a;
+      --primary: #4f46e5;
+      --primary-hover: #4338ca;
+      --link: #4f46e5;
+      --shadow: 0 10px 30px rgba(2,6,23,.08);
+    }
+
+    *{ box-sizing: border-box; }
+
+    html, body{
+      height: 100%;
+      margin: 0;
+      font-family: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    body{
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 48px 16px;
+    }
+
+    /* Layout container (no visible card frame, like the screenshots) */
+    .login-shell{
+      width: 100%;
+      max-width: 420px;
+      text-align: center;
+    }
+
+    .brand{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      margin-bottom: 22px;
+    }
+    .brand img{
+      width: 40px;
+      height: 40px;
+      object-fit: contain;
+      filter: drop-shadow(0 8px 20px rgba(0,0,0,.18));
+    }
+
+    .login-title{
+      margin: 0 0 28px 0;
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: var(--text);
+    }
+
+    form{
+      display:flex;
+      flex-direction: column;
+      gap: 18px;
+      text-align: left;
+    }
+
+    .row-between{
+      display:flex;
+      align-items:center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    label{
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .field{
+      position: relative;
+    }
+
+    input{
+      width: 100%;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--field-bg);
+      color: var(--field-text);
+      padding: 11px 12px;
+      font-size: 14px;
+      outline: none;
+      transition: border-color .15s ease, box-shadow .15s ease, background-color .15s ease;
+    }
+    input::placeholder{ color: color-mix(in srgb, var(--muted) 85%, transparent); }
+    input:focus{
+      border-color: color-mix(in srgb, var(--primary) 55%, var(--border));
+      box-shadow: 0 0 0 4px color-mix(in srgb, var(--primary) 22%, transparent);
+    }
+
+    /* Password eye */
+    .pw-toggle{
+      position:absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: transparent;
+      border: 0;
+      color: var(--muted);
+      cursor: pointer;
+      padding: 6px;
+      border-radius: 8px;
+      line-height: 1;
+    }
+    .pw-toggle:hover{
+      color: var(--text);
+      background: color-mix(in srgb, var(--border) 25%, transparent);
+    }
+
+    .forgot{
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--link);
+      text-decoration: none;
+    }
+    .forgot:hover{ text-decoration: underline; }
+
+    .btn-submit{
+      width: 100%;
+      border: 0;
+      border-radius: 8px;
+      padding: 11px 14px;
+      font-size: 14px;
+      font-weight: 700;
+      color: #fff;
+      background: var(--primary);
+      cursor: pointer;
+      box-shadow: var(--shadow);
+      transition: transform .08s ease, background-color .15s ease, box-shadow .15s ease;
+    }
+    .btn-submit:hover{ background: var(--primary-hover); }
+    .btn-submit:active{ transform: translateY(1px); }
+    .btn-submit:disabled{ opacity: .65; cursor:not-allowed; }
+
+    .helper{
+      margin-top: 18px;
+      text-align: center;
+      font-size: 13px;
+      color: var(--muted);
+    }
+    .helper a{
+      color: var(--link);
+      font-weight: 700;
+      text-decoration: none;
+    }
+    .helper a:hover{ text-decoration: underline; }
+
+    .status-box{
+      margin-top: 12px;
+      font-size: 13px;
+      min-height: 18px;
+      color: var(--muted);
+      line-height: 1.6;
+      white-space: pre-line;
+      text-align: left;
+    }
+    .status-ok{ color: #16a34a; }
+    .status-error{ color: #dc2626; }
+
+    /* Autofill */
+    input:-webkit-autofill,
+    input:-webkit-autofill:hover,
+    input:-webkit-autofill:focus,
+    input:-webkit-autofill:active {
+      -webkit-text-fill-color: var(--field-text) !important;
+      transition: background-color 9999s ease-out 0s;
+      -webkit-box-shadow: 0 0 0px 1000px var(--field-bg) inset !important;
+      box-shadow: 0 0 0px 1000px var(--field-bg) inset !important;
+      caret-color: var(--field-text) !important;
+    }
+
+    /* Theme toggle (tiny, top-right) */
+    .theme-toggle{
+      position: fixed;
+      top: 14px;
+      right: 14px;
+      width: 40px;
+      height: 40px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: color-mix(in srgb, var(--field-bg) 92%, transparent);
+      color: var(--text);
+      cursor: pointer;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      box-shadow: 0 10px 24px rgba(0,0,0,.10);
+      transition: transform .08s ease, background-color .15s ease;
+    }
+    .theme-toggle:hover{
+      background: color-mix(in srgb, var(--field-bg) 78%, transparent);
+    }
+    .theme-toggle:active{ transform: translateY(1px); }
+  </style>
+<style id="oap-login-theme">
+:root{
+    --bg: #F4F2EC;
+    --panel: rgba(255,255,255,0.0);
+    --text: #0b1220;
+    --muted: #667085;
+    --card: transparent;
+    --input-bg: #FFFFFF;
+    --input-border: #D0D5DD;
+    --btn-bg: #6A67FF;
+    --btn-text: #FFFFFF;
+    --link: #6A67FF;
+    --focus: #6A67FF;
+    --shadow: 0 20px 60px rgba(16,24,40,0.08);
+  }
+
+  html, body{
+        background: var(--bg) !important;
+      }
+
+      body{
+    background: var(--bg) !important;
+    color: var(--text) !important;
+  }
+
+  /* Inputs */
+  input[type="email"], input[type="password"], input[type="text"]{
+    background: var(--input-bg) !important;
+    color: var(--text) !important;
+    border: 1px solid var(--input-border) !important;
+    border-radius: 8px;
+    outline: none;
+    transition: border-color .15s ease, box-shadow .15s ease;
+  }
+  input[type="email"]::placeholder,
+  input[type="password"]::placeholder,
+  input[type="text"]::placeholder{
+    color: color-mix(in srgb, var(--muted) 85%, transparent) !important;
+  }
+  input[type="email"]:focus,
+  input[type="password"]:focus,
+  input[type="text"]:focus{
+    border-color: var(--focus) !important;          /* thin border */
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--focus) 20%, transparent) !important;
+  }
+
+  /* Labels & helper text */
+  label, .label, .field-label{
+    color: var(--text) !important;
+  }
+  .muted, small, .helper, .hint{
+    color: var(--muted) !important;
+  }
+
+  /* Primary button */
+  button, .btn, .primary, .btn-primary, input[type="submit"]{
+    background: var(--btn-bg) !important;
+    color: var(--btn-text) !important;
+    border: 1px solid color-mix(in srgb, var(--btn-bg) 70%, #0000) !important;
+  }
+  button:hover, .btn:hover, .primary:hover, .btn-primary:hover, input[type="submit"]:hover{
+    filter: brightness(0.98);
+  }
+
+  a{ color: var(--link) !important; }
+
+  /* Make sure any wrapper keeps same spacing/design */
+  .container, .auth-card, .card, .login-card{
+    box-shadow: var(--shadow) !important;
+  }
+
+
+
+      /* Eye icon button (no borders, centered) */
+      :root{ --eye-color: #111111; }
+
+      .pw-toggle{
+        border: none !important;
+        outline: none !important;
+        box-shadow: none !important;
+        background: transparent !important;
+        color: var(--eye-color) !important;
+      }
+
+      /* If the eye is absolutely positioned inside input wrapper, force vertical centering */
+      .password-field, .field-password, .input-password, .password-wrap, .pw-wrap{
+        position: relative;
+      }
+      .password-field .pw-toggle,
+      .field-password .pw-toggle,
+      .input-password .pw-toggle,
+      .password-wrap .pw-toggle,
+      .pw-wrap .pw-toggle{
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        margin-top: 2px; /* tiny nudge down */
+      }
+
+      /* Move logo up + make logo box bigger */
+      .logo, .brand, .brand-logo, .logo-wrap, .auth-logo{
+        margin-top: -18px !important;
+        margin-bottom: 10px !important;
+      }
+      .logo img, .brand img, .brand-logo img, .logo-wrap img, .auth-logo img{
+        width: 56px !important;
+        height: 56px !important;
+      }
+
+      /* Nudge title up a bit */
+      h1, .title, .auth-title{
+        margin-top: 6px !important;
+        margin-bottom: 18px !important;
+      }
+
+
+
+      /* ===== Requested UI fixes ===== */
+
+      /* 1) Logo: move up + bigger box */
+      img.auth-logo{
+        width: 68px !important;
+        height: 68px !important;
+        margin-top: -26px !important;
+        margin-bottom: 10px !important;
+        display:block;
+      }
+
+      /* 2) Title: move up slightly */
+      h1.login-title{
+        margin-top: -6px !important;
+        margin-bottom: 18px !important;
+      }
+
+      /* 3) Password field: position eye button centered vertically */
+      .field{ position: relative; }
+      #Password{
+        padding-right: 46px !important; /* room for eye */
+      }
+      #togglePassword.pw-toggle{
+        position: absolute !important;
+        right: 10px !important;
+        /* center relative to the password input line */
+        top: calc(100% - 20px) !important;
+        transform: translateY(-50%) !important;
+        width: 36px !important;
+        height: 36px !important;
+        border: none !important;
+        outline: none !important;
+        box-shadow: none !important;
+        background: transparent !important; /* no background */
+        display:flex !important;
+        align-items:center !important;
+        justify-content:center !important;
+        padding: 0 !important;
+      }
+
+      /* 4) Eye color: black in light, white in dark */
+      :root{ --eye-color: #111111; }
+      #togglePassword{ color: var(--eye-color) !important; }
+
+      /* Swap icons */
+      #togglePassword .icon-eye-off{ display:none; }
+      #togglePassword[data-state="shown"] .icon-eye{ display:none; }
+      #togglePassword[data-state="shown"] .icon-eye-off{ display:block; }
+
+      #togglePassword svg{ width: 18px; height: 18px; display:block; }
+
+      /* 5) Theme toggle: no background */
+      #oapThemeToggle{
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        backdrop-filter: none !important;
+      }
+
+
+
+      
+      /* ===== Overrides (final) ===== */
+
+      /* Keep Sign in hover color */
+      button.btn-submit,
+      .btn-submit{
+        background: #4F39F6 !important;
+        color: #fff !important;
+      }
+      button.btn-submit:hover,
+      .btn-submit:hover{
+        background: #615FFF !important;
+      }
+
+      /* Logo box bigger + centered + moved up */
+      .login-shell .brand{
+        width: 76px !important;
+        height: 76px !important;
+        display:flex !important;
+        align-items:center !important;
+        justify-content:center !important;
+
+        /* IMPORTANT: center the fixed-width box */
+        margin-left: auto !important;
+        margin-right: auto !important;
+
+        /* move up */
+        margin-top: -30px !important;
+        margin-bottom: 12px !important;
+      }
+      .login-shell .brand img.auth-logo{
+        width: 68px !important;
+        height: 68px !important;
+        margin: 0 !important;
+      }
+
+      /* Title moved UP (not down) */
+      .login-shell h1.login-title{
+        margin-top: -14px !important;
+        margin-bottom: 18px !important;
+      }
+
+      /* Theme toggle: no background (existing button uses .theme-toggle) */
+      button.theme-toggle, .theme-toggle{
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        backdrop-filter: none !important;
+      }
+
+      /* Eye button: nudge down a bit to true center */
+      .field #togglePassword.pw-toggle{
+        top: calc(100% - 18px) !important;
+      }
+
+
+
+      
+
+
+      /* ===== Logo + Title positioning (only) ===== */
+
+      /* Keep brand centered and ABOVE title */
+      .login-shell .brand{
+        position: relative !important;
+        z-index: 2 !important;
+        margin-left: auto !important;
+        margin-right: auto !important;
+
+        /* Move logo box up without affecting inputs/buttons */
+        margin-top: -26px !important;
+        margin-bottom: 12px !important;
+      }
+
+      /* Bigger logo box */
+      .login-shell .brand{
+        width: 84px !important;
+        height: 84px !important;
+      }
+      .login-shell .brand img.auth-logo{
+        width: 74px !important;
+        height: 74px !important;
+      }
+
+      /* Title slightly up, but stay below logo */
+      .login-shell h1.login-title{
+        position: relative !important;
+        z-index: 1 !important;
+        margin-top: -6px !important;
+        margin-bottom: 18px !important;
+      }
+
+
+      /* ===== FINAL: move logo + title visually (NO layout shift) ===== */
+      body .login-shell .brand{
+        position: relative !important;
+        top: -44px !important;     /* move UP visually */
+        margin-top: 0 !important;  /* neutralize margin hacks */
+      }
+      body .login-shell h1.login-title{
+        position: relative !important;
+        top: -24px !important;     /* move UP visually */
+        margin-top: 0 !important;
+      }
+</style>
+  <script src="/assets/js/theme-manager.js" defer></script>
+</head>
+
+<body>
+  <button id="themeToggle" class="theme-toggle" type="button" aria-label="Toggle theme">🌙</button>
+
+  <main class="login-shell" role="dialog" aria-label="OAP Login">
+    <div class="brand" aria-hidden="true">
+      <img src="/OAP-Form-32x32.png" alt="" width="40" height="40" class="auth-logo">
+    </div>
+
+    <h1 class="login-title">Sign in to your account</h1>
+
+    <form id="loginForm" autocomplete="on" novalidate>
+      <div class="field">
+        <label for="Employee_login">Email address</label>
+        <div style="height:8px"></div>
+        <input id="Employee_login" name="employee" type="email"
+               required inputmode="email" autocomplete="username" aria-label="Email" />
+      </div>
+
+      <div class="field">
+        <div class="row-between">
+          <label for="Password">Password</label>
+          <a id="linkResetPassword" class="forgot" href="/pages/auth/Forgot%20password.html" target="_top" rel="noopener">Forgot password?</a>
+        </div>
+        <div style="height:8px"></div>
+        <input id="Password" name="password" type="password"
+               required minlength="4" maxlength="128"
+               autocomplete="current-password" aria-label="Password" />
+        <button id="togglePassword" class="pw-toggle" type="button" aria-label="Show/Hide password"><span class="icon-eye" aria-hidden="true">
+  <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M2.5 12s3.5-7 9.5-7 9.5 7 9.5 7-3.5 7-9.5 7-9.5-7-9.5-7Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M12 15.2a3.2 3.2 0 1 0 0-6.4 3.2 3.2 0 0 0 0 6.4Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+  </svg>
+</span>
+<span class="icon-eye-off" aria-hidden="true">
+  <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M10.6 5.1A10.6 10.6 0 0 1 12 5c6 0 9.5 7 9.5 7a18.3 18.3 0 0 1-3.6 4.7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M6.2 6.2A18.7 18.7 0 0 0 2.5 12s3.5 7 9.5 7c1.7 0 3.2-.4 4.5-1.1" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M9.9 9.9A3.2 3.2 0 0 0 14.1 14.1" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M3 3l18 18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+  </svg>
+</span></button>
+      </div>
+
+      <button id="Login_button" class="btn-submit" type="submit">Sign in</button>
+
+      <div id="status_box" class="status-box" role="status" aria-live="polite"></div>
+
+      <p class="helper">
+        Not a member?
+        <a id="linkJoinWorkspace" href="/pages/auth/joining.html" target="_top" rel="noopener">Join workspace</a>
+      </p>
+    </form>
+  </main>
+
+  <script>
+    (function(){
+      const root = document.documentElement;
+      const btn = document.getElementById('themeToggle');
+      const saved = (localStorage.getItem('oap_theme') || '').toLowerCase();
+      const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+      function apply(theme){
+        if(theme === 'dark'){
+          root.setAttribute('data-theme','dark');
+          if(btn) btn.textContent = '☀️';
+        }else{
+          root.setAttribute('data-theme','light');
+          if(btn) btn.textContent = '🌙';
+        }
+      }
+
+      const initial = (saved === 'dark' || saved === 'light') ? saved : (prefersDark ? 'dark' : 'light');
+      apply(initial);
+
+      if(btn){
+        btn.addEventListener('click', function(){
+          const current = root.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+          const next = current === 'dark' ? 'light' : 'dark';
+          localStorage.setItem('oap_theme', next);
+          apply(next);
+        });
+      }
+    })();
+  </script>
+
+  <!-- Required scripts (order matters) -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" onerror="(function(){var b=document.getElementById('status_box'); if(b){b.style.display='block';b.style.whiteSpace='pre-line';b.textContent='SCRIPT LOAD FAILED: supabase-js CDN';}})()"></script>
+  <script src="/assets/js/oap_config.js"></script>
+  <script src="/assets/js/nxs_supabase_client.js"></script>
+<script>
+    // Use the single shared Supabase client (created in /assets/js/nxs_supabase_client.js)
+// IMPORTANT: config is loaded async, so we must initialize lazily.
+let sb = null;
+
+async function ensureSupabaseConfig() {
+  if (window.NXS_SUPABASE_URL && window.NXS_SUPABASE_ANON_KEY) return true;
+
+  try {
+    const r = await fetch("/api/public-config", { cache: "no-store" });
+    const j = await r.json().catch(() => null);
+    if (j && j.ok && j.supabaseUrl && j.supabaseAnonKey) {
+      window.NXS_SUPABASE_URL = j.supabaseUrl;
+      window.NXS_SUPABASE_ANON_KEY = j.supabaseAnonKey;
+      return true;
+    }
+  } catch (_) {}
+
+  return Boolean(window.NXS_SUPABASE_URL && window.NXS_SUPABASE_ANON_KEY);
+}
+
+async function getSupabaseClient() {
+  if (sb) return sb;
+
+  const ok = await ensureSupabaseConfig();
+  if (!ok) {
+    console.error("[NXS] Supabase config missing (before login init)");
+    return null;
+  }
+
+  // Prefer shared client if it exists
+  if (window.NXS_Supabase && window.NXS_Supabase.client) {
+    sb = window.NXS_Supabase.client;
+    return sb;
+  }
+
+  // Fallback: create a local client
+  sb = supabase.createClient(window.NXS_SUPABASE_URL, window.NXS_SUPABASE_ANON_KEY);
+  return sb;
+}
+
+const employeeInput = document.getElementById("Employee_login");
+    const passwordInput = document.getElementById("Password");
+    const btnLogin = document.getElementById("Login_button");
+    const statusBox = document.getElementById("status_box");
+    const form = document.getElementById("loginForm");
+
+    function setStatus(message, type) {
+      statusBox.textContent = message || "";
+      statusBox.classList.remove("status-ok", "status-error");
+      if (message) statusBox.classList.add(type === "error" ? "status-error" : "status-ok");
+    }
+
+    function cleanDigits(value) {
+      return (value || "").replace(/[^\d]/g, "").trim();
+    }
+
+
+    function resolveNext() {
+      try {
+        const url = new URL(window.location.href);
+
+        // Prefer returnTo (used by oap_access_api.js)
+        const returnTo = url.searchParams.get("returnTo");
+        if (returnTo && typeof returnTo === "string") {
+          if (returnTo.startsWith("/") && !returnTo.toLowerCase().includes("/login")) {
+            return returnTo;
+          }
+        }
+
+        // Backward compatibility: next
+        const next = url.searchParams.get("next");
+        if (next && typeof next === "string") {
+          if (next.startsWith("/") && !next.toLowerCase().includes("/login")) {
+            return next;
+          }
+        }
+      } catch (_) {}
+
+      // Default home page after login
+      return "/index.html";
+    }
+
+    async function callLogin() {
+      const rawUser = (employeeInput.value || "").trim();
+      const password = (passwordInput.value || "").trim();
+
+      // basic validation
+      if (!rawUser || !password) {
+        setStatus("Please enter both Email/Employee ID and Password.", "error");
+        return;
+      }
+
+      // Derive email:
+      // - If user typed full email, use it
+      // - If user typed digits, use <digits>@saudiags.com
+      const digits = cleanDigits(rawUser);
+      const loginEmail = rawUser.includes("@")
+        ? rawUser.toLowerCase()
+        : (digits ? (String(digits) + "@saudiags.com") : "");
+
+      if (!loginEmail) {
+        setStatus("Please enter a valid Email or Employee ID.", "error");
+        return;
+      }
+
+      // simple client-side throttle (best effort)
+      const now = Date.now();
+      const last = Number(localStorage.getItem("oap_login_last") || "0");
+      if (now - last < 1500) {
+        setStatus("Please wait a moment and try again.", "error");
+        return;
+      }
+      localStorage.setItem("oap_login_last", String(now));
+
+      btnLogin.disabled = true;
+      setStatus("Checking credentials...", "ok");
+
+      try {
+        const sbClient = await getSupabaseClient();
+        if (!sbClient) {
+          setStatus("Supabase is not configured. Please refresh and try again.", "error");
+          btnLogin.disabled = false;
+          return;
+        }
+
+        // ✅ 1) Create Auth session FIRST (this is the real login gate)
+        const { data: authData, error: authError } = await sbClient.auth.signInWithPassword({
+          email: loginEmail,
+          password: password
+        });
+
+        if (authError || !authData?.session) {
+          console.error("Auth signIn failed:", authError);
+          setStatus("Invalid Email/Employee ID or password.", "error");
+          return;
+        }
+
+        // ✅ 2) (Optional) Fetch role/tenant via RPC (do NOT block login if it fails)
+        let rpcData = null;
+        try {
+          if (digits) {
+            const res = await fetch(window.NXS_SUPABASE_URL + "/rest/v1/rpc/oap_login", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                apikey: window.NXS_SUPABASE_ANON_KEY,
+                Authorization: "Bearer " + window.NXS_SUPABASE_ANON_KEY
+              },
+              body: JSON.stringify({
+                p_employee_id: Number(digits),
+                p_password: password
+              })
+            });
+
+            const text = await res.text();
+            try { rpcData = JSON.parse(text); } catch (_) {}
+
+            if (!res.ok) {
+              console.warn("oap_login RPC failed (non-blocking):", res.status, text);
+            }
+          }
+        } catch (e) {
+          console.warn("oap_login RPC error (non-blocking):", e);
+        }
+
+        // ✅ Fetch employee display name (best effort)
+        let employeeName = null;
+        try {
+          const { data: row, error: viewErr } = await sbClient
+            .from('users_with_employee_view')
+            .select('"Employee Name",email,employee_id')
+            .eq('email', loginEmail)
+            .limit(1)
+            .maybeSingle();
+          if (!viewErr && row) {
+            employeeName = row["Employee Name"] || row.EmployeeName || null;
+          }
+        } catch (e) {}
+
+        // Cache for UI (no secrets)
+        try {
+          if (employeeName) localStorage.setItem('oap_employee_name', String(employeeName));
+        } catch (_) {}
+
+        // Mark login time (used by Access API grace window)
+        try { localStorage.setItem("OAP_LOGIN_TS", String(Date.now())); } catch (_) {}
+
+        // Save minimal session hints (no secrets)
+        try {
+          if (digits) localStorage.setItem("oap_employee_id", String(digits));
+          if (rpcData && rpcData.tenant_id != null) localStorage.setItem("oap_tenant_id", String(rpcData.tenant_id));
+          if (rpcData && rpcData.role != null) localStorage.setItem("oap_role", String(rpcData.role));
+        } catch (_) {}
+
+        // ✅ Create short-lived session info so index.html can verify
+        try {
+          const now2 = Date.now();
+          const ttlMs = 8 * 60 * 60 * 1000; // 8 hours
+          sessionStorage.setItem("oap_home_gate_v1", JSON.stringify({
+            issued_at: now2,
+            expires_at: now2 + ttlMs
+          }));
+          sessionStorage.setItem("oap_session_v1", JSON.stringify({
+            v: 1,
+            employee_id: digits ? String(digits) : null,
+            employee_name: employeeName ? String(employeeName) : null,
+            tenant_id: (rpcData && rpcData.tenant_id != null) ? String(rpcData.tenant_id) : null,
+            role: (rpcData && rpcData.role != null) ? String(rpcData.role) : null,
+            issued_at: now2,
+            expires_at: now2 + ttlMs
+          }));
+          sessionStorage.setItem("isLoggedIn", "true");
+          localStorage.setItem("isLoggedIn", "true");
+        } catch (_) {}
+
+                // ✅ Set cookie for Cloudflare Pages Functions gate (worker can read cookies, not localStorage)
+        try {
+          const at = authData.session.access_token;
+          const rt = authData.session.refresh_token;
+          const maxAge = 8 * 60 * 60; // 8h
+          document.cookie = `oap_at=${encodeURIComponent(at)}; Max-Age=${maxAge}; Path=/; SameSite=Lax; Secure`;
+          // refresh token is optional; keep short and scoped
+          document.cookie = `oap_rt=${encodeURIComponent(rt)}; Max-Age=${maxAge}; Path=/; SameSite=Lax; Secure`;
+        } catch (_) {}
+
+setStatus("Login successful. Redirecting...", "ok");
+
+        // ✅ Redirect after login
+        const homeUrl = resolveNext();
+
+        // Try multiple navigation methods for maximum compatibility
+        setTimeout(() => {
+          try { window.location.replace(homeUrl); return; } catch (_) {}
+          try { window.location.assign(homeUrl); return; } catch (_) {}
+          try { window.location.href = homeUrl; return; } catch (_) {}
+          try { window.open(homeUrl, "_self"); return; } catch (_) {}
+        }, 50);
+
+      } catch (err) {
+        console.error(err);
+        setStatus("Login failed. Please check your connection and try again.", "error");
+      } finally {
+        btnLogin.disabled = false;
+      }
+    }
+
+    // Password show/hide (added)
+    const togglePassword = document.getElementById("togglePassword");
+    if (togglePassword) {
+      togglePassword.setAttribute("data-state", "hidden");
+      togglePassword.onclick = () => {
+        const isPw = passwordInput.type === "password";
+        passwordInput.type = isPw ? "text" : "password";
+        togglePassword.setAttribute("data-state", isPw ? "shown" : "hidden");
+      };
+}
+
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+      callLogin();
+    });
+
+    // ✅ Hard navigation for Reset/Join links (prevents any script/router from hijacking clicks)
+    // Runs in CAPTURE phase so it executes before other click handlers.
+    document.addEventListener("click", (e) => {
+      const a = e.target && e.target.closest ? e.target.closest("a#linkResetPassword, a#linkJoinWorkspace") : null;
+      if (!a) return;
+      // Only for left-click / touch
+      if (e.button != null && e.button !== 0) return;
+      e.preventDefault();
+      e.stopPropagation();
+      if (typeof e.stopImmediatePropagation === "function") e.stopImmediatePropagation();
+      // Force full-page navigation
+      // Always force the intended destination (prevents SPA/service-worker fallbacks)
+      const dest = (a.id === "linkResetPassword")
+        ? "/pages/auth/Forgot%20password.html"
+        : "/pages/auth/joining.html";
+      window.location.assign(dest);
+    }, true);
+
+    // If already authenticated, jump directly to requested destination (or default)
+// Auto-redirect on page load disabled to avoid redirect loops between Login and AI.
+// We now only redirect *after* a successful login via callLogin().
+
+</script>
+
+
+<script>
+
+  // Auto-complete @saudiags.com when the user enters 8 digits starting with 150 (e.g., 15011111)
+  (function autoEmailFromId() {
+    const DOMAIN = "@saudiags.com";
+    const form = document.querySelector("form") || document;
+    // Prefer a likely username/email input; fall back to first text/email input
+    const input =
+      form.querySelector('#username, #email, #user, input[name="username"], input[name="email"], input[name="user"], input[type="email"], input[type="text"]');
+
+    if (!input) return;
+
+    // Make it behave like an email field (keyboard on mobile + basic validation)
+    if (!input.getAttribute("type") || input.getAttribute("type").toLowerCase() === "text") {
+      input.setAttribute("type", "email");
+    }
+    input.setAttribute("inputmode", "email");
+    input.setAttribute("autocomplete", "username");
+
+    let lastApplied = "";
+
+    input.addEventListener("input", () => {
+      const v = String(input.value || "").trim();
+
+      // If user already typed an email, do nothing
+      if (v.includes("@")) {
+        lastApplied = "";
+        return;
+      }
+
+      // Only when exactly 8 digits and starts with 150
+      if (/^150\d{5}$/.test(v)) {
+        const completed = v + DOMAIN;
+        // Prevent re-applying if user is editing
+        if (completed !== lastApplied) {
+          input.value = completed;
+          lastApplied = completed;
+          // Put cursor at end
+          try { input.setSelectionRange(input.value.length, input.value.length); } catch (e) {}
+          // Trigger any listeners that depend on value changes
+          input.dispatchEvent(new Event("change", { bubbles: true }));
+          // Move focus to password after auto-completing
+          const pw = document.getElementById("Password");
+          if (pw) { pw.focus(); }
+        }
+      } else {
+        lastApplied = "";
+      }
+    });
+  })();
+
+</script>
+<script>
+  (function(){
+    const KEY = "oap_login_theme";
+    const root = document.documentElement;
+
+    function apply(theme){
+      if(theme){ root.setAttribute("data-theme", theme); }
+      else{ root.removeAttribute("data-theme"); }
+    }
+
+    // Auto from system unless user saved
+    const saved = localStorage.getItem(KEY);
+    if(saved === "dark" || saved === "light") apply(saved);
+
+    // Create a tiny toggle button (top-right)
+    const btn = document.createElement("button");
+    btn.id = "oapThemeToggle";
+    btn.type = "button";
+    btn.setAttribute("aria-label","Toggle theme");
+    btn.textContent = (root.getAttribute("data-theme") === "dark") ? "☀️" : "🌙";
+    btn.style.cssText = [
+          "position:fixed","top:18px","right:18px","z-index:9999",
+          "width:44px","height:44px","border-radius:12px",
+          "border:none","background:transparent",
+          "color:var(--text)","cursor:pointer"
+        ].join(";");
+
+    btn.addEventListener("click", function(){
+      const current = root.getAttribute("data-theme");
+      const next = (current === "dark") ? "light" : "dark";
+      apply(next);
+      localStorage.setItem(KEY, next);
+      btn.textContent = (next === "dark") ? "☀️" : "🌙";
+    });
+
+    document.addEventListener("DOMContentLoaded", function(){
+      document.body.appendChild(btn);
+    });
+  })();
+</script>
+</body>
+</html>

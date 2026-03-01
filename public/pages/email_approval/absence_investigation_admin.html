@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <script>
+(function(){
+  try{
+    var root = document.documentElement;
+    var sp = new URLSearchParams(window.location.search);
+    var t = sp.get('theme');
+    if(!t){
+      try{ t = localStorage.getItem('oap_theme'); }catch(_){}
+    }
+    if(t) root.setAttribute('data-theme', t);
+
+    var ink = sp.get('gink') || sp.get('gradientInk');
+    if(!ink){
+      try{ ink = localStorage.getItem('oap_gradient_ink'); }catch(_){}
+    }
+    if(ink) root.setAttribute('data-gradient-ink', ink);
+  }catch(_){}
+})();
+</script>
+  <meta charset="UTF-8" />
+  <title>Absence investigations - Admin</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="/assets/css/themes.css">
+  <link rel="stylesheet" href="../style.css" />
+  <style>
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #f9fafb;
+      margin: 0;
+    }
+    .page {
+      min-height: 100vh;
+      padding: 24px 32px;
+    }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 18px;
+    }
+    .title-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .title-row span.icon {
+      font-size: 26px;
+    }
+    h1 {
+      font-size: 22px;
+      margin: 0;
+    }
+    .subtitle {
+      font-size: 13px;
+      color: #64748b;
+    }
+    .controls {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .input {
+      border-radius: 999px;
+      border: 1px solid #e2e8f0;
+      padding: 7px 12px;
+      font-size: 13px;
+      outline: none;
+      min-width: 180px;
+    }
+    .input:focus {
+      border-color: #4f46e5;
+      box-shadow: 0 0 0 1px rgba(79, 70, 229, 0.12);
+    }
+    .btn {
+      padding: 8px 14px;
+      border-radius: 999px;
+      border: none;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: transform 0.1s ease, box-shadow 0.1s ease, background 0.1s ease, color 0.1s ease;
+    }
+    .btn-primary {
+      background: #0f766e;
+      color: white;
+      box-shadow: 0 7px 18px rgba(15, 118, 110, 0.25);
+    }
+    .btn-primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 9px 22px rgba(15, 118, 110, 0.32);
+      background: #115e59;
+    }
+    .btn-outline {
+      background: white;
+      color: #0f172a;
+      border: 1px solid #e2e8f0;
+    }
+    .btn-outline:hover {
+      background: #f1f5f9;
+    }
+    .card {
+      background: white;
+      border-radius: 18px;
+      padding: 16px 18px;
+      box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    thead {
+      background: #f8fafc;
+    }
+    th, td {
+      text-align: left;
+      padding: 8px 10px;
+      border-bottom: 1px solid #f1f5f9;
+      white-space: nowrap;
+    }
+    th {
+      font-weight: 600;
+      color: #475569;
+      font-size: 12px;
+    }
+    tr:hover td {
+      background: #f9fafb;
+    }
+    .badge {
+      padding: 3px 9px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .badge-status {
+      background: #eff6ff;
+      color: #1d4ed8;
+    }
+    .badge-reminder {
+      background: #ecfdf5;
+      color: #15803d;
+    }
+    .badge-wait {
+      background: #fef9c3;
+      color: #92400e;
+    }
+    .tag {
+      font-size: 11px;
+      color: #6b7280;
+    }
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #22c55e;
+    }
+    .status-dot.waiting {
+      background: #facc15;
+    }
+    .status-dot.closed {
+      background: #6b7280;
+    }
+    .empty {
+      font-size: 13px;
+      color: #9ca3af;
+      text-align: center;
+      padding: 18px 0;
+    }
+    .count {
+      font-size: 12px;
+      color: #6b7280;
+      margin-bottom: 6px;
+    }
+    @media (max-width: 768px) {
+      .page { padding: 16px; }
+      .header { flex-direction: column; align-items: flex-start; gap: 8px; }
+    }
+  </style>
+  <script src="/assets/js/theme-manager.js" defer></script>
+</head>
+<body>
+<div class="page">
+  <div class="header">
+    <div class="title-row">
+      <span class="icon">📋</span>
+      <div>
+        <h1>Absence investigations</h1>
+        <div class="subtitle">مراقبة جميع ملفات التحقيق لحالات الغياب في مركز مراقبة الحركة.</div>
+      </div>
+    </div>
+    <div class="controls">
+      <input id="filterEmployee" class="input" placeholder="Search by Employee ID or name" />
+      <select id="filterStatus" class="input">
+        <option value="">All statuses</option>
+        <option value="waiting_manager_approval">Waiting manager approval</option>
+        <option value="waiting_employee_reply">Waiting employee reply</option>
+        <option value="replied">Employee replied</option>
+        <option value="escalated_to_hr">Escalated to HR</option>
+        <option value="closed">Closed</option>
+        <option value="closed_without_investigation">Closed without investigation</option>
+      </select>
+      <button id="refreshBtn" class="btn btn-primary">Refresh</button>
+      <button id="backBtn" class="btn btn-outline">⬅ Back</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="count" id="countLabel">Loading…</div>
+    <div style="overflow-x:auto;">
+      <table>
+        <thead>
+        <tr>
+          <th>Employee</th>
+          <th>Absence date</th>
+          <th>Status</th>
+          <th>Reminder</th>
+          <th>Manager email</th>
+          <th>Created</th>
+          <th>Last update</th>
+        </tr>
+        </thead>
+        <tbody id="investigationBody">
+        <tr><td colspan="7" class="empty">Loading…</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+  const SUPABASE_URL = "https://inqlkhoaoueycefvjyj.supabase.co";
+  const SUPABASE_ANON_KEY = "YOUR_ANON_KEY_HERE"; // ضع الـ anon key الحقيقي هنا
+
+  async function fetchInvestigations() {
+    const tbody = document.getElementById("investigationBody");
+    const countLabel = document.getElementById("countLabel");
+    tbody.innerHTML = '<tr><td colspan="7" class="empty">Loading…</td></tr>';
+
+    const empFilter = (document.getElementById("filterEmployee").value || "").trim();
+    const statusFilter = document.getElementById("filterStatus").value;
+
+    const params = new URLSearchParams();
+    params.set("select", "id,\"Employee ID\",\"Employee Name\",absence_date,status,reminder_state,manager_email,created_at,updated_at");
+    params.set("order", "created_at.desc");
+    params.set("limit", "100");
+
+    if (empFilter) {
+      // filter by employee id OR name (simple ilike)
+      params.set("or", `(Employee ID.eq.${empFilter},Employee Name.ilike.*${empFilter}*)`);
+    }
+    if (statusFilter) {
+      params.set("status", `eq.${statusFilter}`);
+    }
+
+    const url = `${SUPABASE_URL}/rest/v1/absence_investigation?${params.toString()}`;
+
+    const res = await fetch(url, {
+      headers: {
+        apikey: SUPABASE_ANON_KEY,
+        Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+      },
+    });
+
+    if (!res.ok) {
+      tbody.innerHTML = '<tr><td colspan="7" class="empty">Failed to load.</td></tr>';
+      countLabel.textContent = "Error loading investigations.";
+      return;
+    }
+
+    const data = await res.json();
+    if (!data.length) {
+      tbody.innerHTML = '<tr><td colspan="7" class="empty">No investigations found.</td></tr>';
+      countLabel.textContent = "0 investigations.";
+      return;
+    }
+
+    countLabel.textContent = `${data.length} investigations (latest first).`;
+    tbody.innerHTML = "";
+
+    for (const row of data) {
+      const tr = document.createElement("tr");
+
+      const empCell = document.createElement("td");
+      empCell.innerHTML = `<div>${row["Employee Name"] || "-"} <span class="tag">(${row["Employee ID"] || "-"})</span></div>`;
+      tr.appendChild(empCell);
+
+      const dateCell = document.createElement("td");
+      dateCell.textContent = row.absence_date || "-";
+      tr.appendChild(dateCell);
+
+      const statusCell = document.createElement("td");
+      const statusDot = document.createElement("span");
+      statusDot.className = "status-dot " + (
+        row.status === "waiting_employee_reply" ? "waiting" :
+        row.status === "closed" || row.status === "closed_without_investigation" ? "closed" : ""
+      );
+      const badge = document.createElement("span");
+      badge.className = "badge badge-status";
+      badge.textContent = row.status;
+      statusCell.appendChild(statusDot);
+      statusCell.appendChild(document.createTextNode(" "));
+      statusCell.appendChild(badge);
+      tr.appendChild(statusCell);
+
+      const reminderCell = document.createElement("td");
+      const rem = row.reminder_state || "None";
+      const remBadge = document.createElement("span");
+      remBadge.className = rem === "None" ? "badge badge-wait" : "badge badge-reminder";
+      remBadge.textContent = rem;
+      reminderCell.appendChild(remBadge);
+      tr.appendChild(reminderCell);
+
+      const mgrCell = document.createElement("td");
+      mgrCell.textContent = row.manager_email || "-";
+      tr.appendChild(mgrCell);
+
+      const createdCell = document.createElement("td");
+      createdCell.textContent = row.created_at ? row.created_at.replace("T", " ").substring(0, 16) : "-";
+      tr.appendChild(createdCell);
+
+      const updatedCell = document.createElement("td");
+      updatedCell.textContent = row.updated_at ? row.updated_at.replace("T", " ").substring(0, 16) : "-";
+      tr.appendChild(updatedCell);
+
+      tbody.appendChild(tr);
+    }
+  }
+
+  document.getElementById("refreshBtn").addEventListener("click", fetchInvestigations);
+  document.getElementById("filterEmployee").addEventListener("keyup", (e) => {
+    if (e.key === "Enter") fetchInvestigations();
+  });
+  document.getElementById("filterStatus").addEventListener("change", fetchInvestigations);
+
+  document.getElementById("backBtn").addEventListener("click", () => {
+    // رجوع إلى Navigation panel أو أي صفحة رئيسية
+    window.location.href = "../Navigation panel.html";
+  });
+
+  // تحميل أولي
+  fetchInvestigations();
+</script>
+</body>
+</html>

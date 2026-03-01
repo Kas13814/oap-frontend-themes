@@ -1,0 +1,661 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <script>
+(function(){
+  try{
+    var root = document.documentElement;
+    var sp = new URLSearchParams(window.location.search);
+    var t = sp.get('theme');
+    if(!t){
+      try{ t = localStorage.getItem('oap_theme'); }catch(_){}
+    }
+    if(t) root.setAttribute('data-theme', t);
+
+    var ink = sp.get('gink') || sp.get('gradientInk');
+    if(!ink){
+      try{ ink = localStorage.getItem('oap_gradient_ink'); }catch(_){}
+    }
+    if(ink) root.setAttribute('data-gradient-ink', ink);
+  }catch(_){}
+})();
+</script>
+  <meta charset="utf-8" />
+  <title>محضر تحقيق إلكتروني رسمي</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link rel="stylesheet" href="/assets/css/themes.css">
+  <style>
+  :root{
+    /* Palette inspired by your screenshot (warm paper + deep ink + soft lines + green accent) */
+    --paper:#f4f1ea;
+    --paper2:#efeae1;
+    --card:#fbfaf7;
+    --ink:#0b1220;
+    --ink2:#111827;
+    --muted:#5b6473;
+    --muted2:#8a93a3;
+    --line:#d7d1c6;
+    --line2:#e6e1d8;
+    --accent:#16a34a;     /* green accent */
+    --accent2:#0b1220;    /* deep ink */
+    --shadow: 0 18px 44px rgba(11,18,32,.10);
+    --radius: 18px;
+  }
+
+  *{box-sizing:border-box}
+  html,body{height:100%}
+
+  body{
+    margin:0;
+    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
+    background: linear-gradient(180deg, var(--paper) 0%, var(--paper2) 100%);
+    color: var(--ink2);
+    direction: rtl;
+    overflow:hidden;
+  }
+
+  .wrap{
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:24px;
+  }
+
+  .card{
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 22px 22px 24px;
+    max-width: 860px;
+    width:100%;
+    max-height: 90vh;
+    overflow-y:auto;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--line2);
+    position:relative;
+
+    scrollbar-width:thin;
+    scrollbar-color: rgba(17,24,39,.08) transparent;
+  }
+  .card::-webkit-scrollbar{width:7px}
+  .card::-webkit-scrollbar-track{background:transparent}
+  .card::-webkit-scrollbar-thumb{background:rgba(17,24,39,.06);border-radius:999px}
+  .card::-webkit-scrollbar-thumb:hover{background:rgba(17,24,39,.10)}
+
+  /* subtle top rule like the screenshot */
+  .card::before{
+    content:"";
+    position: sticky;
+    top:0;
+    display:block;
+    height:1px;
+    margin:-6px 0 14px;
+    background: linear-gradient(90deg, transparent, var(--line), transparent);
+  }
+
+  .header-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    margin-bottom:10px;
+    padding-bottom:10px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  h1{
+    margin:0;
+    color: var(--ink);
+    /* elegant editorial feel (without changing text) */
+    font-family: ui-serif, "Georgia", "Times New Roman", Times, serif;
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: .6px;
+    line-height:1.15;
+  }
+
+  p{
+    margin:6px 0;
+    font-size:14px;
+    color: var(--muted);
+    line-height:1.9;
+  }
+
+  .section-title{
+    font-weight:700;
+    margin-top:16px;
+    margin-bottom:6px;
+    color: var(--ink);
+    font-size:13px;
+    letter-spacing:.2px;
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+  .section-title::before{
+    content:"";
+    width:10px;height:10px;border-radius:999px;
+    background: var(--accent);
+    box-shadow: 0 0 0 4px rgba(22,163,74,.12);
+  }
+
+  .info-box{
+    border-radius: 12px;
+    border: 1px dashed var(--line);
+    padding: 12px 12px 10px;
+    background: rgba(255,255,255,.55);
+    margin-bottom:10px;
+  }
+  .info-line-emp{font-size:14px;margin:2px 0;color:var(--ink2)}
+  .info-line-emp strong{font-weight:700}
+
+  .question-block{
+    margin-top:12px;
+    padding:12px 12px 14px;
+    border-radius: 14px;
+    border: 1px solid var(--line2);
+    background: #ffffff;
+    transition: transform .12s ease, box-shadow .12s ease, border-color .12s ease;
+  }
+  .question-block:hover{
+    transform: translateY(-1px);
+    border-color: var(--line);
+    box-shadow: 0 10px 22px rgba(11,18,32,.06);
+  }
+
+  .question-text{
+    font-size:14px;
+    margin:0 0 8px;
+    color: var(--ink2);
+    font-weight:600;
+  }
+
+  textarea{
+    width:100%;
+    min-height:92px;
+    border-radius: 12px;
+    border:1px solid var(--line);
+    padding:10px 12px;
+    background: #fff;
+    color: var(--ink2);
+    resize:vertical;
+    font-size:14px;
+  }
+  textarea:focus{
+    outline:none;
+    border-color: rgba(22,163,74,.75);
+    box-shadow: 0 0 0 3px rgba(22,163,74,.14);
+  }
+
+  /* Primary button in deep-ink like screenshot */
+  button{
+    margin-top:16px;
+    padding:12px 22px;
+    border-radius:999px;
+    border: 1px solid rgba(11,18,32,.22);
+    background: var(--ink);
+    color:#fff;
+    font-size:14px;
+    font-weight:700;
+    cursor:pointer;
+    transition: transform .12s ease, box-shadow .12s ease, opacity .12s ease;
+    box-shadow: 0 14px 26px rgba(11,18,32,.16);
+  }
+  button:hover{transform: translateY(-1px);box-shadow:0 18px 34px rgba(11,18,32,.18)}
+  button:active{transform: translateY(0)}
+  button:disabled{opacity:.6;cursor:not-allowed;box-shadow:none}
+
+  /* Language toggle: light, outlined */
+  .lang-btn{
+    margin-top:0;
+    padding:7px 12px;
+    border-radius:999px;
+    border:1px solid var(--line);
+    background: transparent;
+    font-size:12px;
+    cursor:pointer;
+    color: var(--ink2);
+    white-space:nowrap;
+    box-shadow:none;
+  }
+  .lang-btn:hover{transform:none;box-shadow:none;background: rgba(11,18,32,.04)}
+
+  #state{
+    margin-top:10px;
+    margin-bottom:6px;
+    font-size:13px;
+    min-height:18px;
+    white-space:pre-wrap;
+    padding:10px 12px;
+    border-radius: 12px;
+    border: 1px solid var(--line2);
+    background: rgba(255,255,255,.55);
+    color: var(--muted);
+  }
+  .ok{color:#15803d}
+  .err{color:#b91c1c}
+
+  .note{
+    font-size:12px;
+    color:#7c5b1a;
+    background: #fff7e6;
+    border-radius: 12px;
+    padding:10px 12px;
+    margin-top:12px;
+    border: 1px solid #f0d7a4;
+    line-height:1.85;
+  }
+
+  @media (max-width:520px){
+    body{overflow:auto}
+    .wrap{padding:14px;align-items:flex-start}
+    .card{max-height:none;padding:16px}
+    h1{font-size:19px}
+  }
+</style>
+  <script src="/assets/js/theme-manager.js" defer></script>
+</head>
+<body>
+<div class="wrap">
+  <div class="card">
+    <div class="header-row">
+      <h1 id="title">محضر تحقيق إلكتروني رسمي</h1>
+      <button id="langToggle" class="lang-btn">English</button>
+    </div>
+
+    <div id="info" class="info-box"></div>
+    <p id="state"></p>
+
+    <p id="violationLabel" class="section-title">شرح المخالفة:</p>
+    <p id="violationText">سيتم عرض تفاصيل المخالفة وتاريخ الغياب هنا بعد تحميل البيانات.</p>
+
+    <p id="questionsLabel" class="section-title" style="margin-top:16px;">أسئلة التحقيق:</p>
+
+    <div class="question-block">
+      <p class="question-text" id="qt1">
+        1- ما هو سبب غيابك عن العمل بتاريخ <strong><span id="qDate1">[تاريخ الغياب]</span></strong> ؟
+      </p>
+      <textarea id="q1" placeholder="اكتب إجابتك على السؤال الأول هنا..."></textarea>
+    </div>
+
+    <div class="question-block">
+      <p class="question-text" id="qt2">
+        2- هل قمت بإبلاغ المسؤول المباشر عن غيابك؟ إذا نعم، من هو الشخص الذي تم إبلاغه؟
+        وإذا لم تقم بالإبلاغ، هل كان هناك سبب يمنعك من ذلك؟
+      </p>
+      <textarea id="q2" placeholder="اكتب إجابتك على السؤال الثاني هنا..."></textarea>
+    </div>
+
+    <div class="question-block">
+      <p class="question-text" id="qt3">
+        3- هل لديك أي اقتراحات أو حلول من شأنها تحسين التزامك بالمواعيد، مثل تعديل جدول العمل
+        في حال وجود إثبات لظروف معينة، أو أي عوامل أخرى قد تساهم في تجنب الغياب عن العمل مستقبلاً؟
+      </p>
+      <textarea id="q3" placeholder="اكتب إجابتك على السؤال الثالث هنا..."></textarea>
+    </div>
+
+    <div class="question-block">
+      <p class="question-text" id="qt4">
+        4- هل لديك أي ملاحظات أو توضيحات إضافية ترغب في تقديمها بخصوص هذا الغياب؟
+      </p>
+      <textarea id="q4" placeholder="اكتب إجابتك على السؤال الرابع هنا..."></textarea>
+    </div>
+
+    <div class="question-block">
+      <p class="question-text" id="qt5">
+        5- برأيك، هل كان لغيابك تأثير سلبي على سير العمل أو على زملائك؟
+      </p>
+      <textarea id="q5" placeholder="اكتب إجابتك على السؤال الخامس هنا..."></textarea>
+    </div>
+
+    <div id="noteText" class="note">
+      تنويه: يتعين عليكم تزويدنا بأي مستندات من شأنها دعم أقوالكم أو إثباتها،
+      على أن يكون ذلك في مدة أقصاها يوم عمل واحد من وقت استلام هذا البريد الإلكتروني.
+    </div>
+
+    <button id="sendBtn">إرسال الرد</button>
+  </div>
+</div>
+
+<script type="module">
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+const SUPABASE_URL = "https://inuqlhkoaoeiycefvjyj.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImludXFsaGtvYW9laXljZWZ2anlqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMxMTUxODEsImV4cCI6MjA3ODY5MTE4MX0.DCAY9rN0noaBoE_T-6eDsb_79szK91af989f9TqjEow";
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+const url = new URL(window.location.href);
+
+function getAllParams(u) {
+  const merged = new URLSearchParams(u.search);
+  // دعم روابط البريد التي تستخدم #? بدل ? لتفادي صفحة فحص Microsoft Defender
+  if (u.hash && u.hash.length > 1) {
+    const h = u.hash.startsWith("#") ? u.hash.slice(1) : u.hash;
+    const q = h.includes("?") ? h.split("?")[1] : h;
+    const hp = new URLSearchParams(q);
+    for (const [k, v] of hp.entries()) merged.set(k, v);
+  }
+  return merged;
+}
+
+const params = getAllParams(url);
+const invId  = params.get("inv_id");
+const token  = params.get("token"); // اختياري // اختياري
+
+const rootEl = document.documentElement;
+const bodyEl = document.body;
+
+const titleEl = document.getElementById("title");
+const langToggleBtn = document.getElementById("langToggle");
+
+const infoEl = document.getElementById("info");
+const stateEl = document.getElementById("state");
+const violationLabelEl = document.getElementById("violationLabel");
+const violationTextEl = document.getElementById("violationText");
+const questionsLabelEl = document.getElementById("questionsLabel");
+
+const qDate1El = document.getElementById("qDate1");
+const qt1El = document.getElementById("qt1");
+const qt2El = document.getElementById("qt2");
+const qt3El = document.getElementById("qt3");
+const qt4El = document.getElementById("qt4");
+const qt5El = document.getElementById("qt5");
+
+const q1El = document.getElementById("q1");
+const q2El = document.getElementById("q2");
+const q3El = document.getElementById("q3");
+const q4El = document.getElementById("q4");
+const q5El = document.getElementById("q5");
+
+const noteTextEl = document.getElementById("noteText");
+const sendBtn = document.getElementById("sendBtn");
+
+let currentLang = "ar";
+let investigation = null;
+
+const uiText = {
+  ar: {
+    title: "محضر تحقيق إلكتروني رسمي",
+    toggleLabel: "English",
+    violationLabel: "شرح المخالفة:",
+    questionsLabel: "أسئلة التحقيق:",
+    note: "تنويه: يتعين عليكم تزويدنا بأي مستندات من شأنها دعم أقوالكم أو إثباتها، على أن يكون ذلك في مدة أقصاها يوم عمل واحد من وقت استلام هذا البريد الإلكتروني.",
+    absencePlaceholder: "[تاريخ الغياب]",
+    violationPending: "سيتم عرض تفاصيل المخالفة وتاريخ الغياب هنا بعد تحميل البيانات.",
+    q1: (date) => `1- ما هو سبب غيابك عن العمل بتاريخ <strong>${date}</strong> ؟`,
+    q2: "2- هل قمت بإبلاغ المسؤول المباشر عن غيابك؟ إذا نعم، من هو الشخص الذي تم إبلاغه؟ وإذا لم تقم بالإبلاغ، هل كان هناك سبب يمنعك من ذلك؟",
+    q3: "3- هل لديك أي اقتراحات أو حلول من شأنها تحسين التزامك بالمواعيد، مثل تعديل جدول العمل في حال وجود إثبات لظروف معينة، أو أي عوامل أخرى قد تساهم في تجنب الغياب عن العمل مستقبلاً؟",
+    q4: "4- هل لديك أي ملاحظات أو توضيحات إضافية ترغب في تقديمها بخصوص هذا الغياب؟",
+    q5: "5- برأيك، هل كان لغيابك تأثير سلبي على سير العمل أو على زملائك؟",
+    ph1: "اكتب إجابتك على السؤال الأول هنا...",
+    ph2: "اكتب إجابتك على السؤال الثاني هنا...",
+    ph3: "اكتب إجابتك على السؤال الثالث هنا...",
+    ph4: "اكتب إجابتك على السؤال الرابع هنا...",
+    ph5: "اكتب إجابتك على السؤال الخامس هنا...",
+    sendButton: "إرسال الرد",
+    invalidLink: "تعذر فتح هذا التحقيق، يرجى التواصل مع الإدارة.",
+    loadError: "تعذر تحميل بيانات التحقيق.",
+    closed: "تم إغلاق ملف التحقيق ولا يمكن الرد عليه الآن.",
+    noAnswers: "الرجاء إدخال إجاباتك على الأقل على أحد الأسئلة قبل الإرسال.",
+    saving: "جاري حفظ الرد…",
+    saveError: "حدث خطأ أثناء حفظ الرد.",
+    unexpectedError: "حدث خطأ غير متوقع.",
+    success: "تم حفظ ردك بنجاح."
+  },
+  en: {
+    title: "Official Electronic Investigation Report",
+    toggleLabel: "العربية",
+    violationLabel: "Description of the violation:",
+    questionsLabel: "Investigation questions:",
+    note: "Note: You must provide any documents that support your statements within one working day from receiving this email.",
+    absencePlaceholder: "[Date of absence]",
+    violationPending: "The details of the violation and the date of absence will appear here after loading the data.",
+    q1: (date) => `1- What was the reason for your absence from work on <strong>${date}</strong>?`,
+    q2: "2- Did you inform your direct supervisor about your absence? If yes, who did you inform? If not, was there any reason that prevented you from doing so?",
+    q3: "3- Do you have any suggestions or solutions that could help improve your attendance, such as adjusting your work schedule in case of proven circumstances, or any other factors that may help avoid future absences?",
+    q4: "4- Do you have any additional comments or clarifications you would like to provide regarding this absence?",
+    q5: "5- In your opinion, did your absence have a negative impact on the workflow or your colleagues?",
+    ph1: "Write your answer to question 1 here...",
+    ph2: "Write your answer to question 2 here...",
+    ph3: "Write your answer to question 3 here...",
+    ph4: "Write your answer to question 4 here...",
+    ph5: "Write your answer to question 5 here...",
+    sendButton: "Submit response",
+    invalidLink: "Unable to open this investigation. Please contact your supervisor.",
+    loadError: "Unable to load investigation data.",
+    closed: "This investigation has been closed and can no longer be answered.",
+    noAnswers: "Please enter at least one answer before submitting.",
+    saving: "Saving your response…",
+    saveError: "An error occurred while saving your response.",
+    unexpectedError: "An unexpected error occurred.",
+    success: "Your response has been saved."
+  }
+};
+
+function setState(type, text) {
+  stateEl.className = type || "";
+  stateEl.textContent = text || "";
+}
+
+function applyDirection() {
+  if (currentLang === "ar") {
+    rootEl.dir = "rtl";
+    rootEl.lang = "ar";
+    bodyEl.style.direction = "rtl";
+    bodyEl.style.textAlign = "right";
+  } else {
+    rootEl.dir = "ltr";
+    rootEl.lang = "en";
+    bodyEl.style.direction = "ltr";
+    bodyEl.style.textAlign = "left";
+  }
+}
+
+function applyLanguage() {
+  applyDirection();
+
+  const t = uiText[currentLang];
+  titleEl.textContent = t.title;
+  langToggleBtn.textContent = t.toggleLabel;
+  violationLabelEl.textContent = t.violationLabel;
+  questionsLabelEl.textContent = t.questionsLabel;
+  noteTextEl.textContent = t.note;
+  sendBtn.textContent = t.sendButton;
+
+  const absDate = investigation?.absence_date || t.absencePlaceholder;
+  qDate1El.textContent = absDate;
+
+  qt1El.innerHTML = t.q1(absDate);
+  qt2El.innerHTML = t.q2;
+  qt3El.innerHTML = t.q3;
+  qt4El.innerHTML = t.q4;
+  qt5El.innerHTML = t.q5;
+
+  q1El.placeholder = t.ph1;
+  q2El.placeholder = t.ph2;
+  q3El.placeholder = t.ph3;
+  q4El.placeholder = t.ph4;
+  q5El.placeholder = t.ph5;
+
+  if (investigation) {
+    const empName = investigation["Employee Name"];
+    const empId = investigation["Employee ID"];
+    const absDateLocal = investigation.absence_date;
+
+    if (currentLang === "ar") {
+      infoEl.innerHTML = `
+        <p class="info-line-emp">عزيزي الموظف / <strong>${empName} (${empId})</strong></p>
+        <p>
+          السلام عليكم ورحمة الله وبركاته، وبعد، فإن إدارة الشركة حريصة جداً على ضرورة إعطاء الموظف الفرصة الكاملة
+          عند أخذ إفادته حول الموضوع الذي استوجب التحقيق فيما نُسب إليه، وعليه فإنه مطلوب من الموظف التعاون الإيجابي
+          مع أعضاء لجنة التحقيق وذلك للتوصل للحقائق الكاملة مما يضمن اتخاذ القرارات المنصفة والعادلة للجميع.
+        </p>
+      `;
+
+      violationTextEl.innerHTML = `
+        ورد إلى قسم التحقيقات بإدارة قسم مراقبة الحركة المخالفة المتمثلة بـ
+        (<strong>التغيب عن العمل بتاريخ ${absDateLocal}</strong>).<br/>
+        وعليه نرجو منكم الإجابة على أسئلة التحقيق أدناه بكل صدق وشفافية
+        في مدة أقصاها يوم عمل واحد من وقت إرسال هذا البريد الإلكتروني.
+      `;
+    } else {
+      infoEl.innerHTML = `
+        <p class="info-line-emp">
+          Dear employee / <strong>${empName} (${empId})</strong>
+        </p>
+        <p>
+          The company is keen to give the employee a full opportunity to provide their statement regarding the matter
+          that required this investigation. You are kindly requested to cooperate positively with the investigation
+          committee to reach the full facts, which ensures fair and just decisions for everyone.
+        </p>
+      `;
+
+      violationTextEl.innerHTML = `
+        An investigation request has been received by the Traffic Control Department regarding the violation of
+        <strong>absence from work on ${absDateLocal}</strong>.<br/>
+        Therefore, you are requested to answer the investigation questions below honestly and transparently within
+        one working day from the time this email was sent.
+      `;
+    }
+  } else {
+    infoEl.innerHTML = "";
+    violationTextEl.textContent = t.violationPending;
+  }
+}
+
+langToggleBtn.addEventListener("click", () => {
+  currentLang = currentLang === "ar" ? "en" : "ar";
+  applyLanguage();
+});
+
+async function loadInvestigation() {
+  if (!invId) {
+    setState("err", uiText[currentLang].invalidLink);
+    sendBtn.disabled = true;
+    return;
+  }
+
+  const { data, error } = await supabase
+    .from("absence_investigation")
+    .select('id, "Employee ID", "Employee Name", absence_date, employee_email, manager_email, employee_action_token, status')
+    .eq("id", invId)
+    .maybeSingle();
+
+  if (error || !data) {
+    setState("err", uiText[currentLang].loadError + (error?.message ? `\n${error.message}` : ""));
+    sendBtn.disabled = true;
+    infoEl.innerHTML = "";
+    return;
+  }
+
+  if (token && data.employee_action_token && data.employee_action_token !== token) {
+    setState("err", uiText[currentLang].invalidLink);
+    sendBtn.disabled = true;
+    return;
+  }
+
+  if (data.status === "closed_without_investigation" || data.status === "closed") {
+    setState("err", uiText[currentLang].closed);
+    sendBtn.disabled = true;
+    return;
+  }
+
+  investigation = data;
+  applyLanguage();
+}
+
+function buildCombinedReply(absDate) {
+  const t = uiText[currentLang];
+  const dateText = absDate || t.absencePlaceholder;
+
+  const a1 = q1El.value.trim();
+  const a2 = q2El.value.trim();
+  const a3 = q3El.value.trim();
+  const a4 = q4El.value.trim();
+  const a5 = q5El.value.trim();
+
+  if (!a1 && !a2 && !a3 && !a4 && !a5) return "";
+
+  let combined = "";
+  combined += `س1: ما هو سبب غيابك عن العمل بتاريخ ${dateText}؟\n`;
+  combined += `ج1: ${a1 || "-"}\n\n`;
+  combined += "س2: هل قمت بإبلاغ المسؤول المباشر عن غيابك؟ إذا نعم، من هو الشخص الذي تم إبلاغه؟ وإذا لم تقم بالإبلاغ، هل كان هناك سبب يمنعك من ذلك؟\n";
+  combined += `ج2: ${a2 || "-"}\n\n`;
+  combined += "س3: هل لديك أي اقتراحات أو حلول من شأنها تحسين التزامك بالمواعيد، مثل تعديل جدول العمل في حال وجود إثبات لظروف معينة، أو أي عوامل أخرى قد تساهم في تجنب الغياب عن العمل مستقبلاً؟\n";
+  combined += `ج3: ${a3 || "-"}\n\n`;
+  combined += "س4: هل لديك أي ملاحظات أو توضيحات إضافية ترغب في تقديمها بخصوص هذا الغياب؟\n";
+  combined += `ج4: ${a4 || "-"}\n\n`;
+  combined += "س5: برأيك، هل كان لغيابك تأثير سلبي على سير العمل أو على زملائك؟\n";
+  combined += `ج5: ${a5 || "-"}\n`;
+  return combined;
+}
+
+async function sendReply() {
+  const t = uiText[currentLang];
+  const combinedText = buildCombinedReply(investigation?.absence_date);
+
+  if (!combinedText) {
+    setState("err", t.noAnswers);
+    return;
+  }
+
+  sendBtn.disabled = true;
+  setState("", t.saving);
+
+  const nowIso = new Date().toISOString();
+
+  // ✅ التحديث الصحيح على absence_investigation (بدون responded_at)
+  const { error: upInvErr } = await supabase
+    .from("absence_investigation")
+    .update({
+      employee_reply_text: combinedText,
+      status: "employee_replied",
+      employee_replied_at: nowIso,
+      employee_link_used: true
+    })
+    .eq("id", invId);
+
+  if (upInvErr) {
+    // نعرض السبب الحقيقي بدل رسالة عامة
+    setState("err", `${t.saveError}\n${upInvErr.message || ""}`);
+    sendBtn.disabled = false;
+    return;
+  }
+
+  // تحديث employee_absence (لو فشل لا نوقف الموظف - بس نسجل الخطأ بالواجهة)
+  const { error: absErr } = await supabase
+    .from("employee_absence")
+    .update({
+      "Respond to the investigation": "employee_replied",
+      "Investigation status": "employee_replied",
+      "Last Update": nowIso
+    })
+    .eq("InvestigationID", invId);
+
+  if (absErr) {
+    setState("err", `تم حفظ الرد، لكن تعذر تحديث سجل الغياب:\n${absErr.message || ""}`);
+    sendBtn.disabled = true;
+    return;
+  }
+
+  setState("ok", t.success);
+  sendBtn.disabled = true;
+}
+
+sendBtn.addEventListener("click", () => {
+  sendReply().catch(err => {
+    console.error(err);
+    setState("err", uiText[currentLang].unexpectedError + "\n" + (err?.message || ""));
+    sendBtn.disabled = false;
+  });
+});
+
+applyLanguage();
+loadInvestigation().catch(err => {
+  console.error(err);
+  setState("err", uiText[currentLang].unexpectedError + "\n" + (err?.message || ""));
+  sendBtn.disabled = true;
+});
+</script>
+</body>
+</html>

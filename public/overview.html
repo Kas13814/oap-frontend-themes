@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <script>
+(function(){
+  try{
+    var root = document.documentElement;
+    var sp = new URLSearchParams(window.location.search);
+    var t = sp.get('theme');
+    if(!t){
+      try{ t = localStorage.getItem('oap_theme'); }catch(_){}
+    }
+    if(t) root.setAttribute('data-theme', t);
+
+    var ink = sp.get('gink') || sp.get('gradientInk');
+    if(!ink){
+      try{ ink = localStorage.getItem('oap_gradient_ink'); }catch(_){}
+    }
+    if(ink) root.setAttribute('data-gradient-ink', ink);
+  }catch(_){}
+})();
+</script>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="/assets/css/themes.css">
+
+  <title>OAP — Operations • Analytics • Performance (Overview)</title>
+
+  <meta name="description" content="OAP (Operations • Analytics • Performance) is a secure operations platform for monitoring daily performance, analytics, and workflows across airport ground services. Built by kas." />
+  <meta name="keywords" content="OAP, oap, Operations, Analytics, Performance, kas, KAS, airport operations, ground services, dashboards, performance analytics" />
+  <link rel="canonical" href="https://oap-kas.com/overview.html" />
+  <meta name="robots" content="index,follow" />
+
+  <!-- Social preview -->
+  <meta property="og:title" content="OAP — Operations • Analytics • Performance" />
+  <meta property="og:description" content="A secure operations platform for analytics, dashboards, and operational workflows across ground services. Built by kas." />
+  <meta property="og:url" content="https://oap-kas.com/overview.html" />
+  <meta property="og:type" content="website" />
+  <meta name="twitter:card" content="summary" />
+
+  <!-- Structured Data (Schema.org) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "OAP – Operations Analytics Performance",
+    "operatingSystem": "Web",
+    "applicationCategory": "BusinessApplication",
+    "description": "OAP is a secure operations and analytics platform designed for airport ground services to track performance, incidents, and operational workflows.",
+    "url": "https://oap-kas.com/overview.html",
+    "author": {
+      "@type": "Person",
+      "name": "kas"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "OAP",
+      "url": "https://oap-kas.com/"
+    }
+  }
+  </script>
+  <script src="/assets/js/theme-manager.js" defer></script>
+</head>
+
+<body style="margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;line-height:1.6;background:#0b0f16;color:#e9eef7;">
+  <main style="max-width:980px;margin:0 auto;padding:48px 20px;">
+    <header style="margin-bottom:28px;">
+      <div style="font-size:14px;opacity:.8;letter-spacing:.12em;text-transform:uppercase;">OAP</div>
+      <h1 style="margin:10px 0 10px;font-size:40px;line-height:1.15;">
+        Operations • Analytics • Performance
+      </h1>
+      <p style="margin:0;max-width:820px;opacity:.9;">
+        A secure operations platform that connects operational records, dashboards, and AI-powered insights — designed for fast decision-making in real-world airport ground services.
+      </p>
+    </header>
+
+    <section style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:18px 18px 14px;margin-bottom:18px;">
+      <h2 style="margin:0 0 8px;font-size:18px;">What is OAP?</h2>
+      <p style="margin:0;">
+        OAP is an internal-ready, role-based web platform that helps teams track daily operations, performance KPIs, incidents, investigations, and productivity.
+        It brings data together into one place, then turns it into searchable insights and actionable dashboards.
+      </p>
+    </section>
+
+    <section style="display:grid;grid-template-columns:1fr;gap:14px;margin-bottom:18px;">
+      <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:18px;">
+        <h2 style="margin:0 0 8px;font-size:18px;">Core Capabilities</h2>
+        <ul style="margin:0;padding-left:18px;">
+          <li>Operational dashboards for trends, KPIs, and daily performance</li>
+          <li>Structured operational forms (records, events, delays, investigations)</li>
+          <li>Searchable data with time-based filtering (day/month/year/quarter)</li>
+          <li>Role-based access (admin / manager / supervisor / employee)</li>
+          <li>AI assistant for quick answers, summaries, and insights based on your data</li>
+        </ul>
+      </div>
+
+      <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:18px;">
+        <h2 style="margin:0 0 8px;font-size:18px;">Why it matters</h2>
+        <p style="margin:0;">
+          In large operations, speed and clarity matter. OAP helps reduce manual effort, standardize reporting,
+          and improve accountability by linking events to teams, time windows, and outcomes.
+        </p>
+      </div>
+    </section>
+
+    <section style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:18px;margin-bottom:18px;">
+      <h2 style="margin:0 0 8px;font-size:18px;">High-level architecture</h2>
+      <ul style="margin:0;padding-left:18px;">
+        <li><strong>Frontend:</strong> Cloudflare Pages (static HTML/CSS/JS)</li>
+        <li><strong>Access & routing:</strong> Cloudflare Functions/Workers (auth gating + routing rules)</li>
+        <li><strong>Backend:</strong> Python API (AI + data services)</li>
+        <li><strong>Data layer:</strong> Supabase (Postgres + Auth + RLS)</li>
+      </ul>
+      <p style="margin:10px 0 0;opacity:.9;">
+        This design separates UI from security and data access, allowing enterprise-grade controls and clean scaling.
+      </p>
+    </section>
+
+    <section style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:18px;margin-bottom:18px;">
+      <h2 style="margin:0 0 8px;font-size:18px;">Keywords</h2>
+      <p style="margin:0;">
+        OAP, Operations, Analytics, Performance, kas, KAS, airport operations, ground services, dashboards, performance analytics.
+      </p>
+    </section>
+
+    <footer style="margin-top:26px;opacity:.8;font-size:13px;">
+      Built by <strong>kas</strong> • OAP — Operations • Analytics • Performance
+    </footer>
+  </main>
+</body>
+</html>

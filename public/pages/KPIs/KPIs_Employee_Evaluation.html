@@ -1,0 +1,1512 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <script>
+(function(){
+  try{
+    var root = document.documentElement;
+    var sp = new URLSearchParams(window.location.search);
+    var t = sp.get('theme');
+    if(!t){
+      try{ t = localStorage.getItem('oap_theme'); }catch(_){}
+    }
+    if(t) root.setAttribute('data-theme', t);
+
+    var ink = sp.get('gink') || sp.get('gradientInk');
+    if(!ink){
+      try{ ink = localStorage.getItem('oap_gradient_ink'); }catch(_){}
+    }
+    if(ink) root.setAttribute('data-gradient-ink', ink);
+  }catch(_){}
+})();
+</script>
+  <meta charset="UTF-8" />
+  <title>OAP • Employee Evaluation</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="/assets/css/themes.css">
+
+  <!-- Protected page -->
+  <meta name="robots" content="noindex,nofollow" />
+  <meta name="googlebot" content="noindex,nofollow" />
+
+  <style>
+    :root{
+      /* Dark theme (default) */
+      --bg: #0f1115;
+      --panel: #151923;
+      --card: #1b2130;
+      --border: rgba(255,255,255,0.10);
+      --text: #e8ecf2;
+      --muted: rgba(232,236,242,0.70);
+      --accent: #B7E219;
+      --danger: #ff6b6b;
+      --warn: #ffd166;
+      --ok: #06d6a0;
+
+      --radius: 16px;
+      --shadow: 0 10px 30px rgba(0,0,0,0.25);
+
+      --w-drawer: 860px;
+      --left-w: 380px;
+      --right-w: 0px;
+      --resizer-w: 10px;
+    }
+
+    *{ box-sizing: border-box; }
+    body{
+      margin:0;
+      font-family: "Segoe UI", Tahoma, Arial, sans-serif;
+      background:
+        radial-gradient(1200px 700px at 85% 10%, rgba(183,226,25,0.12), transparent 55%),
+        radial-gradient(900px 600px at 10% 20%, rgba(0,169,255,0.10), transparent 55%),
+        var(--bg);
+      color: var(--text);
+      overflow-x:hidden;
+    }
+
+    /* ===== Layout ===== */
+    .appGrid{
+      min-height: 100vh;
+      display:grid;
+      transition: grid-template-columns .18s ease;
+      grid-template-columns: var(--left-w) 1fr var(--resizer-w) var(--right-w);
+      gap: 16px;
+      padding: 16px;
+      align-items: start;
+    }
+
+    /* Left accordion panel */
+    .leftPanel{
+      position: sticky;
+      top: 16px;
+      height: calc(100vh - 32px);
+      border-radius: calc(var(--radius) + 4px);
+      border: 1px solid var(--border);
+      background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.03));
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
+      overflow: hidden;
+      display:flex;
+      flex-direction: column;
+    }
+
+    .leftHeader{
+      padding: 14px 14px;
+      border-bottom: 1px solid var(--border);
+      display:flex;
+      align-items:center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+    .brand{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      min-width: 0;
+    }
+    .logo{
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background: rgba(183,226,25,0.12);
+      color: var(--accent);
+      font-weight: 400;
+      letter-spacing: 1px;
+      flex: 0 0 auto;
+    }
+    .titleBlock{
+      display:flex;
+      flex-direction: column;
+      gap:2px;
+      min-width: 0;
+    }
+    .titleBlock b{
+      font-size: 13px;
+      font-weight: 1000;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .titleBlock span{
+      font-size: 11px;
+      color: var(--muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .leftBody{
+      padding: 10px 10px 12px;
+      overflow:auto;
+      flex: 1;
+    }
+
+    /* Accordion */
+    .section{
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      background: rgba(0,0,0,0.10);
+      margin-bottom: 10px;
+      overflow: hidden;
+    }
+
+    .secHead{
+      width: 100%;
+      border: 0;
+      background: transparent;
+      color: var(--text);
+      padding: 12px 12px;
+      display:flex;
+      align-items:center;
+      justify-content: space-between;
+      cursor: pointer;
+      font-weight: 1000;
+      font-size: 13px;
+    }
+    .secHead:hover{ background: rgba(255,255,255,0.06); }
+    .chev{
+      width: 28px;
+      height: 28px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background: rgba(255,255,255,0.05);
+      transition: transform .14s ease;
+      flex: 0 0 auto;
+    }
+    .section[data-open="true"] .chev{ transform: rotate(180deg); }
+
+    .secBody{
+      border-top: 1px solid var(--border);
+      padding: 12px 12px 14px;
+      display:none;
+    }
+    .section[data-open="true"] .secBody{ display:block; }
+
+    /* Fields */
+    .row{
+      display:grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 10px;
+      align-items: end;
+    }
+    .field{
+      grid-column: span 6;
+      display:flex;
+      flex-direction: column;
+      gap: 6px;
+      min-width: 0;
+    }
+    .field.w3{ grid-column: span 4; }
+    .field.w4{ grid-column: span 6; }
+    .field.full{ grid-column: 1 / -1; }
+
+    label{
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 400;
+    }
+    select, input{
+      width:100%;
+      padding: 10px 10px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: rgba(0,0,0,0.18);
+      color: var(--text);
+      outline: none;
+    }
+    input::placeholder{ color: rgba(232,236,242,0.45); }
+
+    /* Buttons */
+    .btn{
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.06);
+      color: var(--text);
+      padding: 10px 12px;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: transform .12s ease, background .12s ease, border-color .12s ease;
+      font-weight: 400;
+      font-size: 13px;
+      white-space: nowrap;
+    }
+    .btn:hover{ transform: translateY(-1px); background: rgba(255,255,255,0.09); }
+    .btn.primary{
+      background: rgba(183,226,25,0.18);
+      border-color: rgba(183,226,25,0.40);
+    }
+    .btn.primary:hover{ background: rgba(183,226,25,0.24); }
+    .btn:disabled{ opacity: .45; cursor: not-allowed; transform:none; }
+
+    .pill{
+      display:inline-flex;
+      gap:8px;
+      align-items:center;
+      border: 1px solid var(--border);
+      padding: 8px 10px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.04);
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 400;
+    }
+    .dot{
+      width:10px;height:10px;border-radius:50%;
+      background: rgba(183,226,25,0.80);
+      box-shadow: 0 0 0 3px rgba(183,226,25,0.16);
+    }
+    .hint{
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.7;
+    }
+
+    .msg{
+      font-size: 12px;
+      color: var(--muted);
+      min-height: 18px;
+    }
+    .msg.error{ color: var(--danger); font-weight: 400; }
+    .msg.ok{ color: var(--ok); font-weight: 400; }
+
+    /* Roles box */
+    .rolesBox{
+      margin-top: 6px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: rgba(0,0,0,0.12);
+      overflow:hidden;
+    }
+
+    .rolesTop{
+      display:flex;
+      gap:10px;
+      padding: 10px;
+      border-bottom: 1px solid var(--border);
+      align-items:center;
+      flex-wrap: wrap;
+    }
+    .rolesTop input{ flex: 1; min-width: 140px; }
+    .rolesList{
+      max-height: 260px;
+      overflow:auto;
+      padding: 8px 10px;
+    }
+    .roleItem{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      padding: 8px 8px;
+      border-radius: 12px;
+      cursor:pointer;
+    }
+    .roleItem:hover{ background: rgba(255,255,255,0.06); }
+    .roleItem input{ width: 16px; height: 16px; }
+
+    /* Center AI Chat */
+    .center{
+      min-height: calc(100vh - 32px);
+      border-radius: calc(var(--radius) + 4px);
+      border: 1px solid var(--border);
+      background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.03));
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
+      overflow: hidden;
+      display:flex;
+      flex-direction: column;
+    }
+
+    .topbar{
+      padding: 14px 14px;
+      border-bottom: 1px solid var(--border);
+      display:flex;
+      align-items:center;
+      justify-content: space-between;
+      gap: 12px;
+      position: sticky;
+      top: 0;
+      z-index: 5;
+      background: rgba(10,12,16,0.35);
+      backdrop-filter: blur(10px);
+    }
+
+    .topbar .left{
+      display:flex;
+      flex-direction: column;
+      gap:2px;
+      min-width: 0;
+    }
+    .topbar .left h1{
+      margin:0;
+      font-size: 14px;
+      font-weight: 1000;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .topbar .left p{
+      margin:0;
+      font-size: 12px;
+      color: var(--muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .topbar .actions{
+      display:flex;
+      gap: 10px;
+      align-items:center;
+      flex-wrap: wrap;
+    }
+
+    .chatWrap{
+      flex: 1;
+      display:flex;
+      flex-direction: column;
+      padding: 14px;
+      gap: 12px;
+      overflow: hidden;
+    }
+
+    .chatLog{
+      flex: 1;
+      overflow:auto;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      background: rgba(0,0,0,0.10);
+      padding: 12px;
+    }
+
+    .bubble{
+      max-width: 92%;
+      padding: 10px 12px;
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      margin: 8px 0;
+      line-height: 1.7;
+      font-size: 13px;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    .bubble.user{
+      margin-right: auto;
+      background: rgba(183,226,25,0.12);
+      border-color: rgba(183,226,25,0.30);
+    }
+    .bubble.ai{
+      margin-left: auto;
+      background: rgba(255,255,255,0.04);
+    }
+
+    .typing{
+      opacity: .75;
+      display:inline-flex;
+      gap:6px;
+      align-items:center;
+    }
+    .typing i{
+      width:6px;height:6px;border-radius:50%;
+      background: currentColor;
+      opacity: .65;
+      animation: dot 1s infinite ease-in-out;
+    }
+    .typing i:nth-child(2){ animation-delay: .15s; }
+    .typing i:nth-child(3){ animation-delay: .30s; }
+    @keyframes dot{
+      0%, 100%{ transform: translateY(0); opacity:.35; }
+      50%{ transform: translateY(-3px); opacity:.9; }
+    }
+
+    .chatInputRow{
+      display:flex;
+      gap: 10px;
+      align-items: end;
+    }
+    .chatInputRow .field{ grid-column: unset; flex: 1; }
+    .chatInputRow input{ height: 42px; }
+
+    /* Drawer (right hidden tables panel) - kept from original, visually aligned */
+    
+    .drawer{
+      position: sticky;
+      top: 16px;
+      height: calc(100vh - 32px);
+      width: 100%;
+      min-width: 0;
+      background: rgba(10,12,16,0.88);
+      border: 1px solid var(--border);
+      border-radius: calc(var(--radius) + 4px);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
+      overflow: hidden;
+      display:flex;
+      flex-direction: column;
+      opacity: 0;
+      pointer-events: none;
+    }
+    /* When open, the grid gives it width via --right-w */
+    body.drawer-open .drawer{
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .splitter{
+      width: var(--resizer-w);
+      min-width: var(--resizer-w);
+      height: calc(100vh - 32px);
+      position: sticky;
+      top: 16px;
+      cursor: col-resize;
+      transition: opacity .15s ease;
+      background: transparent;
+      opacity: 0;
+      pointer-events: none;
+    }
+    body.drawer-open .splitter{
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .splitter::before{
+      content:"";
+      position:absolute;
+      top: 0;
+      bottom: 0;
+      left: 50%;
+      width: 1px;
+      transform: translateX(-0.5px);
+      background: var(--border);
+      opacity: .85;
+    }
+    .splitterGrip{
+      position:absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%,-50%);
+      width: 18px;
+      height: 48px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.05);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap: 3px;
+      box-shadow: 0 8px 18px rgba(0,0,0,0.18);
+    }
+    .splitterDot{
+      width: 3px;
+      height: 18px;
+      border-radius: 999px;
+      background: var(--muted);
+      opacity: .6;
+    }
+
+
+    .drawerHeader{
+      padding: 14px 14px;
+      border-bottom: 1px solid var(--border);
+      display:flex;
+      gap:10px;
+      align-items:center;
+      justify-content: space-between;
+    }
+    .drawerHeader .left{
+      display:flex;
+      flex-direction: column;
+      gap:3px;
+      min-width: 0;
+    }
+    .drawerHeader .left b{
+      font-size: 14px;
+      font-weight: 1000;
+    }
+    .drawerHeader .left span{
+      font-size: 12px;
+      color: var(--muted);
+      white-space: nowrap;
+      overflow:hidden;
+      text-overflow: ellipsis;
+      max-width: 520px;
+    }
+
+    .drawerControls{
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--border);
+      display:flex;
+      gap:10px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .drawerControls .field{
+      grid-column: unset;
+      width: 220px;
+    }
+    .drawerControls input{ width: 220px; height: 40px; }
+
+    .report{
+      padding: 14px;
+      overflow:auto;
+      flex:1;
+    }
+
+    .kpiRow{
+      display:flex;
+      gap:10px;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
+    }
+    .kpi{
+      flex:1;
+      min-width: 160px;
+      padding: 10px 12px;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.04);
+    }
+    .kpi .k{ font-size: 12px; color: var(--muted); font-weight: 400; }
+    .kpi .v{ font-size: 16px; font-weight: 1000; margin-top: 4px; }
+
+    .ratingsGrid{
+      display:grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+    @media (max-width: 1060px){
+      :root{ --left-w: 360px; }
+    }
+    @media (max-width: 980px){
+      .appGrid{ grid-template-columns: 1fr; }
+      .leftPanel{ position: relative; height: auto; top: unset; }
+      :root{ --w-drawer: 92vw; --left-w: 1fr; }
+      .ratingsGrid{ grid-template-columns: 1fr; }
+    }
+
+    .rCard{
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      background: rgba(255,255,255,0.04);
+      overflow:hidden;
+    }
+
+    .rHead{
+      padding: 10px 12px;
+      display:flex;
+      align-items:center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border);
+      font-weight: 1000;
+    }
+    .tag{
+      padding: 4px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 400;
+    }
+    .tag.E{ background: rgba(6,214,160,0.12); border-color: rgba(6,214,160,0.32); }
+    .tag.M{ background: rgba(183,226,25,0.12); border-color: rgba(183,226,25,0.35); }
+    .tag.P{ background: rgba(255,209,102,0.12); border-color: rgba(255,209,102,0.35); }
+    .tag.I{ background: rgba(255,107,107,0.12); border-color: rgba(255,107,107,0.35); }
+
+    table{
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+    th, td{
+      padding: 8px 10px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      vertical-align: middle;
+      white-space: nowrap;
+      text-align: right;
+    }
+    th{
+      position: sticky;
+      top: 0;
+      background: rgba(20,24,34,0.96);
+      backdrop-filter: blur(6px);
+      font-weight: 1000;
+      color: rgba(232,236,242,0.90);
+      z-index: 1;
+    }
+    tbody tr:hover{ background: rgba(255,255,255,0.045); }
+
+    /* Print */
+    @media print {
+      body{ background: #fff !important; color:#111 !important; }
+      .appGrid, .leftPanel, .center{ display:none !important; }
+      .drawer{
+        position: static !important;
+        transform: none !important;
+        width: 100% !important;
+        height: auto !important;
+        max-width: none !important;
+        box-shadow:none !important;
+        background: #fff !important;
+        border: none !important;
+      }
+      .drawerHeader, .drawerControls{ border: none !important; }
+      th{ background:#f3f3f3 !important; color:#111 !important; }
+      .rCard{ break-inside: avoid; }
+    }
+  
+    /* --- v4 typography: no bold --- */
+    body, button, input, select, textarea, label, .btn, .pill, .chip, .tag, .sectionTitle, .title, .subtitle { font-weight: 400 !important; }
+
+    /* ---- Weight normalization (no bold) ---- */
+    b, strong, h1, h2, h3, h4, h5, h6,
+    .secHead, .kpi .v, .drawerHeader .left b, .titleBlock b {
+      font-weight: 400 !important;
+    }
+
+    /* Keep the splitter thin (visual) but still easy to drag (hit area stays wide) */
+    .splitterGrip{ display:none !important; }
+
+
+    /* === Minimal surfaces (remove large backplates for chat & tables) === */
+    .center{
+      background: transparent !important;
+      border: none !important;
+      box-shadow: none !important;
+      backdrop-filter: none !important;
+      border-radius: 0 !important;
+    }
+    .drawer{
+      background: transparent !important;
+      border: none !important;
+      box-shadow: none !important;
+      backdrop-filter: none !important;
+      border-radius: 0 !important;
+      border-left: 1px solid var(--border) !important;
+    }
+    /* Remove chat log box */
+    .chatLog{
+      background: transparent !important;
+      border: none !important;
+      border-radius: 0 !important;
+    }
+
+    /* Tables typography: remove bold in the tables panel */
+    #drawer th, #drawer td{
+      font-weight: 400 !important;
+    }
+
+</style>
+
+  <!-- Supabase + Security (same as AI.html) -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.1/dist/umd/supabase.min.js"></script>
+  <script src="/assets/js/nxs_supabase_client.js"></script>
+  <script src="/assets/js/chat_page_secure.js"></script>
+  <script src="/assets/js/theme-manager.js" defer></script>
+</head>
+
+<body>
+  <div class="appGrid">
+
+    <!-- Left: Fields as collapsible sections -->
+    <aside class="leftPanel" aria-label="Fields Panel">
+      <div class="leftHeader">
+        <div class="brand">
+          <div class="logo">E/M</div>
+          <div class="titleBlock">
+            <span>Employee Evaluation</span>
+            <span>Organized fields • reduced clutter</span>
+          </div>
+        </div>
+        <button id="themeBtn" class="btn" type="button" title="Toggle theme">Theme</button>
+      </div>
+
+      <div class="leftBody">
+
+        <div class="section" data-open="true">
+          <button class="secHead" type="button">
+            <span>Period Setup</span>
+            <span class="chev">⌄</span>
+          </button>
+          <div class="secBody">
+            <div class="row">
+              <div class="field w3">
+                <label>Year</label>
+                <input id="year" type="number" min="2020" max="2100" value="2026"/>
+              </div>
+
+              <div class="field w3">
+                <label>Period Type</label>
+                <select id="periodType">
+                  <option value="Q" selected>Quarterly (Q)</option>
+                  <option value="H">Half-Year (H)</option>
+                </select>
+              </div>
+
+              <div class="field w3">
+                <label id="periodLabel">Quarter</label>
+                <select id="period">
+                  <option value="1" selected>Q1</option>
+                  <option value="2">Q2</option>
+                  <option value="3">Q3</option>
+                  <option value="4">Q4</option>
+                </select>
+              </div>
+
+              <div class="field full">
+                <label>Role field in Master</label>
+                <select id="roleField">
+                  <option>Job Title</option>
+                  <option>Actual Role</option>
+                  <option>Grade</option>
+                  <option>Department</option>
+                  <option>Current Department</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="hint">
+              <span class="pill"><span class="dot"></span> After "Generate evaluation", open the Results panel to view E/M/P/I.</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="section" data-open="true">
+          <button class="secHead" type="button">
+            <span>Rating distribution (E/M/P/I)</span>
+            <span class="chev">⌄</span>
+          </button>
+          <div class="secBody">
+            <div class="row">
+              <div class="field w3">
+                <label>E% (Exceeds)</label>
+                <input id="pctE" type="number" min="0" max="100" step="0.1" value="10"/>
+              </div>
+              <div class="field w3">
+                <label>M% (Meets)</label>
+                <input id="pctM" type="number" min="0" max="100" step="0.1" value="70"/>
+              </div>
+              <div class="field w3">
+                <label>P% (Partially)</label>
+                <input id="pctP" type="number" min="0" max="100" step="0.1" value="15"/>
+              </div>
+              <div class="field w3">
+                <label>I% (Needs improvement)</label>
+                <input id="pctI" type="number" min="0" max="100" step="0.1" value="5"/>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="section" data-open="false">
+          <button class="secHead" type="button">
+            <span>Roles</span>
+            <span class="chev">⌄</span>
+          </button>
+          <div class="secBody">
+            <div class="rolesBox">
+              <div class="rolesTop">
+                <button id="refreshRoles" class="btn" type="button">Refresh</button>
+                <button id="selectAllRoles" class="btn" type="button">All</button>
+                <button id="clearRoles" class="btn" type="button">Clear</button>
+                <input id="roleSearch" type="text" placeholder="Search roles..." />
+              </div>
+              <div id="rolesList" class="rolesList"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="section" data-open="true">
+          <button class="secHead" type="button">
+            <span>Run & Results</span>
+            <span class="chev">⌄</span>
+          </button>
+          <div class="secBody">
+
+            <div style="display:flex; gap:10px; flex-wrap: wrap;">
+              <button id="generateBtn" class="btn primary" type="button">Generate evaluation</button>
+              <button id="openDrawerBtn" class="btn" type="button" title="Open Tables panel">Tables</button>
+              <button id="closeDrawerBtn" class="btn" type="button" title="Close Tables panel">Close</button>
+            </div>
+
+            <div style="height:10px"></div>
+
+            <div class="msg" id="msg"></div>
+
+            <div style="height:10px"></div>
+
+            <div style="display:flex; gap:10px; flex-wrap: wrap;">
+              <span class="pill"><span>Total employees:</span> <span id="totalEmp">—</span></span>
+              <span class="pill"><span>Targets:</span> E=<span id="tE">—</span> • M=<span id="tM">—</span> • P=<span id="tP">—</span> • I=<span id="tI">—</span></span>
+            </div>
+
+            <div style="height:10px"></div>
+
+            <div style="display:flex; gap:10px; flex-wrap: wrap;">
+              <button id="printBtn" class="btn" type="button" disabled>Print PDF</button>
+              <button id="approveBtn" class="btn primary" type="button" disabled>Approve & save</button>
+            </div>
+
+            <div class="hint" style="margin-top: 10px;">
+              <span class="pill"><span class="dot"></span> The evaluation is calculated, then tables appear in the Results panel.</span>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+    </aside>
+
+    <!-- Center: AI Conversation -->
+    <main class="center" aria-label="AI Chat">
+      <div class="topbar">
+        <div class="left">
+          <h1>AI Evaluation Chat</h1>
+          <p>Ask why an employee was rated — using the current evaluation context</p>
+        </div>
+        <div class="actions">
+          <span class="pill"><span class="dot"></span><span id="drawerSub">—</span></span>
+        </div>
+      </div>
+
+      <div class="chatWrap">
+        <div id="askReply" class="chatLog" aria-label="Chat history">
+          <div class="bubble ai">👋 Start with a question like: Why did employee 15013814 receive P?</div>
+        </div>
+
+        <div class="chatInputRow">
+          <div class="field">
+            <label>Your question</label>
+            <input id="askText" type="text" placeholder="Type your question…" />
+          </div>
+          <div class="field" style="flex: 0 0 auto;">
+            <label>&nbsp;</label>
+            <button id="askBtn" class="btn primary" type="button">Send</button>
+          </div>
+        </div>
+
+        <div class="hint" style="margin-top:0;">
+          ⚠️ Note: Questions use the latest generated evaluation (if none yet, generate one first).
+        </div>
+      </div>
+    </main>
+
+    <!-- Splitter (resizable divider between chat and tables) -->
+    <div id="splitter" class="splitter" aria-hidden="true">
+      <div class="splitterGrip" aria-hidden="true">
+        <span class="splitterDot"></span><span class="splitterDot"></span><span class="splitterDot"></span>
+      </div>
+    </div>
+
+    
+    <!-- Right Drawer: Tables panel (hidden by default) -->
+    <aside id="drawer" class="drawer" aria-hidden="true">
+      <div class="drawerHeader">
+        <div class="left">
+          <span>Results Panel</span>
+          <span>Filter by role/employee ID — then print or approve</span>
+        </div>
+        <div style="display:flex; gap:8px; align-items:center;">
+          <span id="batchInfo" class="pill" style="display:none;"><span class="dot"></span><span id="batchText"></span></span>
+          <button id="drawerCloseBtn" class="btn" type="button" title="Close panel">Close</button>
+        </div>
+      </div>
+
+      <div class="drawerControls">
+        <div class="field">
+          <label>Role filter (evaluation results only)</label>
+          <select id="roleFilter">
+            <option value="__ALL__" selected>All</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>Search by employee ID</label>
+          <input id="empSearch" type="text" placeholder="150...." />
+        </div>
+
+        <button id="refreshViewBtn" class="btn" type="button">Apply</button>
+      </div>
+
+      <div class="report" id="reportArea">
+        <div class="kpiRow">
+          <div class="kpi"><div class="k">Period</div><div class="v" id="kPeriod">—</div></div>
+          <div class="kpi"><div class="k">Approved role</div><div class="v" id="kRoleField">—</div></div>
+          <div class="kpi"><div class="k">Employee count</div><div class="v" id="kN">—</div></div>
+          <div class="kpi"><div class="k">Approval status</div><div class="v" id="kApproved">Not approved</div></div>
+        </div>
+
+        <div class="ratingsGrid">
+          <div class="rCard">
+            <div class="rHead"><span>Exceeds expectations</span><span class="tag E">E</span></div>
+            <div class="tableWrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Employee</th>
+                    <th>Name</th>
+                    <th>Role</th>
+                    <th>Absence</th>
+                    <th>Delay (min)</th>
+                    <th>Delays caused</th>
+                    <th>Operational events</th>
+                    <th>Sick leave (days)</th>
+                    <th>OT (hrs)</th>
+                    <th>Score</th>
+                  </tr>
+                </thead>
+                <tbody id="tbodyE"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="rCard">
+            <div class="rHead"><span>Meets expectations</span><span class="tag M">M</span></div>
+            <table>
+              <thead>
+                <tr>
+                  <th>Employee</th>
+                  <th>Name</th>
+                  <th>Role</th>
+                  <th>Absence</th>
+                  <th>Delay (min)</th>
+                  <th>Delays caused</th>
+                  <th>Operational events</th>
+                  <th>Sick leave (days)</th>
+                  <th>OT (hrs)</th>
+                  <th>Score</th>
+                </tr>
+              </thead>
+              <tbody id="tbodyM"></tbody>
+            </table>
+          </div>
+
+          <div class="rCard">
+            <div class="rHead"><span>Partially meets</span><span class="tag P">P</span></div>
+            <table>
+              <thead>
+                <tr>
+                  <th>Employee</th>
+                  <th>Name</th>
+                  <th>Role</th>
+                  <th>Absence</th>
+                  <th>Delay (min)</th>
+                  <th>Delays caused</th>
+                  <th>Operational events</th>
+                  <th>Sick leave (days)</th>
+                  <th>OT (hrs)</th>
+                  <th>Score</th>
+                </tr>
+              </thead>
+              <tbody id="tbodyP"></tbody>
+            </table>
+          </div>
+
+          <div class="rCard">
+            <div class="rHead"><span>Needs improvement</span><span class="tag I">I</span></div>
+            <table>
+              <thead>
+                <tr>
+                  <th>Employee</th>
+                  <th>Name</th>
+                  <th>Role</th>
+                  <th>Absence</th>
+                  <th>Delay (min)</th>
+                  <th>Delays caused</th>
+                  <th>Operational events</th>
+                  <th>Sick leave (days)</th>
+                  <th>OT (hrs)</th>
+                  <th>Score</th>
+                </tr>
+              </thead>
+              <tbody id="tbodyI"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+  </div>
+
+<script>
+(() => {
+  "use strict";
+
+  const $ = (id) => document.getElementById(id);
+
+  const drawer = $("drawer");
+  const splitter = $("splitter");
+  const msg = $("msg");
+
+  let optionsCache = null;
+  let currentEval = null;
+  let approvedBatch = null;
+
+  function setMsg(text, cls){
+    msg.textContent = text || "";
+    msg.className = "msg" + (cls ? " " + cls : "");
+  }
+
+  function openDrawer(){
+    drawer.classList.add("open");
+    drawer.setAttribute("aria-hidden", "false");
+    document.body.classList.add("drawer-open");
+
+    // apply remembered width (or default)
+    const saved = Number(localStorage.getItem("oap_tables_width") || "");
+    const w = Number.isFinite(saved) && saved >= 320 ? saved : parseInt(getComputedStyle(document.documentElement).getPropertyValue("--w-drawer")) || 860;
+
+    document.documentElement.style.setProperty("--right-w", w + "px");
+    document.documentElement.style.setProperty("--resizer-w", "10px");
+  }
+  function closeDrawer(){
+    drawer.classList.remove("open");
+    drawer.setAttribute("aria-hidden", "true");
+    document.body.classList.remove("drawer-open");
+
+
+  function clamp(n, a, b){ return Math.max(a, Math.min(b, n)); }
+
+  function initSplitter(){
+    if(!splitter) return;
+
+    splitter.addEventListener("pointerdown", (e) => {
+      if(!document.body.classList.contains("drawer-open")) return;
+      e.preventDefault();
+
+      splitter.setPointerCapture(e.pointerId);
+
+      const minW = 320;
+      const maxW = Math.min(1200, Math.floor(window.innerWidth * 0.72));
+
+      const onMove = (ev) => {
+        const x = ev.clientX;
+        const w = clamp(window.innerWidth - x, minW, maxW);
+        document.documentElement.style.setProperty("--right-w", w + "px");
+        localStorage.setItem("oap_tables_width", String(w));
+      };
+
+      const onUp = (ev) => {
+        try{ splitter.releasePointerCapture(e.pointerId); }catch(_){}
+        window.removeEventListener("pointermove", onMove);
+        window.removeEventListener("pointerup", onUp);
+      };
+
+      window.addEventListener("pointermove", onMove);
+      window.addEventListener("pointerup", onUp);
+    });
+  }
+    document.documentElement.style.setProperty("--right-w", "0px");
+    document.documentElement.style.setProperty("--resizer-w", "0px");
+  }
+
+  async function getToken(){
+    const supa = window.NXS_Supabase && window.NXS_Supabase.client;
+    if (!supa) return "";
+    const { data } = await supa.auth.getSession();
+    return (data && data.session && data.session.access_token) ? data.session.access_token : "";
+  }
+
+  async function apiPost(url, body){
+    const token = await getToken();
+    const res = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+        "Authorization": token ? `Bearer ${token}` : ""
+      },
+      body: JSON.stringify(body || {})
+    });
+    return res.json();
+  }
+
+  async function apiGet(url){
+    const token = await getToken();
+    const res = await fetch(url, {
+      method: "GET",
+      headers: {
+        "Accept": "application/json",
+        "Authorization": token ? `Bearer ${token}` : ""
+      }
+    });
+    return res.json();
+  }
+
+  function periodUiUpdate(){
+    const t = $("periodType").value;
+    const period = $("period");
+    const lbl = $("periodLabel");
+
+    if (t === "H"){
+      lbl.textContent = "Half";
+      period.innerHTML = `<option value="1" selected>H1</option><option value="2">H2</option>`;
+    } else {
+      lbl.textContent = "Quarter";
+      period.innerHTML = `<option value="1" selected>Q1</option><option value="2">Q2</option><option value="3">Q3</option><option value="4">Q4</option>`;
+    }
+  }
+
+  function renderRolesList(values){
+    const list = $("rolesList");
+    list.innerHTML = "";
+    (values || []).forEach(v => {
+      const row = document.createElement("div");
+      row.className = "roleItem";
+      row.innerHTML = `
+        <input type="checkbox" class="roleChk" value="${escapeHtml(v)}" />
+        <div style="flex:1; font-weight: 400;">${escapeHtml(v)}</div>
+      `;
+      row.addEventListener("click", (e) => {
+        if (e.target && e.target.classList && e.target.classList.contains("roleChk")) return;
+        const c = row.querySelector("input.roleChk");
+        c.checked = !c.checked;
+      });
+      list.appendChild(row);
+    });
+  }
+
+  function getSelectedRoles(){
+    const chks = Array.from(document.querySelectorAll("#rolesList .roleChk"));
+    return chks.filter(c => c.checked).map(c => c.value);
+  }
+
+  function applyRoleSearch(){
+    const q = ($("roleSearch").value || "").trim().toLowerCase();
+    const items = Array.from(document.querySelectorAll("#rolesList .roleItem"));
+    items.forEach(it => {
+      const txt = (it.textContent || "").toLowerCase();
+      it.style.display = (!q || txt.includes(q)) ? "" : "none";
+    });
+  }
+
+  function escapeHtml(s){
+    return String(s || "").replace(/[&<>"']/g, m => ({
+      "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+    })[m]);
+  }
+
+  function setSummary(meta){
+    $("totalEmp").textContent = meta.total_employees ?? "—";
+    $("tE").textContent = meta.targets?.E ?? "—";
+    $("tM").textContent = meta.targets?.M ?? "—";
+    $("tP").textContent = meta.targets?.P ?? "—";
+    $("tI").textContent = meta.targets?.I ?? "—";
+
+    const p = meta.period_type === "H" ? `H${meta.period}` : `Q${meta.period}`;
+    $("drawerSub").textContent = `${meta.year} • ${p} • ${meta.start_date} → ${meta.end_date}`;
+    $("kPeriod").textContent = `${meta.year} • ${p}`;
+    $("kRoleField").textContent = meta.role_field || "—";
+    $("kN").textContent = meta.total_employees ?? "—";
+  }
+
+  function populateRoleFilterFromResults(results){
+    const roleSet = new Set();
+    (results || []).forEach(r => {
+      const rv = (r.role_value || "").trim();
+      if (rv) roleSet.add(rv);
+    });
+    const sel = $("roleFilter");
+    const cur = sel.value;
+    sel.innerHTML = `<option value="__ALL__">All</option>` + Array.from(roleSet).sort().map(v => `<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join("");
+    if (cur && Array.from(roleSet).includes(cur)){
+      sel.value = cur;
+    } else {
+      sel.value = "__ALL__";
+    }
+  }
+
+  function filterResults(){
+    if (!currentEval?.results) return {E:[],M:[],P:[],I:[]};
+    const rf = $("roleFilter").value;
+    const q = ($("empSearch").value || "").trim();
+    const results = currentEval.results.filter(r => {
+      if (rf && rf !== "__ALL__" && (r.role_value || "") !== rf) return false;
+      if (q){
+        const idStr = String(r.employee_id || "");
+        if (!idStr.includes(q)) return false;
+      }
+      return true;
+    });
+    return {
+      E: results.filter(r => r.rating === "E"),
+      M: results.filter(r => r.rating === "M"),
+      P: results.filter(r => r.rating === "P"),
+      I: results.filter(r => r.rating === "I")
+    };
+  }
+
+  function renderTable(tbodyId, rows){
+    const tbody = $(tbodyId);
+    tbody.innerHTML = "";
+    (rows || []).forEach(r => {
+      const m = r.metrics || {};
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${escapeHtml(r.employee_id)}</td>
+        <td>${escapeHtml(r.employee_name)}</td>
+        <td>${escapeHtml(r.role_value)}</td>
+        <td>${escapeHtml(m.absences_count ?? 0)}</td>
+        <td>${escapeHtml(m.work_delay_minutes ?? 0)}</td>
+        <td>${escapeHtml(m.flight_incidents_count ?? 0)}</td>
+        <td>${escapeHtml(m.operational_events_count ?? 0)}</td>
+        <td>${escapeHtml(m.sick_leave_days ?? 0)}</td>
+        <td>${escapeHtml(m.overtime_hours ?? 0)}</td>
+        <td>${escapeHtml(r.score ?? 0)}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+
+  function renderReport(){
+    const grouped = filterResults();
+    renderTable("tbodyE", grouped.E);
+    renderTable("tbodyM", grouped.M);
+    renderTable("tbodyP", grouped.P);
+    renderTable("tbodyI", grouped.I);
+  }
+
+  function setApprovedUI(batchId){
+    approvedBatch = batchId || null;
+    if (approvedBatch){
+      $("kApproved").textContent = "Approved";
+      $("batchInfo").style.display = "";
+      $("batchText").textContent = `Saved • Batch: ${approvedBatch}`;
+    } else {
+      $("kApproved").textContent = "Not approved";
+      $("batchInfo").style.display = "none";
+      $("batchText").textContent = "";
+    }
+  }
+
+  async function loadOptions(){
+    setMsg("Loading roles…", "");
+    const data = await apiGet("/api/evaluation/options");
+    if (!data?.ok){
+      setMsg("Failed to load roles.", "error");
+      return;
+    }
+    optionsCache = data;
+    setMsg("Roles loaded.", "ok");
+    const roleField = $("roleField").value;
+    renderRolesList(optionsCache.values?.[roleField] || []);
+    applyRoleSearch();
+  }
+
+  async function generate(){
+    setMsg("", "");
+    setApprovedUI(null);
+
+    const year = parseInt($("year").value || "0", 10);
+    const period_type = $("periodType").value;
+    const period = parseInt($("period").value || "0", 10);
+    const role_field = $("roleField").value;
+
+    const percent_E = parseFloat($("pctE").value || "0");
+    const percent_M = parseFloat($("pctM").value || "0");
+    const percent_P = parseFloat($("pctP").value || "0");
+    const percent_I = parseFloat($("pctI").value || "0");
+
+    const sum = percent_E + percent_M + percent_P + percent_I;
+    if (!year || year < 2020) return setMsg("Invalid year.", "error");
+    if (!period) return setMsg("Invalid period.", "error");
+    if (Math.abs(sum - 100) > 0.01) return setMsg("Percentages must sum to 100%.", "error");
+
+    const roles = getSelectedRoles();
+    if (!roles.length) return setMsg("Select at least one role.", "error");
+
+    $("generateBtn").disabled = true;
+    setMsg("Calculating evaluation…", "");
+
+    const payload = { year, period_type, period, role_field, roles, percent_E, percent_M, percent_P, percent_I };
+    const data = await apiPost("/api/evaluation/quarterly", payload);
+
+    $("generateBtn").disabled = false;
+
+    if (!data?.ok){
+      setMsg(data?.message || "Failed to calculate evaluation.", "error");
+      return;
+    }
+
+    currentEval = data;
+    setSummary(data.meta || {});
+    populateRoleFilterFromResults(data.results || []);
+    renderReport();
+    openDrawer();
+
+    $("printBtn").disabled = false;
+    $("approveBtn").disabled = false;
+
+    setMsg("Evaluation generated successfully.", "ok");
+  }
+
+  async function approve(){
+    if (!currentEval?.ok) return;
+    $("approveBtn").disabled = true;
+    setMsg("Saving approved evaluation…", "");
+
+    // approved_by from session (email)
+    let approved_by_name = null;
+    try {
+      const supa = window.NXS_Supabase && window.NXS_Supabase.client;
+      const { data } = await supa.auth.getUser();
+      approved_by_name = data?.user?.email || null;
+    } catch(_) {}
+
+    const payload = {
+      meta: currentEval.meta,
+      results: currentEval.results,
+      approved_by_name
+    };
+
+    const data = await apiPost("/api/evaluation/approve", payload);
+    $("approveBtn").disabled = false;
+
+    if (!data?.ok){
+      setMsg(data?.message || "Failed to save evaluation.", "error");
+      return;
+    }
+    setApprovedUI(data.batch_id);
+    setMsg(`Approved & saved (${data.saved}).`, "ok");
+  }
+
+  function printPdf(){
+    if (!currentEval?.ok) return;
+    openDrawer();
+    window.print();
+  }
+
+  /* ===== AI Chat UI (uses same /api/chat logic, but with chat bubbles) ===== */
+  const chatLog = $("askReply");
+  function addBubble(role, text){
+    const div = document.createElement("div");
+    div.className = "bubble " + (role === "user" ? "user" : "ai");
+    div.textContent = text || "";
+    chatLog.appendChild(div);
+    chatLog.scrollTop = chatLog.scrollHeight;
+    return div;
+  }
+
+  async function ask(){
+    const q = ($("askText").value || "").trim();
+    if (!q) return;
+
+    addBubble("user", q);
+    $("askText").value = "";
+
+    const typing = document.createElement("div");
+    typing.className = "bubble ai";
+    typing.innerHTML = `<span class="typing">Thinking…<i></i><i></i><i></i></span>`;
+    chatLog.appendChild(typing);
+    chatLog.scrollTop = chatLog.scrollHeight;
+
+    $("askBtn").disabled = true;
+    try {
+      const meta = currentEval?.meta || {};
+      const summary = currentEval?.results ? currentEval.results.slice(0, 40) : [];
+      const prompt =
+`[Employee Evaluation Context]
+Period: ${meta.year || ""} ${meta.period_type || ""}${meta.period || ""}
+Role Field: ${meta.role_field || ""}
+Targets: ${JSON.stringify(meta.targets || {})}
+(Showing sample 40 rows)
+Sample: ${JSON.stringify(summary)}
+
+User Question: ${q}`;
+
+      const res = await apiPost("/api/chat", { message: prompt });
+      const answer = (res && (res.reply || res.answer)) ? (res.reply || res.answer) : "No answer.";
+      typing.remove();
+      addBubble("ai", answer);
+    } catch(e){
+      typing.remove();
+      addBubble("ai", "An error occurred while asking.");
+    } finally {
+      $("askBtn").disabled = false;
+    }
+  }
+
+  /* ===== Theme toggle (light/dark) ===== */
+  function applyTheme(theme){
+    document.body.setAttribute("data-theme", theme === "light" ? "light" : "dark");
+    try { localStorage.setItem("oap_eval_theme", theme); } catch(_) {}
+  }
+  function initTheme(){
+    let t = "dark";
+    try { t = localStorage.getItem("oap_eval_theme") || "dark"; } catch(_) {}
+    applyTheme(t);
+  }
+
+  /* ===== Accordion ===== */
+  function initAccordion(){
+    const sections = Array.from(document.querySelectorAll(".section"));
+    sections.forEach(sec => {
+      const head = sec.querySelector(".secHead");
+      if (!head) return;
+      head.addEventListener("click", () => {
+        const open = sec.getAttribute("data-open") === "true";
+        sec.setAttribute("data-open", open ? "false" : "true");
+      });
+    });
+  }
+
+  // Events
+  $("openDrawerBtn").addEventListener("click", openDrawer);
+  $("closeDrawerBtn").addEventListener("click", closeDrawer);
+  const _drawerCloseBtn = $("drawerCloseBtn");
+  if (_drawerCloseBtn) _drawerCloseBtn.addEventListener("click", closeDrawer);
+  $("periodType").addEventListener("change", periodUiUpdate);
+
+  $("refreshRoles").addEventListener("click", loadOptions);
+  $("roleField").addEventListener("change", () => {
+    if (!optionsCache) return;
+    renderRolesList(optionsCache.values?.[$("roleField").value] || []);
+    applyRoleSearch();
+  });
+  $("roleSearch").addEventListener("input", applyRoleSearch);
+
+  $("selectAllRoles").addEventListener("click", () => {
+    document.querySelectorAll("#rolesList .roleChk").forEach(c => c.checked = true);
+  });
+  $("clearRoles").addEventListener("click", () => {
+    document.querySelectorAll("#rolesList .roleChk").forEach(c => c.checked = false);
+  });
+
+  $("generateBtn").addEventListener("click", generate);
+  $("approveBtn").addEventListener("click", approve);
+  $("printBtn").addEventListener("click", printPdf);
+
+  $("refreshViewBtn").addEventListener("click", () => {
+    if (!currentEval?.ok) return;
+    renderReport();
+  });
+
+  $("roleFilter").addEventListener("change", renderReport);
+  $("empSearch").addEventListener("input", renderReport);
+
+  $("askBtn").addEventListener("click", ask);
+  $("askText").addEventListener("keydown", (e) => {
+    if (e.key === "Enter"){
+      e.preventDefault();
+      ask();
+    }
+  });
+
+  $("themeBtn").addEventListener("click", () => {
+    const cur = document.body.getAttribute("data-theme") || "dark";
+    applyTheme(cur === "light" ? "dark" : "light");
+  });
+
+  // Init
+  initTheme();
+  initAccordion();
+  initSplitter();
+  periodUiUpdate();
+  setTimeout(loadOptions, 250);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <script>
+(function(){
+  try{
+    var root = document.documentElement;
+    var sp = new URLSearchParams(window.location.search);
+    var t = sp.get('theme');
+    if(!t){
+      try{ t = localStorage.getItem('oap_theme'); }catch(_){}
+    }
+    if(t) root.setAttribute('data-theme', t);
+
+    var ink = sp.get('gink') || sp.get('gradientInk');
+    if(!ink){
+      try{ ink = localStorage.getItem('oap_gradient_ink'); }catch(_){}
+    }
+    if(ink) root.setAttribute('data-gradient-ink', ink);
+  }catch(_){}
+})();
+</script>
+  <meta charset="utf-8" />
+  <title>إجراءات متابعة عدم الرد على التحقيق</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link rel="stylesheet" href="/assets/css/themes.css">
+  <style>
+    body{
+      margin:0;
+      font-family:system-ui,-apple-system,"Segoe UI",sans-serif;
+      background:#020617;
+      color:#f9fafb;
+      direction:rtl;
+    }
+    .wrap{
+      min-height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:24px;
+    }
+    .card{
+      background:#020617;
+      border-radius:18px;
+      padding:24px 22px;
+      max-width:640px;
+      width:100%;
+      box-shadow:0 24px 60px rgba(15,23,42,.7);
+      border:1px solid rgba(148,163,184,.4);
+    }
+    h1{
+      margin:0 0 12px;
+      font-size:20px;
+    }
+    p{
+      margin:6px 0;
+      font-size:14px;
+      color:#e5e7eb;
+    }
+    #state{
+      margin-bottom:8px;
+      font-size:13px;
+    }
+    .ok{ color:#22c55e; }
+    .err{ color:#f97373; }
+  </style>
+  <script src="/assets/js/theme-manager.js" defer></script>
+</head>
+<body>
+<div class="wrap">
+  <div class="card">
+    <h1>إجراءات متابعة عدم الرد على التحقيق</h1>
+    <p id="state">جاري تنفيذ الإجراء…</p>
+    <p id="info"></p>
+  </div>
+</div>
+
+<script type="module">
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+const SUPABASE_URL = "https://inuqlhkoaoeiycefvjyj.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImludXFsaGtvYW9laXljZWZ2anlqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMxMTUxODEsImV4cCI6MjA3ODY5MTE4MX0.DCAY9rN0noaBoE_T-6eDsb_79szK91af989f9TqjEow";
+
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+const url = new URL(window.location.href);
+const action = url.searchParams.get("action");
+const invId  = url.searchParams.get("inv_id");
+
+const stateEl = document.getElementById("state");
+const infoEl  = document.getElementById("info");
+
+function setState(type, text) {
+  stateEl.className = type;
+  stateEl.textContent = text;
+}
+
+async function start() {
+  if (!action || !invId) {
+    setState("err", "رابط غير صالح.");
+    return;
+  }
+
+  const { data: inv, error } = await supabase
+    .from("absence_investigation")
+    .select("id, \"Employee ID\", \"Employee Name\", absence_date, employee_email, status")
+    .eq("id", invId)
+    .maybeSingle();
+
+  if (error || !inv) {
+    setState("err", "تعذر جلب بيانات التحقيق.");
+    return;
+  }
+
+  const empId   = inv["Employee ID"];
+  const empName = inv["Employee Name"];
+  const absDate = inv.absence_date;
+  const empEmail= inv.employee_email;
+
+  infoEl.textContent = `الموظف: ${empName} (${empId}) – تاريخ الغياب: ${absDate}`;
+
+  if (action === "resend") {
+    if (!empEmail) {
+      setState("err", "لا يوجد بريد إلكتروني للموظف.");
+      return;
+    }
+
+    const replyUrl =
+      "https://oap-kas.com/absence_investigation_reply.html?inv_id=" +
+      encodeURIComponent(invId) +
+      "&token="; // التوكن محفوظ سابقًا ولن نغيره هنا
+
+    const subject  = `إعادة إرسال تحقيق الغياب – ${empName} (${empId})`;
+    const preview  = `إعادة إرسال تحقيق الغياب بتاريخ ${absDate}`;
+    const bodyHtml = `
+      <div dir="rtl" style="font-family:sans-serif;">
+        <p>عزيزي الموظف ${empName} (${empId}),</p>
+        <p>تمت إعادة إرسال رابط تحقيق الغياب بتاريخ <strong>${absDate}</strong>.</p>
+        <p><a href="${replyUrl}" style="padding:8px 14px;background:#2563eb;color:#fff;text-decoration:none;border-radius:8px;">فتح نموذج التحقيق</a></p>
+      </div>
+    `;
+
+    await supabase
+      .from("oap_email_outbox")
+      .insert({
+        inv_id: invId,
+        to: empEmail,
+        subject,
+        body_html: bodyHtml,
+        body_preview: preview,
+        type: "absence_investigation_employee_resend",
+        role: "system",
+        sent_at: null
+      });
+
+    await supabase
+      .from("absence_investigation")
+      .update({
+        status: "waiting_employee_reply",
+        first_email_at: new Date().toISOString(),
+        reminder_stage: 0
+      })
+      .eq("id", invId);
+
+    setState("ok", "تمت إعادة إرسال التحقيق للموظف بنجاح.");
+    return;
+  }
+
+  if (action === "summon") {
+    if (!empEmail) {
+      setState("err", "لا يوجد بريد إلكتروني للموظف.");
+      return;
+    }
+
+    const subject  = `استدعاء لمراجعة وحدة التحقيق – ${empName} (${empId})`;
+    const preview  = `استدعاء لمراجعة الإدارة بخصوص غياب بتاريخ ${absDate}`;
+    const bodyHtml = `
+      <div dir="rtl" style="font-family:sans-serif;">
+        <p>عزيزي الموظف ${empName} (${empId}),</p>
+        <p>يرجى مراجعة وحدة التحقيق في الإدارة بخصوص غيابك بتاريخ <strong>${absDate}</strong> في أقرب وقت ممكن.</p>
+      </div>
+    `;
+
+    await supabase
+      .from("oap_email_outbox")
+      .insert({
+        inv_id: invId,
+        to: empEmail,
+        subject,
+        body_html: bodyHtml,
+        body_preview: preview,
+        type: "absence_investigation_employee_summon",
+        role: "system",
+        sent_at: null
+      });
+
+    setState("ok", "تم إرسال استدعاء الموظف لمراجعة وحدة التحقيق.");
+    return;
+  }
+
+  if (action === "close") {
+    await supabase
+      .from("absence_investigation")
+      .update({
+        status: "closed_no_reply",
+        updated_at: new Date().toISOString()
+      })
+      .eq("id", invId);
+
+    await supabase
+      .from("employee_absence")
+      .update({
+        "Investigation status": "closed_no_reply",
+        "Final action": "closed_no_reply",
+        "Last Update": new Date().toISOString()
+      })
+      .eq("InvestigationID", invId);
+
+    setState("ok", "تم إغلاق ملف التحقيق بسبب عدم رد الموظف.");
+    return;
+  }
+
+  setState("err", "إجراء غير معروف.");
+}
+
+start().catch(err => {
+  console.error(err);
+  setState("err", "حدث خطأ غير متوقع أثناء تنفيذ الإجراء.");
+});
+</script>
+</body>
+</html>

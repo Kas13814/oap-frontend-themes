@@ -1,0 +1,1664 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link rel="stylesheet" href="/assets/css/themes.css">
+  <title>Permissions Admin | OAP</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+
+  <style>
+
+
+
+    /* ===== OAP THEMES (synced with INDEX_OK) — colors only ===== */
+:root{
+  /* Base = DARK (matches INDEX dark) */
+  --bg:#2A2A3C;
+  --text:#ECECF1;
+  --muted:#B9B7C1;
+  --muted2: rgba(236,236,241,.72);
+  --border: rgba(236,236,241,.14);
+
+  /* Surfaces */
+  --panel:#1f1f2f;
+  --panel2:#242437;
+
+  /* Accents (keep minimal, aligned with INDEX accent) */
+  --brand:#ECECF1;
+  --brand2:#B9B7C1;
+
+  /* Status */
+  --good:#22c55e;
+  --warn:#f59e0b;
+  --bad:#ef4444;
+
+  --shadow: 0 18px 60px rgba(0,0,0,.35);
+  --radius: 16px;
+}
+
+
+
+    *{ box-sizing:border-box; }
+    html,body{ height:100%; }
+body{
+  background: var(--bg);
+      margin:0;
+  color: var(--text);
+      font-family: Inter, system-ui, -apple-system, "Segoe UI", Arial, "Cairo", sans-serif;
+}
+
+    a{ color:inherit; text-decoration:none; }
+    .app{
+      min-height:100%;
+      display:grid;
+      grid-template-columns: 280px 1fr;
+      gap:18px;
+      padding:18px;
+    }
+
+    /* Sidebar */
+    .sidebar{
+      position:sticky;
+      top:18px;
+      height: calc(100vh - 36px);
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+      border:1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+      display:flex;
+      flex-direction:column;
+    }
+    .sb-head{
+      padding:18px 16px 14px;
+      border-bottom:1px solid var(--border);
+      background: rgba(0,0,0,.15);
+    }
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      font-weight:800;
+      letter-spacing:.2px;
+      font-size:18px;
+    }
+    .dot{
+      width:10px;height:10px;border-radius:50%;
+      background: radial-gradient(circle at 30% 30%, #fff, var(--brand));
+      box-shadow: 0 0 0 6px rgba(56,189,248,.12);
+    }
+    .sb-sub{
+      margin-top:6px;
+      color:var(--muted);
+      font-size:12px;
+      line-height:1.35;
+    }
+    .sb-body{ padding:14px 10px; display:flex; flex-direction:column; gap:10px; }
+    .navbtn{
+      width:100%;
+      display:flex;
+      align-items:center;
+      gap:10px;
+      padding:10px 12px;
+      border-radius:12px;
+      border:1px solid transparent;
+      color:var(--text);
+      background: transparent;
+      cursor:pointer;
+      font-family:inherit;
+      font-weight:700;
+      font-size:13px;
+      transition: .15s ease;
+    }
+    .navbtn:hover{ background: rgba(255,255,255,.06); border-color: rgba(236,236,241,.06); }
+    .navbtn.active{ background: rgba(56,189,248,.12); border-color: rgba(56,189,248,.22); }
+    .ico{
+      width:28px;height:28px;border-radius:10px;
+      display:grid;place-items:center;
+      background: rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.08);
+      font-size:14px;
+    }
+    .sb-foot{
+      margin-top:auto;
+      padding:14px 12px;
+      border-top:1px solid var(--border);
+      display:grid;
+      gap:10px;
+      background: rgba(0,0,0,.12);
+    }
+    .me{
+      display:flex; gap:10px; align-items:flex-start;
+      padding:10px 12px;
+      border:1px solid var(--border);
+      border-radius:14px;
+      background: rgba(255,255,255,.04);
+    }
+    .avatar{
+      width:34px;height:34px;border-radius:12px;
+      background: linear-gradient(135deg, rgba(56,189,248,.35), rgba(96,165,250,.2));
+      border:1px solid rgba(255,255,255,.10);
+      display:grid;place-items:center;
+      font-weight:900;
+    }
+    .me .meta{ line-height:1.35; }
+    .me .name{ font-weight:800; font-size:12.5px; }
+    .me .role{ color:var(--muted); font-size:11.5px; }
+    .row{ display:flex; gap:10px; align-items:center; }
+    .btn{
+      height:38px;
+      padding:0 12px;
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.06);
+      color:var(--text);
+      font-family:inherit;
+      font-weight:800;
+      font-size:12.5px;
+      cursor:pointer;
+      transition:.15s ease;
+      display:inline-flex; align-items:center; gap:8px;
+      justify-content:center;
+      user-select:none;
+    }
+    .btn-ico{ display:inline-flex; align-items:center; justify-content:center; }
+    .btn-ico svg{ width:16px; height:16px; display:block; }
+    .btn:hover{ background: rgba(255,255,255,.10); }
+    .btn.primary{
+      background: linear-gradient(135deg, rgba(56,189,248,.20), rgba(96,165,250,.12));
+      border-color: rgba(56,189,248,.30);
+    }
+    .btn.primary:hover{ background: linear-gradient(135deg, rgba(56,189,248,.28), rgba(96,165,250,.16)); }
+    .btn.danger{
+      border-color: rgba(239,68,68,.35);
+      background: rgba(239,68,68,.10);
+    }
+    .btn.danger:hover{ background: rgba(239,68,68,.14); }
+
+    /* Main */
+    .main{
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+      border:1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+      display:flex;
+      flex-direction:column;
+      min-height: calc(100vh - 36px);
+    }
+
+    .topbar{
+      padding:16px 18px;
+      border-bottom:1px solid var(--border);
+      background: rgba(0,0,0,.14);
+      display:flex;
+      align-items:flex-start;
+      gap:14px;
+      justify-content:space-between;
+      flex-wrap:wrap;
+    }
+    .title{
+      display:grid;
+      gap:4px;
+    }
+    .title h1{
+      margin:0;
+      font-size:18px;
+      font-weight:900;
+      letter-spacing:.2px;
+    }
+    .title p{
+      margin:0;
+      color:var(--muted);
+      font-size:12.5px;
+    }
+
+    .tools{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      flex-wrap:wrap;
+    }
+    .field{
+      height:38px;
+      padding:0 12px;
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.18);
+      color:var(--text);
+      font-family:inherit;
+      font-weight:700;
+      font-size:12.5px;
+      outline:none;
+      min-width:220px;
+    }
+    .field::placeholder{ color: rgba(255,255,255,.45); }
+
+    .content{
+      padding:14px 18px 18px;
+      display:grid;
+      gap:12px;
+      overflow:auto;
+    }
+
+    .kpis{
+      display:grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap:12px;
+    }
+    .kpi{
+      padding:12px 12px;
+      border-radius:14px;
+      border:1px solid rgba(255,255,255,.08);
+      background: rgba(0,0,0,.16);
+      display:flex;
+      gap:10px;
+      align-items:center;
+    }
+    .kpi .num{ font-size:20px; font-weight:900; line-height:1; }
+    .kpi .lab{ color:var(--muted); font-size:12px; font-weight:800; }
+    .kpi .hint{ color:var(--muted2); font-size:11px; }
+
+    .card{
+      border-radius: 16px;
+      border:1px solid rgba(255,255,255,.08);
+      background: rgba(0,0,0,.14);
+      overflow:hidden;
+    }
+    .card-h{
+      padding:12px 14px;
+      border-bottom:1px solid rgba(255,255,255,.08);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      background: rgba(0,0,0,.12);
+    }
+    .card-h .left{
+      display:flex; align-items:center; gap:10px;
+      font-weight:900;
+      font-size:13px;
+    }
+    .pill{
+      font-size:11px;
+      font-weight:900;
+      padding:5px 10px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.06);
+      color: var(--muted);
+      white-space:nowrap;
+    }
+    .pill.good{ border-color: rgba(34,197,94,.25); background: rgba(34,197,94,.10); color: rgba(210,255,225,.92); }
+    .pill.warn{ border-color: rgba(245,158,11,.25); background: rgba(245,158,11,.10); color: rgba(255,244,214,.92); }
+    .pill.bad{ border-color: rgba(239,68,68,.25); background: rgba(239,68,68,.10); color: rgba(255,216,216,.92); }
+
+    table{ width:100%; border-collapse:collapse; }
+    th,td{ padding:12px 12px; border-bottom:1px solid rgba(255,255,255,.06); vertical-align:middle; }
+    th{
+      position:sticky;
+      top:0;
+      background: rgba(10,16,30,.92);
+      backdrop-filter: blur(8px);
+      text-align:left;
+      font-size:11.5px;
+      color:var(--muted);
+      font-weight:900;
+      letter-spacing:.15px;
+      z-index:2;
+    }
+    td{ font-size:12.5px; font-weight:700; color: rgba(255,255,255,.88); }
+    tr:hover td{ background: rgba(255,255,255,.03); }
+    .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; font-size:12px; }
+    .actions{ display:flex; gap:8px; justify-content:flex-start; flex-wrap:wrap; }
+    .small{ height:32px; padding:0 10px; border-radius:10px; font-size:12px; }
+    .muted{ color:var(--muted); font-weight:700; }
+
+    /* Toast */
+    .toast{
+      position:fixed;
+      right:18px;
+      left:auto;
+      bottom:18px;
+      z-index:50;
+      width:min(520px, calc(100% - 36px));
+border-radius:16px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(10,16,30,.92);
+      backdrop-filter: blur(10px);
+      box-shadow: var(--shadow);
+      padding:12px 12px;
+      display:none;
+      gap:10px;
+      align-items:flex-start;
+    }
+    .toast.show{ display:flex; }
+    .t-ico{
+      width:34px;height:34px;border-radius:12px;
+      display:grid;place-items:center;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.06);
+      font-weight:900;
+    }
+    .t-title{ font-weight:900; font-size:12.5px; margin:0; }
+    .t-msg{ margin:2px 0 0; color:var(--muted); font-size:12px; font-weight:700; line-height:1.5; }
+    .t-close{ margin-inline-start:auto; opacity:.8; }
+    .t-close:hover{ opacity:1; }
+
+    /* Modal */
+    .modal{
+      position:fixed; inset:0;
+      display:none;
+      z-index:60;
+      background: rgba(0,0,0,.55);
+      backdrop-filter: blur(6px);
+      padding:16px;
+    }
+    .modal.show{ display:grid; place-items:center; }
+    .dialog{
+      width:min(980px, 100%);
+      border-radius:18px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(10,16,30,.96);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+    .dlg-h{
+      padding:14px 14px;
+      border-bottom:1px solid rgba(255,255,255,.08);
+      display:flex; align-items:flex-start; justify-content:space-between; gap:10px;
+      background: rgba(0,0,0,.18);
+    }
+    .dlg-h h2{ margin:0; font-size:14px; font-weight:900; }
+    .dlg-h p{ margin:4px 0 0; color:var(--muted); font-size:12px; font-weight:700; }
+    .dlg-b{ padding:14px; display:grid; gap:12px; }
+    .grid2{ display:grid; grid-template-columns: 1fr 1fr; gap:10px; }
+    .label{ font-size:11.5px; font-weight:900; color:var(--muted); margin-bottom:6px; }
+    .input{
+      width:100%;
+      height:40px;
+      padding:0 12px;
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.18);
+      color:var(--text);
+      font-family:inherit;
+      font-weight:800;
+      outline:none;
+    }
+    .input:focus{ border-color: rgba(56,189,248,.35); }
+    .hint{
+      font-size:11.5px;
+      color:var(--muted2);
+      font-weight:700;
+      line-height:1.5;
+    }
+    .perm{
+      border:1px solid rgba(255,255,255,.08);
+      border-radius:16px;
+      overflow:hidden;
+      background: rgba(0,0,0,.10);
+    }
+    .perm-h{
+      padding:10px 12px;
+      display:flex; align-items:center; justify-content:space-between; gap:10px;
+      border-bottom:1px solid rgba(255,255,255,.08);
+      background: rgba(0,0,0,.12);
+    }
+    .perm-h .ttl{ font-weight:900; font-size:12.5px; }
+    .perm-h .sub{ color:var(--muted); font-size:11.5px; font-weight:700; }
+    .perm-list{ padding:10px 12px; display:grid; gap:8px; }
+    .perm-row{
+      display:grid;
+      grid-template-columns: 1fr 130px 40px;
+      gap:8px;
+      align-items:center;
+    }
+    .sel{
+      height:40px;
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.18);
+      color:var(--text);
+      font-family:inherit;
+      font-weight:800;
+      outline:none;
+      padding:0 10px;
+    }
+    .iconbtn{
+      width:40px;height:40px;border-radius:12px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.06);
+      cursor:pointer;
+      display:grid;place-items:center;
+      font-weight:900;
+    }
+    .iconbtn:hover{ background: rgba(255,255,255,.10); }
+    .dlg-f{
+      padding:12px 14px;
+      border-top:1px solid rgba(255,255,255,.08);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      background: rgba(0,0,0,.16);
+      flex-wrap:wrap;
+    }
+
+    /* Responsive */
+    @media (max-width: 980px){
+      .app{ grid-template-columns: 1fr; }
+      .sidebar{ position:relative; height:auto; }
+      .kpis{ grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .grid2{ grid-template-columns: 1fr; }
+      .perm-row{ grid-template-columns: 1fr 1fr 40px; }
+      th{ position:static; }
+    }
+  
+
+
+/* ===== Theme Toggle Button (preview only) ===== */
+#oapThemeToggle{
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+  z-index: 9999;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--panel);
+  color: var(--text);
+  box-shadow: var(--shadow);
+  cursor: pointer;
+  user-select: none;
+}
+#oapThemeToggle .dot{
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--brand);
+  box-shadow: 0 0 0 4px rgba(0,0,0,.06);
+}
+#oapThemeToggle .label{
+  font-size: 12px;
+  letter-spacing: .2px;
+  opacity: .9;
+}
+#oapThemeToggle:active{ transform: translateY(1px); }
+
+
+/* ===== Permissions Admin additions (layout only) ===== */
+.perm-grid{ display:grid; grid-template-columns: 340px 1fr; gap:12px; }
+@media (max-width:980px){ .perm-grid{ grid-template-columns:1fr; } }
+.userlist{ max-height: 560px; overflow:auto; padding:10px 12px; }
+.useritem{ padding:10px 10px; border:1px solid rgba(255,255,255,.08); border-radius:14px; background: rgba(0,0,0,.12); cursor:pointer; display:flex; flex-direction:column; gap:4px; margin-bottom:10px; }
+.useritem:hover{ background: rgba(255,255,255,.05); }
+.useritem.active{ border-color: rgba(56,189,248,.30); background: rgba(56,189,248,.10); }
+.useritem .email{ font-size:12.5px; font-weight:900; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.useritem .id{ font-size:11.5px; color: var(--muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.useritem .mini{ display:flex; gap:8px; align-items:center; margin-top:4px; flex-wrap:wrap; }
+.useritem .mini .pill{ padding:4px 8px; }
+.tablewrap{ border:1px solid rgba(255,255,255,.08); border-radius:16px; overflow:auto; }
+.rolebar{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; padding:10px 12px; border:1px solid rgba(255,255,255,.08); border-radius:16px; background: rgba(0,0,0,.12); }
+.rolebar label{ font-size:12px; font-weight:900; color: var(--muted); }
+.rolebar select{ height:38px; padding:0 12px; border-radius:12px; border:1px solid rgba(255,255,255,.10); background: rgba(0,0,0,.18); color: var(--text); font-family:inherit; font-weight:800; font-size:12.5px; outline:none; min-width:160px; }
+.smallnote{ font-size:12px; color: var(--muted2); font-weight:700; }
+.switch{ width:46px; height:26px; border-radius:999px; background: rgba(255,255,255,.10); border:1px solid rgba(255,255,255,.12); position:relative; cursor:pointer; }
+.knob{ width:20px; height:20px; border-radius:50%; background: rgba(255,255,255,.88); position:absolute; top:2px; left:2px; transition:.16s ease; }
+.switch.on{ background: rgba(34,197,94,.16); border-color: rgba(34,197,94,.30); }
+.switch.on .knob{ left:24px; }
+/* ===== End additions ===== */
+
+  
+    /* Tabs (Owner/Admin console) */
+    .tabsbar{
+      display:flex; gap:8px; padding:10px 14px; align-items:center;
+      border-bottom:1px solid rgba(255,255,255,.08);
+      background:rgba(0,0,0,.12);
+      position:sticky; top:0; z-index:5;
+      backdrop-filter: blur(8px);
+    }
+    .tabsbar .tab{
+      appearance:none;
+      border:1px solid rgba(255,255,255,.14);
+      background:rgba(0,0,0,.20);
+      color:rgba(255,255,255,.85);
+      padding:8px 12px;
+      border-radius:10px;
+      font-weight:800;
+      font-size:13px;
+      cursor:pointer;
+    }
+    .tabsbar .tab:hover{ background:rgba(0,0,0,.32); }
+    .tabsbar .tab.active{
+      border-color: rgba(183,226,25,.55);
+      box-shadow: 0 0 0 2px rgba(183,226,25,.12) inset;
+      color:#fff;
+    }
+
+  
+
+/* ===== PATCH: Collapsible page permissions + Home icon ===== */
+.iconbtn{
+  width:40px; height:40px;
+  display:inline-flex; align-items:center; justify-content:center;
+  border-radius:12px;
+  border:1px solid var(--border);
+  background: rgba(255,255,255,.06);
+  color: var(--text);
+  cursor:pointer;
+  text-decoration:none;
+}
+.iconbtn:hover{ filter: brightness(1.06); }
+
+.collapsibleHdr{ user-select:none; cursor:pointer; }
+.chev{ display:inline-flex; transition: transform .18s ease; }
+.isCollapsed .chev{ transform: rotate(-90deg); }
+.collapsibleContent{ overflow:hidden; }
+.collapsed{ display:none; }
+/* ===== END PATCH ===== */
+
+  
+/* ===== JOIN REQUESTS (patch) ===== */
+.join-list{display:flex;flex-direction:column;gap:12px;margin-top:14px;}
+.join-item{border:1px solid rgba(255,255,255,.10);border-radius:16px;padding:14px;background:rgba(255,255,255,.03);}
+.join-top{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center;}
+.join-meta{display:flex;flex-direction:column;gap:4px;}
+.join-badges{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+.badge{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:999px;font-size:12px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05);}
+.badge.ok{border-color:rgba(183,226,25,.35);background:rgba(183,226,25,.12);}
+.badge.warn{border-color:rgba(254,98,30,.35);background:rgba(254,98,30,.12);}
+.join-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+.join-pages{margin-top:12px;display:flex;flex-wrap:wrap;gap:10px;}
+.join-pages label{display:flex;gap:8px;align-items:center;font-size:13px;padding:8px 10px;border-radius:12px;border:1px solid rgba(255,255,255,.10);background:rgba(0,0,0,.18);}
+.join-pages input{transform:scale(1.05);}
+.select-row{margin-top:10px;display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
+.select-row select{min-width:160px;}
+/* ===== END JOIN REQUESTS ===== */
+</style>
+  <script src="/assets/js/theme-manager.js" defer></script>
+</head>
+
+<body>
+  <div class="app">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sb-head">
+        <div class="brand">
+          <span class="dot"></span>
+          <span>OAP | Permissions Admin</span>
+        </div>
+        <div class="sb-sub">
+          <br>
+          
+        </div>
+      </div>
+
+      <div class="sb-body">
+        <button class="navbtn active" id="navPerm" type="button">
+          <span class="ico">🔐</span>
+          <span>Permissions</span>
+        </button>
+      </div>
+
+      <div class="sb-foot">
+        <div class="me">
+          <div class="avatar" id="meAvatar">A</div>
+          <div class="meta">
+            <div class="name" id="meName">—</div>
+            <div class="role" id="meRole">—</div>
+            <div class="role" id="meEmail">—</div>
+          </div>
+        </div>
+        <div class="row">
+          <button class="btn primary" id="btnRefresh" type="button">
+            <span class="btn-ico" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M21 12a9 9 0 1 1-2.64-6.36" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/>
+                <path d="M21 3v6h-6" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </span>
+            <span>Refresh</span>
+          </button>
+          <button class="btn danger" id="btnLogout" type="button">
+            <span class="btn-ico" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M10 17l5-5-5-5" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M15 12H3" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/>
+                <path d="M21 3v18" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/>
+              </svg>
+            </span>
+            <span>Logout</span>
+          </button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main -->
+    <main class="main">
+      <div class="topbar">
+        <div class="title">
+          <h1>Permissions</h1>
+          </div>
+        <div class="tools">
+          <a class="iconbtn home" href="/index.html" title="Home" aria-label="Home"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3 10.5L12 3l9 7.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M5.5 9.75V21h13V9.75" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M9.5 21v-6h5v6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+          <input class="field" id="q" placeholder="Search by email…" />
+          <button class="btn primary" id="refreshBtn" type="button">
+            <span class="btn-ico" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M21 12a9 9 0 1 1-2.64-6.36" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/>
+                <path d="M21 3v6h-6" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </span>
+            <span>Refresh</span>
+          </button>
+        </div>
+      </div>
+
+      
+      <div class="tabsbar" id="adminTabs">
+        <button class="tab active" type="button" data-tab="permissions">Permissions</button>
+        <button class="tab" type="button" data-tab="users">Users</button>
+        <button class="tab" type="button" data-tab="join">Join Requests</button>
+      </div>
+      <div class="content" id="permContent">
+        <div class="perm-grid">
+          <!-- Users -->
+          <section class="card" id="cardUsers">
+            <div class="card-h">
+              <div class="left"><span class="ico">👥</span> Users</div>
+              <span class="pill" id="pillUserCount">0</span>
+            </div>
+            <div class="userlist" id="users"></div>
+
+            
+          </section>
+
+          <!-- Matrix -->
+          <section class="card" id="cardMatrix">
+            <div class="card-h">
+              <div class="left"><span class="ico">🧩</span> Access Matrix</div>
+              <span class="pill" id="pillSelected">No user</span>
+            </div>
+            <div style="padding:12px 14px; display:grid; gap:12px;">
+              <div>
+                <div style="font-size:13px; font-weight:900;" id="selTitle">Select a user</div>
+                <div class="smallnote" id="selSub">—</div>
+              </div>
+
+              <div class="rolebar">
+                <label>Role</label>
+                <select id="roleSel" disabled>
+                  <option value="user">user</option>
+<option value="viewer">viewer</option>
+<option value="manager">manager</option>
+<option value="admin">admin</option>
+                </select>
+                <button class="btn" id="saveRoleBtn" disabled type="button">Save role</button>
+                <span class="smallnote" id="roleHint"></span>
+              </div>
+
+              
+              <!-- ===== Owner Tools: Add employee directly (does not touch join_requests) ===== -->
+              <div class="card" style="padding:12px 12px; border:1px solid rgba(255,255,255,.08); border-radius:12px; background:rgba(255,255,255,.03);">
+                <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
+                  <div>
+                    <div style="font-weight:900; font-size:13px;">Add Employee (Direct)</div>
+                    </div>
+                </div>
+
+                <div style="display:grid; grid-template-columns: 1fr 1fr 160px; gap:10px; margin-top:10px;">
+                  <div>
+                    <label class="smallnote" for="addEmpId">Employee ID</label>
+                    <input class="input" id="addEmpId" inputmode="numeric" />
+                  </div>
+                  <div>
+                    <label class="smallnote" for="addEmail">Email</label>
+                    <input class="input" id="addEmail" autocomplete="email" />
+                  </div>
+                  <div>
+                    <label class="smallnote" for="addRoleSel">Role</label>
+                    <select class="input" id="addRoleSel">
+                      <option value="user">user</option>
+<option value="viewer">viewer</option>
+<option value="manager">manager</option>
+<option value="admin">admin</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:10px;">
+                  <label style="display:flex; align-items:center; gap:8px; user-select:none;">
+                    <input type="checkbox" id="addGrantAll" checked />
+                    <span class="smallnote">Grant all active pages</span>
+                  </label>
+                  <div style="display:flex; gap:8px;">
+                    <button class="btn" id="addEmployeeBtn" type="button">＋ Add / Provision</button>
+                  </div>
+                </div>
+
+                
+                <div id="addPagesBox" style="margin-top:10px; border:1px solid var(--line, rgba(0,0,0,.12)); border-radius:12px; padding:10px 12px;">
+                  <div id="addPagesHeader" class="collapsibleHdr" style="display:flex; align-items:center; justify-content:space-between; gap:10px;"><div style="display:flex; align-items:center; gap:8px;"><span id="addPagesChevron" class="chev" aria-hidden="true">▾</span><div class="smallnote" style="margin:0;">Select pages to grant (when “Grant all active pages” is OFF)</div></div><div style="display:flex; gap:8px; flex-wrap:wrap;"><button class="btn mini" id="addPagesAllBtn" type="button">Select all</button><button class="btn mini ghost" id="addPagesNoneBtn" type="button">Select none</button></div></div>
+                  
+                </div>
+
+
+              </div>
+
+<div class="smallnote">Disabled buttons in the UI are driven by these flags.</div>
+
+              <div class="tablewrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th style="min-width:180px">Page</th>
+                      <th style="min-width:140px">Requires Auth</th>
+                      <th style="min-width:140px">Access</th>
+                      <th style="min-width:140px">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody id="matrix"></tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+      <div class="content" id="joinContent" style="display:none;">
+        <section class="card">
+          <div class="card-head">
+            <h2 style="margin:0;">Join Requests</h2>
+            <div class="card-actions">
+              <button class="btn btn-secondary" id="btnReloadJoin">Reload</button>
+            </div>
+          </div>
+          <p class="muted" style="margin-top:8px;">
+            قبل الموافقة: اختر <b>Role</b> وحدد صفحات الوصول. إذا لم تحدد صفحات → لا يمكن الموافقة.
+          </p>
+          <div id="joinRequestsList" class="join-list"></div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  
+
+    <div class="toast" id="toast"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="/assets/js/nxs_supabase_client.js"></script>
+
+  <script>
+  (function(){
+    const toastEl = document.getElementById('toast');
+    const meName = document.getElementById('meName');
+    const meRole = document.getElementById('meRole');
+    const meEmail = document.getElementById('meEmail');
+    const meAvatar = document.getElementById('meAvatar');
+
+    const usersEl = document.getElementById('users');
+    const matrixEl = document.getElementById('matrix');
+    const qEl = document.getElementById('q');
+
+    const tabsEl = document.getElementById('adminTabs');
+    const permContent = document.getElementById('permContent');
+    const joinContent = document.getElementById('joinContent');
+    const cardUsers = document.getElementById('cardUsers');
+    const cardMatrix = document.getElementById('cardMatrix');
+    const btnOpenJoinAdmin = document.getElementById('btnOpenJoinAdmin');
+
+
+    const selTitle = document.getElementById('selTitle');
+    const selSub = document.getElementById('selSub');
+    const pillUserCount = document.getElementById('pillUserCount');
+    const pillSelected = document.getElementById('pillSelected');
+
+    const roleSel = document.getElementById('roleSel');
+    const saveRoleBtn = document.getElementById('saveRoleBtn');
+    const roleHint = document.getElementById('roleHint');
+
+    const refreshBtn = document.getElementById('refreshBtn');
+    const btnRefresh = document.getElementById('btnRefresh');
+    const btnLogout = document.getElementById('btnLogout');
+
+    // ----- Direct provisioning (Owner) -----
+    const addEmpIdEl = document.getElementById('addEmpId');
+    const addEmailEl = document.getElementById('addEmail');
+    const addRoleSelEl = document.getElementById('addRoleSel');
+    const addGrantAllEl = document.getElementById('addGrantAll');
+    const addPagesBox = document.getElementById('addPagesBox');
+    // ===== PATCH: auto-fill Email from Employee ID (150xxxxxx -> @saudiags.com) =====
+    function normalizeEmpId(v){
+      const digits = String(v || '').replace(/\D+/g,'');
+      if (digits.startsWith('150')) return digits.slice(0,8);
+      return digits;
+    }
+    function syncEmailFromEmpId(){
+      if(!addEmpIdEl || !addEmailEl) return;
+      const norm = normalizeEmpId(addEmpIdEl.value);
+      if (addEmpIdEl.value !== norm) addEmpIdEl.value = norm;
+      if (norm.length === 8 && norm.startsWith('150')){
+        addEmailEl.value = norm + '@saudiags.com';
+      }
+    }
+    if(addEmpIdEl){
+      addEmpIdEl.setAttribute('maxlength','8');
+      addEmpIdEl.addEventListener('input', syncEmailFromEmpId);
+      addEmpIdEl.addEventListener('blur', syncEmailFromEmpId);
+    }
+
+    // ===== PATCH: collapsible Page Permissions box (arrow) =====
+    const addPagesHeader = document.getElementById('addPagesHeader');
+    const addPagesContent = document.getElementById('addPagesContent');
+    const addPagesChevron = document.getElementById('addPagesChevron');
+    let addPagesCollapsed = false;
+
+    function setPagesCollapsed(collapsed){
+      addPagesCollapsed = !!collapsed;
+      if(!addPagesBox || !addPagesContent) return;
+      if(addPagesCollapsed){
+        addPagesBox.classList.add('isCollapsed');
+        addPagesContent.classList.add('collapsed');
+        if(addPagesChevron) addPagesChevron.textContent = '▸';
+      }else{
+        addPagesBox.classList.remove('isCollapsed');
+        addPagesContent.classList.remove('collapsed');
+        if(addPagesChevron) addPagesChevron.textContent = '▾';
+      }
+    }
+    if(addPagesHeader){
+      addPagesHeader.addEventListener('click', function(ev){
+        // keep clicks on buttons working normally
+        const tag = (ev.target && ev.target.tagName ? ev.target.tagName.toLowerCase() : '');
+        if(tag === 'button') return;
+        setPagesCollapsed(!addPagesCollapsed);
+      });
+    }
+
+    const addPagesList = document.getElementById('addPagesList');
+    const addPagesAllBtn = document.getElementById('addPagesAllBtn');
+    const addPagesNoneBtn = document.getElementById('addPagesNoneBtn');
+    const addEmployeeBtn = document.getElementById('addEmployeeBtn');
+    const addEmployeeHint = document.getElementById('addEmployeeHint');
+
+
+    function toastShow(kind, title, msg){
+      const icon = kind === 'ok' ? '✅' : (kind === 'warn' ? '⚠️' : '⛔');
+      toastEl.innerHTML = '<div class="t-h">'+icon+' '+escapeHtml(title||'')+'</div><div class="t-b">'+escapeHtml(msg||'')+'</div>';
+      toastEl.classList.add('show');
+      clearTimeout(toastEl._t);
+      toastEl._t = setTimeout(()=>toastEl.classList.remove('show'), 2600);
+    }
+
+    function escapeHtml(s){
+      return String(s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    }
+
+    function safeReturnTo(){
+      const url = new URL(location.href);
+      url.searchParams.delete('returnTo'); // prevent nesting returnTo in returnTo
+      const clean = url.pathname + (url.search ? url.search : '') + (url.hash || '');
+      const p = encodeURIComponent(clean);
+      return '/Login.html?returnTo=' + p;
+    }
+
+    function getClient(){
+      return window.NXS_Supabase && window.NXS_Supabase.client ? window.NXS_Supabase.client : null;
+    }
+
+    async function waitForClient(timeoutMs=8000){
+      const start = Date.now();
+      while(Date.now()-start < timeoutMs){
+        const c = getClient();
+        if(c) return c;
+        await new Promise(r=>setTimeout(r,50));
+      }
+      return null;
+    }
+
+    async function getCurrentUser(){
+      const api = window.NXS_Supabase;
+
+      // Preferred wrapper (if present)
+      try{
+        if(api && api.getCurrentUser){
+          const { user } = await api.getCurrentUser();
+          if(user) return user;
+        }
+      }catch(_e){ /* fall through */ }
+
+      // Fallback to the raw supabase-js v2 client (prevents auth loop if wrapper misbehaves)
+      try{
+        const client = (api && api.client) ? api.client : getClient();
+        if(client && client.auth){
+          const u = await client.auth.getUser();
+          if(u && u.data && u.data.user) return u.data.user;
+
+          const s = await client.auth.getSession();
+          if(s && s.data && s.data.session && s.data.session.user) return s.data.session.user;
+        }
+      }catch(_e2){ /* ignore */ }
+
+      return null;
+    }
+
+    async function ensureAuth(){
+      let client = getClient();
+      if(!client){ client = await waitForClient(); }
+      if(!client) throw new Error('Supabase client not found');
+      const user = await getCurrentUser();
+      if(!user){ location.href = safeReturnTo(); return null; }
+      return user;
+    }
+
+    // State
+    const STATE = { users: [], selected: null, meRole: null, meUid: null, allPages: [] };
+
+
+    // ===== JOIN REQUESTS (patch) =====
+    const JOIN_STATE = { selections: Object.create(null), roles: Object.create(null) };
+
+    function normalizeRole(v){
+      v = String(v||"").toLowerCase().trim();
+      if (["owner","admin","user","staff"].includes(v)) return v;
+      return "staff";
+    }
+
+    function escapeHtml(s){
+      return String(s??"").replace(/[&<>"']/g, (c)=>({ "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;" }[c]));
+    }
+
+    async function fetchJoinRequests(){
+      const sb = await getClient();
+      // Prefer RPC if available
+      try{
+        const { data, error } = await sb.rpc("admin_list_join_requests");
+        if (!error && Array.isArray(data)) return data;
+      }catch(_){}
+      // Fallback to table select (requires RLS allow for admin/owner)
+      const { data: jr, error: e2 } = await sb
+        .from("join_requests")
+        .select("join_request_id,status,email,employee_id,created_at,auth_user_id,linked_to_auth")
+        .order("join_request_id", { ascending:false })
+        .limit(50);
+      if (e2) throw e2;
+      return jr || [];
+    }
+
+    function pagesForSelection(){
+      return (STATE.allPages || [])
+        .filter(p => p && (p.permission_key || p.page_key))
+        .map(p => ({
+          key: String(p.permission_key || p.page_key),
+          label: String(p.page_key || p.permission_key),
+          path: p.page_path ? String(p.page_path) : ""
+        }));
+    }
+
+    function renderJoinRequests(list){
+      const host = document.getElementById("joinRequestsList");
+      if (!host) return;
+      if (!Array.isArray(list) || list.length===0){
+        host.innerHTML = '<div class="muted">لا توجد طلبات حالياً.</div>';
+        return;
+      }
+
+      const pages = pagesForSelection();
+      host.innerHTML = "";
+
+      list.forEach(r=>{
+        const id = Number(r.join_request_id || r.id || 0);
+        const email = String(r.email || "").trim();
+        const emp = r.employee_id!=null ? String(r.employee_id) : "";
+        const status = String(r.status || "").toLowerCase();
+
+        if (!JOIN_STATE.selections[id]) JOIN_STATE.selections[id] = new Set();
+        if (!JOIN_STATE.roles[id]) JOIN_STATE.roles[id] = "staff";
+
+        const box = document.createElement("div");
+        box.className = "join-item";
+        box.innerHTML = `
+          <div class="join-top">
+            <div class="join-meta">
+              <div style="font-weight:700">Request #${id}</div>
+              <div class="muted" style="font-size:13px">${escapeHtml(email || "(no email)")} ${emp ? "• "+escapeHtml(emp) : ""}</div>
+            </div>
+            <div class="join-badges">
+              <span class="badge ${status==="pending" ? "warn" : "ok"}">${escapeHtml(status || "unknown")}</span>
+              ${r.linked_to_auth ? '<span class="badge ok">linked_to_auth</span>' : '<span class="badge warn">not_linked</span>'}
+            </div>
+            <div class="join-actions">
+              <select class="input" data-role="${id}" aria-label="Role">
+                <option value="staff">staff</option>
+                <option value="user">user</option>
+                <option value="admin">admin</option>
+              </select>
+              <button class="btn" data-approve="${id}">Approve</button>
+              <button class="btn btn-secondary" data-reject="${id}">Reject</button>
+            </div>
+          </div>
+
+          <div class="select-row muted" style="font-size:13px">
+            اختر الصفحات التي يستطيع الوصول لها (مطلوب قبل الموافقة):
+          </div>
+
+          <div class="join-pages" data-pages="${id}"></div>
+        `;
+
+        host.appendChild(box);
+
+        const roleSel = box.querySelector(`select[data-role="${id}"]`);
+        roleSel.value = JOIN_STATE.roles[id] || "staff";
+        roleSel.addEventListener("change", ()=>{
+          JOIN_STATE.roles[id] = normalizeRole(roleSel.value);
+        });
+
+        const pagesWrap = box.querySelector(`.join-pages[data-pages="${id}"]`);
+        pages.forEach(p=>{
+          const lab = document.createElement("label");
+          const checked = JOIN_STATE.selections[id].has(p.key);
+          lab.innerHTML = `<input type="checkbox" ${checked ? "checked":""} data-jp="${id}" data-key="${escapeHtml(p.key)}"> <span>${escapeHtml(p.label)}${p.path ? ' <span class="muted" style="font-size:12px">('+escapeHtml(p.path)+')</span>' : ""}</span>`;
+          pagesWrap.appendChild(lab);
+        });
+
+        pagesWrap.addEventListener("change",(ev)=>{
+          const cb = ev.target;
+          if (!(cb && cb.matches && cb.matches('input[type="checkbox"][data-jp]'))) return;
+          const jid = Number(cb.getAttribute("data-jp"));
+          const key = cb.getAttribute("data-key");
+          if (!JOIN_STATE.selections[jid]) JOIN_STATE.selections[jid] = new Set();
+          if (cb.checked) JOIN_STATE.selections[jid].add(key);
+          else JOIN_STATE.selections[jid].delete(key);
+        });
+
+        box.querySelector(`[data-approve="${id}"]`).addEventListener("click", async ()=>{
+          const sel = Array.from(JOIN_STATE.selections[id] || []);
+          if (sel.length === 0){
+            alert("لا يمكن الموافقة: يجب تحديد صفحات الوصول أولاً.");
+            return;
+          }
+          const role = normalizeRole(JOIN_STATE.roles[id]);
+          await approveJoinFromPermissionsPanel(id, email, role, sel);
+        });
+
+        box.querySelector(`[data-reject="${id}"]`).addEventListener("click", async ()=>{
+          await rejectJoinFromPermissionsPanel(id);
+        });
+      });
+    }
+
+    async function approveJoinFromPermissionsPanel(join_request_id, email, role, page_keys){
+      const token = await getAccessToken();
+      if (!token){ alert("No session. Please login."); return; }
+
+      const resp = await fetch("/api/admin-approve-join", {
+        method:"POST",
+        headers:{
+          "Content-Type":"application/json",
+          "Authorization":"Bearer " + token
+        },
+        body: JSON.stringify({ join_request_id, email, role, page_keys })
+      });
+
+      const raw = await resp.text().catch(()=> "");
+      let j = null; try{ j = raw ? JSON.parse(raw) : null; }catch(_){}
+      if (!resp.ok || (j && j.ok === false)){
+        const msg = (j && (j.error || j.message || j.rpc_raw)) ? (j.error || j.message || j.rpc_raw) : (raw || ("HTTP "+resp.status));
+        alert("Approve failed: " + msg);
+        return;
+      }
+      try{ await loadJoinRequests(); }catch(_){ location.reload(); }
+    }
+
+    async function rejectJoinFromPermissionsPanel(join_request_id){
+      const sb = await getClient();
+      try{
+        const { error } = await sb.rpc("admin_set_join_request_status", { p_join_request_id: join_request_id, p_status: "rejected", p_auth_user_id: null });
+        if (error) throw error;
+        await loadJoinRequests();
+      }catch(e){
+        alert("Reject failed: " + (e?.message || "RPC not available"));
+      }
+    }
+
+    async function loadJoinRequests(){
+      const btn = document.getElementById("btnReloadJoin");
+      if (btn) btn.disabled = true;
+      try{
+        if (!STATE.allPages || STATE.allPages.length===0){
+          if (typeof loadAllPages === "function") await loadAllPages();
+        }
+        const list = await fetchJoinRequests();
+        renderJoinRequests(list);
+      }catch(e){
+        const host = document.getElementById("joinRequestsList");
+        if (host) host.innerHTML = '<div class="muted">Failed to load join requests.</div>';
+        console.error("loadJoinRequests failed", e);
+      }finally{
+        if (btn) btn.disabled = false;
+      }
+    }
+
+    document.addEventListener("click",(ev)=>{
+      const t = ev.target;
+      if (t && t.id === "btnReloadJoin"){
+        ev.preventDefault();
+        if (typeof loadJoinRequests === "function") loadJoinRequests();
+      }
+    });
+    // ===== END JOIN REQUESTS (patch) =====
+
+    function updateRoleOptions(){
+      // Roles list is fixed (no "owner").
+      // Keep this hook for future role-based UI tweaks.
+    }
+
+    function setTab(name){
+      // permissions: users + matrix
+      // users: users only
+      // join: join only
+      const tabs = tabsEl ? Array.from(tabsEl.querySelectorAll('.tab')) : [];
+      tabs.forEach(b => b.classList.toggle('active', b.dataset.tab === name));
+
+      if(permContent) permContent.style.display = (name === 'join') ? 'none' : '';
+      if(joinContent) joinContent.style.display = (name === 'join') ? '' : 'none';
+
+      if(cardUsers) cardUsers.style.display = (name === 'permissions' || name === 'users') ? '' : 'none';
+      if(cardMatrix) cardMatrix.style.display = (name === 'permissions') ? '' : 'none';
+    }
+
+    function initTabs(){
+      if(!tabsEl) return;
+      tabsEl.addEventListener('click', (e)=>{
+        const btn = e.target && e.target.closest && e.target.closest('.tab');
+        if(!btn) return;
+        if(btn.dataset.tab === 'join'){
+          setTab('join');
+          if (typeof loadJoinRequests === 'function') loadJoinRequests();
+          return;
+        }
+        setTab(btn.dataset.tab);
+      });
+      // Join admin open
+      if(btnOpenJoinAdmin){
+        btnOpenJoinAdmin.addEventListener('click', ()=>{
+          window.location.href = '/pages/auth/joining_admin.html';
+        });
+      }
+      setTab('permissions');
+    }
+
+    function renderUsers(){
+      const q = (qEl.value || '').trim().toLowerCase();
+      const list = STATE.users.filter(u => !q || (u.email||'').toLowerCase().includes(q));
+      pillUserCount.textContent = String(list.length);
+
+      usersEl.innerHTML = list.map(u => {
+        const active = STATE.selected && STATE.selected.auth_user_id === u.auth_user_id;
+        const role = (u.role || u.app_role || 'user');
+        return (
+          '<div class="useritem '+(active?'active':'')+'" data-uid="'+escapeHtml(u.auth_user_id)+'">'
+          + '<div class="email">'+escapeHtml(u.email || '—')+'</div>'
+          + '<div class="id mono">'+escapeHtml(u.auth_user_id || '')+'</div>'
+          + '<div class="mini">'
+          +   '<span class="pill">'+escapeHtml(String(role).toUpperCase())+'</span>'
+          + '</div>'
+          + '</div>'
+        );
+      }).join('') || '<div class="muted" style="padding:10px 12px;">No users.</div>';
+    }
+
+    function statusPill(can_access, is_active){
+      if(!is_active) return '<span class="pill bad">Inactive</span>';
+      if(can_access) return '<span class="pill good">Allowed</span>';
+      return '<span class="pill warn">Blocked</span>';
+    }
+
+    function renderMatrix(rows){
+      if(!rows || !rows.length){
+        matrixEl.innerHTML = '<tr><td colspan="4" class="muted">No pages.</td></tr>';
+        return;
+      }
+      matrixEl.innerHTML = rows.map(r => {
+        const key = r.page_key || '';
+        const requires = !!r.requires_auth;
+        const can = !!r.can_access;
+        const active = !!r.is_active;
+        const swClass = (can && active) ? 'switch on' : 'switch';
+
+        return (
+          '<tr data-page-key="'+escapeHtml(key)+'">'
+          + '<td>'+escapeHtml(key)+'</td>'
+          + '<td>'+ (requires ? '<span class="pill">YES</span>' : '<span class="pill">NO</span>') +'</td>'
+          + '<td>'
+          +   '<div style="display:flex; align-items:center; gap:10px;">'
+          +     '<div class="'+swClass+'" role="switch" aria-checked="'+(can && active ? 'true':'false')+'" tabindex="0">'
+          +       ''
+          +     '</div>'
+          +     '<span class="muted">'+(can && active ? 'enabled' : 'disabled')+'</span>'
+          +   '</div>'
+          + '</td>'
+          + '<td>'+statusPill(can, active)+'</td>'
+          + '</tr>'
+        );
+      }).join('');
+    }
+
+    function renderAddPagesList(rows){
+      // rows from admin_get_user_access: [{page_key, requires_auth, is_active, can_access}]
+      if(!addPagesList) return;
+      const pages = (rows || []).map(r => ({
+        page_key: r.page_key || '',
+        requires_auth: !!r.requires_auth,
+        is_active: !!r.is_active
+      })).filter(p => p.page_key);
+
+      STATE.allPages = pages;
+
+      if(!pages.length){
+        addPagesList.innerHTML = '<div class="muted">No pages available.</div>';
+        return;
+      }
+
+      addPagesList.innerHTML = pages.map(p => {
+        const key = escapeHtml(p.page_key);
+        const disabled = !p.is_active ? 'disabled' : '';
+        const badge = !p.is_active ? '<span class="pill bad" style="margin-left:8px;">Inactive</span>' : (p.requires_auth ? '<span class="pill" style="margin-left:8px;">Auth</span>' : '<span class="pill" style="margin-left:8px;">Public</span>');
+        return (
+          '<label style="display:flex; align-items:center; gap:10px; padding:8px 10px; border:1px solid rgba(0,0,0,.10); border-radius:10px;">'
+          + '<input type="checkbox" class="addPageChk" data-page-key="'+key+'" '+disabled+' />'
+          + '<span class="mono" style="font-size:12px;">'+key+'</span>'
+          + badge
+          + '</label>'
+        );
+      }).join('');
+
+      // default: if grant-all checked, select all active
+      syncAddPagesEnabledState();
+    }
+
+    function setAddPagesSelection(mode){
+      if(!addPagesList) return;
+      const boxes = addPagesList.querySelectorAll('input.addPageChk');
+      boxes.forEach(b => {
+        if(b.disabled) return;
+        b.checked = (mode === 'all');
+      });
+    }
+
+    function syncAddPagesEnabledState(){
+      if(!addPagesBox || !addGrantAllEl) return;
+      const useAll = !!addGrantAllEl.checked;
+      // When Grant All is ON: visually disable custom selection and auto-select all active.
+      addPagesBox.style.opacity = useAll ? '0.55' : '1';
+      addPagesBox.style.pointerEvents = useAll ? 'none' : 'auto';
+      if(useAll){
+        setAddPagesSelection('all');
+      }
+    }
+
+
+
+    async function loadUsers(){
+      const client = getClient();
+      const { data, error } = await client.rpc('admin_list_users');
+      if(error){
+        const msg = (error.message||'').toLowerCase();
+        if(msg.includes('forbidden') || msg.includes('permission') || msg.includes('access denied')){
+          location.href = '/pages/auth/unauthorized.html';
+          return;
+        }
+        throw error;
+      }
+      STATE.users = (data || []).map(x => ({
+        auth_user_id: x.auth_user_id || x.id || x.uid,
+        email: x.email,
+        role: x.role || x.app_role || x.user_role
+      })).filter(x => x.auth_user_id);
+      renderUsers();
+    }
+
+    async function provisionDirect(){
+      const client = getClient();
+      if(!client){ toastShow('err','Error','Supabase client not found'); return; }
+
+      const empIdRaw = (addEmpIdEl && addEmpIdEl.value ? String(addEmpIdEl.value).trim() : '');
+      const emailRaw = (addEmailEl && addEmailEl.value ? String(addEmailEl.value).trim() : '');
+      const roleRaw  = (addRoleSelEl && addRoleSelEl.value ? String(addRoleSelEl.value).trim() : 'user');
+      const grantAll = !!(addGrantAllEl && addGrantAllEl.checked);
+
+      if(addEmployeeHint) addEmployeeHint.textContent = '';
+
+      if(!empIdRaw || !/^[0-9]{3,20}$/.test(empIdRaw)){
+        toastShow('warn','Missing','Enter a valid Employee ID');
+        if(addEmployeeHint) addEmployeeHint.textContent = 'Please enter a valid numeric Employee ID.';
+        return;
+      }
+      if(!emailRaw || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailRaw)){
+        toastShow('warn','Missing','Enter a valid email');
+        if(addEmployeeHint) addEmployeeHint.textContent = 'Please enter a valid email (must already exist in Auth).';
+        return;
+      }
+
+      const payload = {
+        p_employee_id: Number(empIdRaw),
+        p_email: emailRaw.toLowerCase(),
+        p_role: roleRaw.toLowerCase(),
+        p_grant_all: grantAll
+      };
+
+      // If Grant All is OFF, collect selected pages for custom access.
+      let selectedPages = [];
+      if(!grantAll && addPagesList){
+        selectedPages = Array.from(addPagesList.querySelectorAll('input.addPageChk:checked'))
+          .map(x => x.getAttribute('data-page-key'))
+          .filter(Boolean);
+      }
+
+
+      try{
+        if(addEmployeeBtn){ addEmployeeBtn.disabled = true; addEmployeeBtn.textContent = 'Working…'; }
+        const { data, error } = await client.rpc('admin_provision_user', payload);
+        if(error) throw error;
+
+        const uid = Array.isArray(data) ? (data[0]?.out_auth_user_id ?? data[0]?.auth_user_id ?? data[0]?.user_id ?? data[0]?.uid ?? null) : (data?.out_auth_user_id ?? data?.auth_user_id ?? data?.user_id ?? data?.uid ?? data ?? null);
+        toastShow('ok','Done','User provisioned');
+
+        // Apply custom per-page access (only when Grant All is OFF)
+        if(!grantAll && uid && selectedPages && selectedPages.length){
+          try{
+            for(const pk of selectedPages){
+              await client.rpc('admin_set_user_access', { p_auth_user_id: uid, p_page_key: pk, p_can_access: true });
+            }
+          }catch(e){
+            console.warn('Custom page grants failed', e);
+            toastShow('warn','Partial','User created but some page grants may have failed');
+          }
+        }
+
+        // Refresh list and auto-select the provisioned user
+        await loadUsers();
+        if(uid) await selectUser(String(uid));
+      }catch(e){
+        const msg = (e && (e.message || e.error_description)) ? String(e.message || e.error_description) : 'Failed';
+        toastShow('err','Failed', msg);
+        if(addEmployeeHint) addEmployeeHint.textContent = msg;
+      }finally{
+        if(addEmployeeBtn){ addEmployeeBtn.disabled = false; addEmployeeBtn.textContent = '＋ Add / Provision'; }
+      }
+    }
+
+    if(addEmployeeBtn && !addEmployeeBtn.__bound){
+      addEmployeeBtn.__bound = true;
+            addEmployeeBtn.addEventListener('click', provisionDirect);
+      if(addGrantAllEl){ addGrantAllEl.addEventListener('change', syncAddPagesEnabledState); }
+      if(addPagesAllBtn){ addPagesAllBtn.addEventListener('click', ()=>setAddPagesSelection('all')); }
+      if(addPagesNoneBtn){ addPagesNoneBtn.addEventListener('click', ()=>setAddPagesSelection('none')); }
+    }
+
+    async function loadAccessFor(uid){
+      const client = getClient();
+      const { data, error } = await client.rpc('admin_get_user_access', { p_auth_user_id: uid });
+      if(error) throw error;
+      return data || [];
+    }
+
+    async function loadRoleFor(uid){
+      const client = getClient();
+      const { data, error } = await client.rpc('admin_get_user_role', { p_auth_user_id: uid });
+      if(error) return null;
+      if(!data) return null;
+      return data.role || data.app_role || data.user_role || null;
+    }
+
+    async function selectUser(uid){
+      const u = STATE.users.find(x => x.auth_user_id === uid);
+      STATE.selected = u || { auth_user_id: uid, email: uid };
+
+      selTitle.textContent = u && u.email ? u.email : 'Selected user';
+      selSub.textContent = uid;
+      pillSelected.textContent = 'Selected';
+
+      roleSel.disabled = false;
+      saveRoleBtn.disabled = false;
+      roleHint.textContent = '';
+
+      // role
+      const role = (u && u.role) ? u.role : await loadRoleFor(uid);
+      if(role){ roleSel.value = String(role).toLowerCase(); }
+
+      // matrix
+      matrixEl.innerHTML = '<tr><td colspan="4" class="muted">Loading…</td></tr>';
+      const rows = await loadAccessFor(uid);
+      renderMatrix(rows);
+
+      // highlight selection
+      renderUsers();
+    }
+
+    async function toggleAccess(pageKey){
+      const client = getClient();
+      const uid = STATE.selected && STATE.selected.auth_user_id;
+      if(!uid) return;
+
+      const row = matrixEl.querySelector('tr[data-page-key="'+CSS.escape(pageKey)+'"]');
+      if(!row) return;
+
+      const sw = row.querySelector('.switch');
+      const isOn = sw.classList.contains('on');
+      const next = !isOn;
+
+      // optimistic UI
+      if(next) sw.classList.add('on'); else sw.classList.remove('on');
+      sw.setAttribute('aria-checked', next ? 'true':'false');
+      row.querySelector('td:nth-child(3) .muted').textContent = next ? 'enabled' : 'disabled';
+      row.querySelector('td:nth-child(4)').innerHTML = next ? '<span class="pill good">Allowed</span>' : '<span class="pill warn">Blocked</span>';
+
+      const { error } = await client.rpc('admin_set_user_access', {
+        p_auth_user_id: uid,
+        p_page_key: pageKey,
+        p_can_access: next
+      });
+      if(error){
+        // rollback
+        if(isOn) sw.classList.add('on'); else sw.classList.remove('on');
+        sw.setAttribute('aria-checked', isOn ? 'true':'false');
+        row.querySelector('td:nth-child(3) .muted').textContent = isOn ? 'enabled' : 'disabled';
+        row.querySelector('td:nth-child(4)').innerHTML = isOn ? '<span class="pill good">Allowed</span>' : '<span class="pill warn">Blocked</span>';
+        toastShow('err', 'Failed', error.message || 'Could not update access');
+        return;
+      }
+      toastShow('ok', 'Saved', pageKey + ' updated');
+    }
+
+    async function saveRole(){
+      const uid = STATE.selected && STATE.selected.auth_user_id;
+      if(!uid) return;
+      const role = roleSel.value;
+      const client = getClient();
+      const { error } = await client.rpc('admin_set_user_role', {
+        p_auth_user_id: uid,
+        p_role: role
+      });
+      if(error){
+        toastShow('err', 'Failed', error.message || 'Could not update role');
+        return;
+      }
+      // update cached user role
+      const u = STATE.users.find(x => x.auth_user_id === uid);
+      if(u) u.role = role;
+      renderUsers();
+      toastShow('ok', 'Saved', 'Role updated');
+    }
+
+    async function hydrateMe(){
+      let client = getClient();
+      if(!client){ client = await waitForClient(); }
+      if(!client) return;
+      const user = await getCurrentUser();
+      if(!user) return;
+      STATE.meUid = user.id;
+
+      // Try to read profile from public.users
+      try{
+        const { data } = await client
+          .from('users')
+          .select('email, username, app_role, role')
+          .eq('auth_user_id', user.id)
+          .maybeSingle();
+        const nm = (data && (data.username || data.email)) || user.email || 'Owner/Admin';
+        const rl = (data && (data.app_role || data.role)) || '—';
+        meName.textContent = nm;
+        meRole.textContent = 'Role: ' + String(rl);
+        STATE.meRole = rl;
+        updateRoleOptions();
+        meEmail.textContent = (data && data.email) ? data.email : (user.email || '');
+        meAvatar.textContent = String(nm).slice(0,1).toUpperCase();
+      }catch(e){
+        const nm = user.email || 'Owner/Admin';
+        meName.textContent = nm;
+        meRole.textContent = 'Role: —';
+        meEmail.textContent = user.email || '';
+        meAvatar.textContent = String(nm).slice(0,1).toUpperCase();
+      }
+    }
+
+    // Events
+    usersEl.addEventListener('click', (ev)=>{
+      const item = ev.target.closest('.useritem');
+      if(!item) return;
+      selectUser(item.getAttribute('data-uid'));
+    });
+
+    qEl.addEventListener('input', ()=>renderUsers());
+
+    matrixEl.addEventListener('click', (ev)=>{
+      const sw = ev.target.closest('.switch');
+      if(!sw) return;
+      const tr = ev.target.closest('tr');
+      if(!tr) return;
+      toggleAccess(tr.getAttribute('data-page-key'));
+    });
+
+    matrixEl.addEventListener('keydown', (ev)=>{
+      if(ev.key !== 'Enter' && ev.key !== ' ') return;
+      const sw = ev.target.closest('.switch');
+      if(!sw) return;
+      ev.preventDefault();
+      const tr = ev.target.closest('tr');
+      if(!tr) return;
+      toggleAccess(tr.getAttribute('data-page-key'));
+    });
+
+    refreshBtn.addEventListener('click', async ()=>{
+      try{
+        await loadUsers();
+        toastShow('ok','Refreshed','Users updated');
+      }catch(e){
+        console.error(e);
+        toastShow('err','Error', e.message || String(e));
+      }
+    });
+
+    btnRefresh.addEventListener('click', ()=>refreshBtn.click());
+    saveRoleBtn.addEventListener('click', saveRole);
+
+    btnLogout.addEventListener('click', async ()=>{
+      const client = getClient();
+      try{ await client.auth.signOut(); }catch(e){}
+      location.href = '/Login.html';
+    });
+
+    // Boot
+    (async function boot(){
+      try{
+        initTabs();
+        await ensureAuth();
+        await hydrateMe();
+        // Load full pages list for provisioning UI (based on admin_get_user_access)
+        if(STATE.meUid){
+          try{ const pages = await loadAccessFor(STATE.meUid); renderAddPagesList(pages); }
+          catch(e){ console.warn('Pages list load failed', e); }
+        }
+        await loadUsers();
+        // Auto-select first user so Role dropdown is usable immediately
+        if(STATE.users && STATE.users.length){
+          await selectUser(STATE.users[0].auth_user_id);
+        }
+        toastShow('ok','Ready','Signed in as Owner/Admin');
+      }catch(e){
+        console.error(e);
+        toastShow('err','Error', e.message || String(e));
+      }
+    })();
+  })();
+  </script>
+
+  
+  <script>
+  /* Sync theme with INDEX (persisted) */
+  (function(){
+    const KEY_THEME = "oap_theme_mode";
+    // Gradient text color key (from INDEX) — supports both value names and hex
+    const KEY_GRADIENT_TEXT = "oap_gradient_text_color";
+    const KEY_GRADIENT_TEXT_ALT = "oap_gradient_text";
+
+    const root = document.documentElement;
+
+    function applyTheme(t){
+      if (!t) return;
+      root.setAttribute("data-theme", t);
+      // when gradient, also sync text color if provided by INDEX
+      if (t === "gradient"){
+        applyGradientText();
+      } else {
+        // reset any inline override (fallback to CSS vars)
+        try { root.style.removeProperty("--text"); } catch(e) {}
+      }
+    }
+
+    function coerceColor(v){
+      if(!v) return "";
+      const s = String(v).trim();
+      if(!s) return "";
+      const low = s.toLowerCase();
+      if(low === "white" || low === "light") return "#ECECF1";
+      if(low === "black" || low === "dark") return "#1d1e26";
+      // allow hex (#RGB/#RRGGBB)
+      if(/^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(s)) return s;
+      return "";
+    }
+
+    function applyGradientText(){
+      let v = "";
+      try {
+        v = localStorage.getItem(KEY_GRADIENT_TEXT) || localStorage.getItem(KEY_GRADIENT_TEXT_ALT) || "";
+      } catch(e) {}
+      const color = coerceColor(v);
+      if(color){
+        root.style.setProperty("--text", color);
+      }
+    }
+
+    try { applyTheme(localStorage.getItem(KEY_THEME)); } catch(e) {}
+
+    window.addEventListener("storage", function(ev){
+      if (ev.key === KEY_THEME) applyTheme(ev.newValue);
+      if (ev.key === KEY_GRADIENT_TEXT || ev.key === KEY_GRADIENT_TEXT_ALT){
+        if(root.getAttribute("data-theme") === "gradient") applyGradientText();
+      }
+    });
+  })();
+  </script>
+
+
+</body>
+</html>

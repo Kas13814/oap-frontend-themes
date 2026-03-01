@@ -1,0 +1,330 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <script>
+(function(){
+  try{
+    var root = document.documentElement;
+    var sp = new URLSearchParams(window.location.search);
+    var t = sp.get('theme');
+    if(!t){
+      try{ t = localStorage.getItem('oap_theme'); }catch(_){}
+    }
+    if(t) root.setAttribute('data-theme', t);
+
+    var ink = sp.get('gink') || sp.get('gradientInk');
+    if(!ink){
+      try{ ink = localStorage.getItem('oap_gradient_ink'); }catch(_){}
+    }
+    if(ink) root.setAttribute('data-gradient-ink', ink);
+  }catch(_){}
+})();
+</script>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link rel="stylesheet" href="/assets/css/themes.css">
+  <title>OAP Mask (50% Transparent Outside)</title>
+  <style>
+    html, body{
+      margin:0;
+      height:100%;
+      overflow:hidden;
+      cursor:none;
+      background: transparent;
+    }
+
+    /* خلفية حقيقية (الفيديو يغطي الشاشة) */
+    .bg{
+      position:fixed;
+      inset:0;
+      z-index:0;
+      overflow:hidden;
+    }
+    .bg video{
+      position:absolute;
+      inset:0;
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      display:block;
+    }
+
+    /* ✅ هذا هو “الشفاف 50%” فوق الخلفية */
+    .dim{
+      position:fixed;
+      inset:0;
+      z-index:1;
+      background: rgba(0,0,0,0.50);
+      pointer-events:none;
+    }
+
+    /* طبقة الماسك (تُظهر الفيديو + التدرج داخل الشكل فقط) */
+    #targetLayer{
+      position:fixed;
+      inset:0;
+      z-index:2;
+      overflow:hidden;
+      isolation:isolate;
+
+      -webkit-mask-repeat:no-repeat;
+      -webkit-mask-size:100% 100%;
+      mask-repeat:no-repeat;
+      mask-size:100% 100%;
+
+      --glow: 0.90;
+      --glow-boost: 0;
+    }
+
+    #targetLayer video{
+      position:absolute;
+      inset:0;
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      display:block;
+      filter: saturate(1.35) contrast(1.07) brightness(1.06);
+      
+    }
+
+    /* نفس ألوان الدائرة */
+    #targetLayer::after{
+      content:"";
+      position:absolute;
+      inset:0;
+      pointer-events:none;
+      background: linear-gradient(90deg,
+        rgba(129,47,236, calc(var(--glow) + var(--glow-boost))) 0%,
+        rgba(41,216,255, calc(var(--glow) + var(--glow-boost))) 100%);
+      mix-blend-mode: normal;
+      opacity: 0.90;
+    }
+
+    #maskCanvas{
+      position:fixed;
+      inset:0;
+      width:100%;
+      height:100%;
+      opacity:0;
+      pointer-events:none;
+      z-index:3; /* فوق للـ toDataURL فقط */
+    }
+
+    /* Header في المقدمة */
+    .top{
+      position:fixed;
+      left:36px;
+      right:36px;
+      top:22px;
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      z-index:10;
+      pointer-events:none;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    }
+    .brand{
+      font-weight:900;
+      letter-spacing:1px;
+      line-height:0.9;
+      font-size: clamp(72px, 14vw, 220px);
+      color:#fff;
+      text-transform:uppercase;
+    }
+    .logoBox{
+      width: 92px;
+      height: 92px;
+      border:none;
+      border-radius:14px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background: transparent;
+    }
+    .logoBox img{
+      width:48px;
+      height:48px;
+      display:block;
+    }
+
+    /* Cursor */
+    #cursorDot{
+      position:fixed;
+      width:12px;
+      height:12px;
+      left:0;
+      top:0;
+      transform:translate(-50%,-50%);
+      pointer-events:none;
+      z-index:9999;
+      border-radius:999px;
+      background:#ffffff;
+      box-shadow:
+        0 0 0 10px rgba(129,47,236,0.14),
+        0 0 0 20px rgba(101,136,234,0.10);
+    }
+    #cursorDot::before{
+      content:"";
+      position:absolute;
+      inset:-12px;
+      border-radius:999px;
+      border:2px solid rgba(255,255,255,0.70);
+    }
+    #cursorDot::after{
+      content:"";
+      position:absolute;
+      inset:-22px;
+      border-radius:999px;
+      border:2px solid rgba(255,255,255,0.30);
+    }
+.testText > div{
+      font-size: clamp(54px, 10vw, 160px);
+      color: rgba(255,255,255,0.85);
+      text-transform: uppercase;
+      text-shadow: 0 18px 55px rgba(0,0,0,0.55);
+    }
+#targetLayer .innerText > div{
+      font-size: clamp(54px, 10vw, 160px);
+      color: rgba(255,255,255,0.95); /* ✅ واضح داخل الدائرة */
+      text-transform: uppercase;
+      text-shadow: 0 18px 55px rgba(0,0,0,0.55);
+    }
+
+</style>
+  <script src="/assets/js/theme-manager.js" defer></script>
+</head>
+
+<body>
+  <!-- ✅ الخلفية: نفس الفيديو يغطي الصفحة -->
+  <div class="bg">
+    <video autoplay muted loop playsinline preload="auto">
+      <source src="/assets/video/bg.mp4" type="video/mp4" />
+    </video>
+  </div>
+</div>
+
+  <!-- ✅ تعتيم 50% خارج الدائرة -->
+  <div class="dim"></div>
+
+  <!-- ✅ داخل الدائرة: فيديو + تدرج -->
+  <div id="targetLayer">
+    <video autoplay muted loop playsinline preload="auto">
+      <source src="/assets/video/bg.mp4" type="video/mp4" />
+    </video>
+</div>
+
+  <canvas id="maskCanvas"></canvas>
+
+  <div class="top" aria-hidden="true">
+    <div class="brand">OAP</div>
+    <div class="logoBox">
+      <img src="/OAP-Form-32x32.png" alt="OAP logo" />
+    </div>
+  </div>
+
+  <div id="cursorDot"></div>
+
+  <script>
+    const canvas = document.getElementById('maskCanvas');
+    const ctx = canvas.getContext('2d');
+    const targetLayer = document.getElementById('targetLayer');
+    const dot = document.getElementById('cursorDot');
+
+    const TAIL_POINTS = 18;
+    const FOLLOW = 0.40;
+    const SPEED = 0.50;
+    const BASE_WIDTH = 290;
+
+    const GLOW_MAX = 0.18;
+    const GLOW_FALLOFF = 0.92;
+
+    let target = { x: innerWidth / 2, y: innerHeight / 2 };
+    let head = { x: target.x, y: target.y };
+    let prevHead = { x: head.x, y: head.y };
+    let history = [];
+    let glowBoost = 0;
+
+    function resizeCanvas(){
+      const dpr = Math.max(1, devicePixelRatio || 1);
+      canvas.width  = Math.floor(innerWidth * dpr);
+      canvas.height = Math.floor(innerHeight * dpr);
+      canvas.style.width  = innerWidth + 'px';
+      canvas.style.height = innerHeight + 'px';
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+      history = [];
+      for (let i = 0; i < TAIL_POINTS; i++) history.push({ x: head.x, y: head.y });
+    }
+
+    addEventListener('mousemove', (e) => {
+      target.x = e.clientX;
+      target.y = e.clientY;
+      dot.style.left = e.clientX + 'px';
+      dot.style.top  = e.clientY + 'px';
+    });
+
+    function buildSmoothPath(points){
+      ctx.beginPath();
+      ctx.moveTo(points[0].x, points[0].y);
+      for (let i = 0; i < points.length - 1; i++){
+        const p = points[i];
+        const n = points[i + 1];
+        const xc = (p.x + n.x) / 2;
+        const yc = (p.y + n.y) / 2;
+        ctx.quadraticCurveTo(p.x, p.y, xc, yc);
+      }
+      const last = points[points.length - 1];
+      ctx.lineTo(last.x, last.y);
+    }
+
+    function updateGlow(){
+      const dx = head.x - prevHead.x;
+      const dy = head.y - prevHead.y;
+      const v  = Math.sqrt(dx*dx + dy*dy);
+
+      const add = Math.min(GLOW_MAX, v / 180);
+      glowBoost = Math.max(glowBoost * GLOW_FALLOFF, add);
+      targetLayer.style.setProperty('--glow-boost', glowBoost.toFixed(3));
+
+      prevHead.x = head.x;
+      prevHead.y = head.y;
+    }
+
+    function draw(){
+      ctx.clearRect(0, 0, innerWidth, innerHeight);
+
+      head.x += (target.x - head.x) * SPEED;
+      head.y += (target.y - head.y) * SPEED;
+
+      history[0].x = head.x;
+      history[0].y = head.y;
+
+      for (let i = 1; i < history.length; i++){
+        history[i].x += (history[i - 1].x - history[i].x) * FOLLOW;
+        history[i].y += (history[i - 1].y - history[i].y) * FOLLOW;
+      }
+
+      ctx.save();
+      ctx.filter = 'none';
+      ctx.strokeStyle = 'black';
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.lineWidth = BASE_WIDTH;
+
+      buildSmoothPath(history);
+      ctx.stroke();
+      ctx.restore();
+
+      const maskData = canvas.toDataURL('image/png');
+      targetLayer.style.webkitMaskImage = `url(${maskData})`;
+      targetLayer.style.maskImage = `url(${maskData})`;
+
+      updateGlow();
+      requestAnimationFrame(draw);
+    }
+
+    addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+    draw();
+  </script>
+</body>
+</html>

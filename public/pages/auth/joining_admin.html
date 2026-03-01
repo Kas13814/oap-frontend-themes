@@ -1,0 +1,1067 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <script>
+(function(){
+  try{
+    var root = document.documentElement;
+    var sp = new URLSearchParams(window.location.search);
+    var t = sp.get('theme');
+    if(!t){
+      try{ t = localStorage.getItem('oap_theme'); }catch(_){}
+    }
+    if(t) root.setAttribute('data-theme', t);
+
+    var ink = sp.get('gink') || sp.get('gradientInk');
+    if(!ink){
+      try{ ink = localStorage.getItem('oap_gradient_ink'); }catch(_){}
+    }
+    if(ink) root.setAttribute('data-gradient-ink', ink);
+  }catch(_){}
+})();
+</script>
+  <!-- OAP joining_admin build: 2026-02-06 03:31:45 -->
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="/assets/css/themes.css">
+  <title>OAP • لوحة اعتماد طلبات الانضمام</title>
+
+  <!-- Keep your existing access controller (do not change path if you already use a different one) -->
+<!-- Supabase JS (v2) -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="/assets/js/nxs_supabase_client.js"></script>
+
+  <style>
+    :root{
+      --bg:#0b0b0c;
+      --card:#121214;
+      --card2:#151518;
+      --stroke:rgba(255,255,255,.10);
+      --stroke2:rgba(255,255,255,.14);
+      --text:#f2f2f2;
+      --muted:rgba(255,255,255,.65);
+      --muted2:rgba(255,255,255,.48);
+      --good:#2ecc71;
+      --bad:#ff4d4d;
+      --warn:#ffb020;
+      --brand:#B7E219;
+      --orange:#FE621E;
+      --shadow: 0 10px 30px rgba(0,0,0,.45);
+      --radius: 18px;
+      --radius2: 14px;
+      --font: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Arial, "Noto Kufi Arabic", "Noto Sans Arabic", sans-serif;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:var(--font);
+      background: radial-gradient(1200px 600px at 50% -100px, rgba(183,226,25,.12), transparent 60%),
+                  radial-gradient(900px 500px at 100% 0, rgba(254,98,30,.10), transparent 55%),
+                  var(--bg);
+      color:var(--text);
+    }
+    a{color:inherit}
+    .wrap{
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 22px 16px 40px;
+    }
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap:10px;
+      background: rgba(255,255,255,.08);
+      border:1px solid var(--stroke);
+      border-radius: 999px;
+      padding: 8px 12px;
+      font-weight:700;
+      font-size: 13px;
+      box-shadow: 0 8px 18px rgba(0,0,0,.25);
+    }
+    .pill .dot{
+      width:10px;height:10px;border-radius:50%;
+      background: var(--brand);
+      box-shadow: 0 0 0 6px rgba(183,226,25,.12);
+    }
+    .hero{
+      text-align:center;
+      margin: 14px 0 18px;
+    }
+    .hero h1{
+      margin: 12px 0 8px;
+      font-size: 28px;
+      letter-spacing: .2px;
+    }
+    .hero p{
+      margin:0;
+      color: var(--muted);
+      font-size: 14px;
+    }
+    .grid{
+      display:grid;
+      grid-template-columns: 1.05fr .95fr;
+      gap: 14px;
+      align-items:start;
+      margin-top: 18px;
+    }
+    @media (max-width: 980px){
+      .grid{grid-template-columns:1fr}
+    }
+    .card{
+      background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.02));
+      border: 1px solid var(--stroke);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+    .card .hd{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      padding: 14px 14px 12px;
+      border-bottom:1px solid var(--stroke);
+      background: rgba(255,255,255,.02);
+    }
+    .card .hd .ttl{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      font-weight:800;
+      font-size: 14px;
+      color: rgba(255,255,255,.92);
+    }
+    .badge{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      border: 1px solid var(--stroke);
+      background: rgba(255,255,255,.06);
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      color: var(--muted);
+      white-space:nowrap;
+    }
+    .badge strong{color:var(--text)}
+    .body{
+      padding: 14px;
+    }
+
+    /* Table */
+    .toolbar{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+      justify-content:space-between;
+      margin-bottom: 10px;
+    }
+    .search{
+      flex: 1 1 320px;
+      display:flex;
+      align-items:center;
+      gap:10px;
+      background: rgba(255,255,255,.05);
+      border:1px solid var(--stroke);
+      border-radius: 12px;
+      padding: 10px 12px;
+    }
+    .search input{
+      width:100%;
+      border:0;
+      outline:none;
+      background:transparent;
+      color: var(--text);
+      font-size: 13px;
+    }
+    .btn{
+      appearance:none;
+      border: 1px solid var(--stroke2);
+      background: rgba(255,255,255,.06);
+      color: var(--text);
+      padding: 10px 12px;
+      border-radius: 12px;
+      font-weight: 800;
+      font-size: 13px;
+      cursor:pointer;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:10px;
+      transition: transform .06s ease, background .2s ease, border-color .2s ease;
+      user-select:none;
+      white-space:nowrap;
+    }
+    .btn:hover{background: rgba(255,255,255,.09)}
+    .btn:active{transform: translateY(1px)}
+    .btn.good{
+      border-color: rgba(46,204,113,.35);
+      background: rgba(46,204,113,.12);
+    }
+    .btn.bad{
+      border-color: rgba(255,77,77,.35);
+      background: rgba(255,77,77,.12);
+    }
+    .btn.orange{
+      border-color: rgba(254,98,30,.38);
+      background: rgba(254,98,30,.12);
+    }
+    .btn:disabled{
+      opacity:.55;
+      cursor:not-allowed;
+      transform:none;
+    }
+
+    table{
+      width:100%;
+      border-collapse:separate;
+      border-spacing:0;
+      overflow:hidden;
+      border-radius: 14px;
+      border:1px solid var(--stroke);
+      background: rgba(0,0,0,.18);
+    }
+    thead th{
+      text-align:right;
+      padding: 10px 10px;
+      font-size: 12px;
+      color: rgba(255,255,255,.78);
+      background: rgba(255,255,255,.04);
+      border-bottom:1px solid var(--stroke);
+      position: sticky;
+      top: 0;
+      z-index: 1;
+    }
+    tbody td{
+      padding: 10px 10px;
+      font-size: 13px;
+      border-bottom:1px solid rgba(255,255,255,.07);
+      color: rgba(255,255,255,.92);
+      vertical-align: middle;
+    }
+    tbody tr{
+      cursor:pointer;
+      transition: background .15s ease;
+    }
+    tbody tr:hover{
+      background: rgba(183,226,25,.06);
+    }
+    tbody tr.active{
+      background: rgba(183,226,25,.12);
+      outline: 1px solid rgba(183,226,25,.25);
+    }
+    .status{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border:1px solid var(--stroke);
+      font-size: 12px;
+      color: var(--muted);
+      background: rgba(255,255,255,.04);
+      white-space:nowrap;
+    }
+    .status.pending{border-color: rgba(255,176,32,.35); background: rgba(255,176,32,.10); color: rgba(255,255,255,.86)}
+    .status.approved{border-color: rgba(46,204,113,.35); background: rgba(46,204,113,.10); color: rgba(255,255,255,.92)}
+    .status.rejected{border-color: rgba(255,77,77,.35); background: rgba(255,77,77,.10); color: rgba(255,255,255,.92)}
+
+    /* Details */
+    .kv{
+      display:grid;
+      grid-template-columns: 140px 1fr;
+      gap: 10px 12px;
+      padding: 12px;
+      border-radius: 14px;
+      border:1px solid var(--stroke);
+      background: rgba(255,255,255,.03);
+    }
+    .kv .k{
+      color: var(--muted2);
+      font-size: 12px;
+      font-weight: 800;
+    }
+    .kv .v{
+      color: rgba(255,255,255,.92);
+      font-size: 13px;
+      font-weight: 700;
+      word-break: break-word;
+      text-align:left; /* values are better LTR (emails/ids) */
+      direction:ltr;
+    }
+    .section{
+      margin-top: 12px;
+    }
+    .section .sec-h{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      margin-bottom: 8px;
+    }
+    .section .sec-h .t{
+      font-size: 13px;
+      font-weight: 900;
+      color: rgba(255,255,255,.9);
+    }
+    .hint{
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .pages{
+      border:1px solid var(--stroke);
+      border-radius: 14px;
+      background: rgba(0,0,0,.16);
+      overflow:hidden;
+    }
+    .pages .phd{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      padding: 10px 12px;
+      border-bottom:1px solid var(--stroke);
+      background: rgba(255,255,255,.03);
+    }
+    .pages .list{
+      max-height: 330px;
+      overflow:auto;
+    }
+    .row{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      padding: 10px 12px;
+      border-bottom:1px solid rgba(255,255,255,.06);
+    }
+    .row:last-child{border-bottom:0}
+    .row .meta{
+      display:flex;
+      flex-direction:column;
+      gap:4px;
+      min-width:0;
+    }
+    .row .meta .name{
+      font-weight: 900;
+      font-size: 13px;
+      color: rgba(255,255,255,.92);
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      direction:ltr;
+      text-align:left;
+    }
+    .row .meta .sub{
+      font-size: 12px;
+      color: var(--muted);
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      direction:ltr;
+      text-align:left;
+    }
+    .toggle{
+      display:inline-flex;
+      align-items:center;
+      gap:10px;
+      user-select:none;
+    }
+    .switch{
+      width: 44px;
+      height: 24px;
+      border-radius: 999px;
+      border: 1px solid var(--stroke2);
+      background: rgba(255,255,255,.06);
+      position: relative;
+      flex: 0 0 auto;
+      cursor:pointer;
+    }
+    .switch::after{
+      content:"";
+      position:absolute;
+      top: 3px;
+      right: 3px;
+      width: 18px;
+      height: 18px;
+      border-radius:50%;
+      background: rgba(255,255,255,.82);
+      transition: transform .18s ease;
+      transform: translateX(0);
+    }
+    .switch.on{
+      background: rgba(46,204,113,.16);
+      border-color: rgba(46,204,113,.35);
+    }
+    .switch.on::after{
+      transform: translateX(-20px);
+      background: rgba(255,255,255,.92);
+    }
+
+    .note{
+      width:100%;
+      min-height: 86px;
+      resize: vertical;
+      border-radius: 14px;
+      border:1px solid var(--stroke);
+      background: rgba(255,255,255,.03);
+      color: var(--text);
+      padding: 10px 12px;
+      font-size: 13px;
+      outline:none;
+    }
+    .note:focus{border-color: rgba(183,226,25,.38)}
+    .foot-actions{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      justify-content:flex-start;
+      margin-top: 12px;
+    }
+
+    .toast{
+      margin-top: 10px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      border:1px solid var(--stroke);
+      background: rgba(255,255,255,.04);
+      color: var(--muted);
+      font-size: 12px;
+      line-height:1.4;
+    }
+    .toast.good{border-color: rgba(46,204,113,.35); background: rgba(46,204,113,.10); color: rgba(255,255,255,.9)}
+    .toast.bad{border-color: rgba(255,77,77,.35); background: rgba(255,77,77,.10); color: rgba(255,255,255,.9)}
+    .toast.warn{border-color: rgba(255,176,32,.35); background: rgba(255,176,32,.10); color: rgba(255,255,255,.9)}
+
+    .muted{color:var(--muted)}
+    .small{font-size:12px}
+    .ltr{direction:ltr; text-align:left}
+  </style>
+  <script src="/assets/js/theme-manager.js" defer></script>
+</head>
+<body>
+  <div class="wrap">
+    <div class="pill"><span class="dot"></span> OAP • <span class="muted">طلب اعتماد</span></div>
+
+    <div class="hero">
+      <h1>لوحة اعتماد — طلبات الانضمام</h1>
+      <p>عرض الطلبات، منح صلاحيات الصفحات، ثم اعتماد أو رفض الطلب.</p>
+    </div>
+
+    <div class="grid">
+      <!-- Left: requests list -->
+      <div class="card">
+        <div class="hd">
+          <div class="ttl">طلبات الانضمام</div>
+          <div class="badge"><strong id="meRole">—</strong> <span id="meEmail">—</span></div>
+        </div>
+        <div class="body">
+          <div class="toolbar">
+            <div class="search" title="بحث بالاسم/الرقم/البريد/الحالة">
+              🔎
+              <input id="q" placeholder="بحث..." autocomplete="off" />
+            </div>
+            <button class="btn orange" id="btnRefresh">تحديث</button>
+          </div>
+
+          <div style="max-height:520px; overflow:auto;">
+            <table>
+              <thead>
+                <tr>
+                  <th style="width:130px;">رقم الطلب</th>
+                  <th>الموظف</th>
+                  <th style="width:150px;">الرقم الوظيفي</th>
+                  <th style="width:160px;">الحالة</th>
+                  <th style="width:170px;">تاريخ الطلب</th>
+                </tr>
+              </thead>
+              <tbody id="tbody">
+                <tr><td colspan="5" class="muted">… جاري التحميل</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div id="listToast" class="toast" style="display:none;"></div>
+        </div>
+      </div>
+
+      <!-- Right: details & permissions -->
+      <div class="card">
+        <div class="hd">
+          <div class="ttl">تفاصيل الطلب والصلاحيات</div>
+          <div class="badge"><span class="muted">المحدد:</span> <strong id="selId">—</strong></div>
+        </div>
+        <div class="body">
+          <div class="kv" id="details">
+            <div class="k">الاسم</div><div class="v" id="dName">—</div>
+            <div class="k">الرقم الوظيفي</div><div class="v" id="dEmp">—</div>
+            <div class="k">البريد</div><div class="v" id="dEmail">—</div>
+            <div class="k">الدور المطلوب</div><div class="v" id="dReqRole">—</div>
+            <div class="k">الحالة</div><div class="v" id="dStatus">—</div>
+            <div class="k">Auth UUID</div><div class="v" id="dAuth">—</div>
+          </div>
+
+          <div class="section">
+            <div class="sec-h">
+              <div class="t">صلاحيات الصفحات</div>
+              <div class="hint">سيتم الحفظ قبل الاعتماد</div>
+            </div>
+
+            <div class="pages">
+              <div class="phd">
+                <div class="hint">الصفحات النشطة فقط (page_catalog)</div>
+                <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                  <button class="btn" id="btnAllOn">تحديد الكل</button>
+                  <button class="btn" id="btnAllOff">إلغاء الكل</button>
+                </div>
+              </div>
+              <div class="list" id="pagesList">
+                <div class="row"><div class="muted">… تحميل الصفحات</div></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="section">
+            <div class="sec-h">
+              <div class="t">سبب الرفض / ملاحظة</div>
+              <div class="hint">يُستخدم عند الرفض فقط</div>
+            </div>
+            <textarea id="rejectReason" class="note" placeholder="اكتب سبب الرفض (اختياري)"></textarea>
+
+            <div class="foot-actions">
+              <button class="btn bad" id="btnReject" disabled>❌ رفض الطلب</button>
+              <button class="btn good" id="btnApprove" disabled>✅ حفظ الصلاحيات + اعتماد</button>
+            </div>
+
+            <div id="actionToast" class="toast" style="display:none;"></div>
+          </div>
+
+          <div class="toast warn small" id="authWarn" style="display:none;">
+            ⚠️ لا يمكن الاعتماد لأن الطلب لا يحتوي على <span class="ltr"><b>Auth UUID</b></span>.
+            يجب أن يكون <span class="ltr"><b>auth_user_id</b></span> موجودًا في join_requests.
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+
+(function(){
+  "use strict";
+
+  // ---------- Helpers ----------
+  const $ = (id)=>document.getElementById(id);
+  const show = (el, yes=true)=>{ el.style.display = yes ? "" : "none"; };
+  const setToast = (id, type, msg)=>{
+    const el = $(id);
+    el.className = "toast" + (type ? (" " + type) : "");
+    el.textContent = msg;
+    show(el, true);
+  };
+  const clearToast = (id)=>{ const el=$(id); show(el,false); el.textContent=""; el.className="toast"; };
+  const normalize = (s)=> (s ?? "").toString().trim().toLowerCase();
+
+  const fmtDate = (iso)=>{
+    try{
+      const d = new Date(iso);
+      if (isNaN(d)) return iso || "—";
+      return d.toLocaleString("en-GB", { year:"numeric", month:"short", day:"2-digit", hour:"2-digit", minute:"2-digit" });
+    }catch(e){ return iso || "—"; }
+  };
+
+  function escapeHtml(str){
+    return (str ?? "").toString()
+      .replaceAll("&","&amp;")
+      .replaceAll("<","&lt;")
+      .replaceAll(">","&gt;")
+      .replaceAll('"',"&quot;")
+      .replaceAll("'","&#039;");
+  }
+
+  function safeReturnTo(){
+    const url = new URL(location.href);
+    url.searchParams.delete('returnTo');
+    const clean = url.pathname + (url.search ? url.search : '') + (url.hash || '');
+    return '/Login.html?returnTo=' + encodeURIComponent(clean);
+  }
+
+  function getClient(){
+    return window.NXS_Supabase && window.NXS_Supabase.client ? window.NXS_Supabase.client : null;
+  }
+
+  async function waitForClient(timeoutMs=8000){
+    const start = Date.now();
+    while(Date.now()-start < timeoutMs){
+      const c = getClient();
+      if(c) return c;
+      await new Promise(r=>setTimeout(r,50));
+    }
+    return null;
+  }
+
+  async function getCurrentUser(){
+    // Prefer wrapper if exists (prevents auth loop)
+    try{
+      const api = window.NXS_Supabase;
+      if(api && typeof api.getCurrentUser === "function"){
+        const u = await api.getCurrentUser();
+        if(u) return u;
+      }
+    }catch(_e){}
+
+    // Fallback to supabase-js v2
+    try{
+      const client = getClient();
+      if(client && client.auth){
+        const u = await client.auth.getUser();
+        if(u && u.data && u.data.user) return u.data.user;
+        const s = await client.auth.getSession();
+        if(s && s.data && s.data.session && s.data.session.user) return s.data.session.user;
+      }
+    }catch(_e2){}
+    return null;
+  }
+
+  async function ensureAuth(){
+    let client = getClient();
+    if(!client) client = await waitForClient();
+    if(!client) throw new Error("Supabase client not found");
+    const user = await getCurrentUser();
+    if(!user){
+      location.href = safeReturnTo();
+      return null;
+    }
+    return user;
+  }
+
+  // ---------- State ----------
+  let client = null;
+  let user = null;
+  let pages = [];
+  let requests = [];
+  let selected = null;
+  const pageAccessDraft = new Map(); // page_key -> bool
+
+  function setDetailsEmpty(){
+    $("selId").textContent = "—";
+    $("dName").textContent = "—";
+    $("dEmp").textContent = "—";
+    $("dEmail").textContent = "—";
+    $("dReqRole").textContent = "—";
+    $("dStatus").textContent = "—";
+    $("dAuth").textContent = "—";
+    $("pagesList").innerHTML = '<div class="row"><div class="muted">— اختر طلبًا لعرض الصلاحيات</div></div>';
+    pageAccessDraft.clear();
+    $("btnReject").disabled = true;
+    $("btnApprove").disabled = true;
+    show($("authWarn"), false);
+    clearToast("actionToast");
+  }
+
+  function renderRequests(){
+    const q = normalize($("q").value);
+    const rows = (requests || []).filter(r=>{
+      if(!q) return true;
+      const hay = [r.join_request_id, r.employee_id, r.email, r.full_name, r.status, r.requested_role]
+        .map(x=>normalize(x)).join(" ");
+      return hay.includes(q);
+    });
+
+    const tbody = $("tbody");
+    if(!rows.length){
+      tbody.innerHTML = `<tr><td colspan="5" class="muted">لا توجد طلبات</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = rows.map(r=>{
+      const isActive = selected && String(selected.join_request_id) === String(r.join_request_id);
+      const st = normalize(r.status || "");
+      const stClass = st === "approved" ? "approved" : (st === "rejected" ? "rejected" : "pending");
+      const stText = r.status || "pending";
+      return `
+        <tr data-id="${String(r.join_request_id)}" class="${isActive ? "active":""}">
+          <td class="ltr">${String(r.join_request_id)}</td>
+          <td>${(r.full_name||"—")}</td>
+          <td class="ltr">${String(r.employee_id ?? "—")}</td>
+          <td><span class="status ${stClass}">${escapeHtml(stText)}</span></td>
+          <td class="ltr">${fmtDate(r.created_at)}</td>
+        </tr>
+      `;
+    }).join("");
+
+    [...tbody.querySelectorAll("tr[data-id]")].forEach(tr=>{
+      tr.addEventListener("click", ()=>{
+        const id = tr.getAttribute("data-id");
+        const r = requests.find(x=>String(x.join_request_id)===String(id));
+        if(r) selectRequest(r);
+      });
+    });
+  }
+
+  function renderPages(){
+    const list = $("pagesList");
+    if(!pages.length){
+      list.innerHTML = '<div class="row"><div class="muted">لا توجد صفحات نشطة</div></div>';
+      return;
+    }
+
+    list.innerHTML = pages.map(p=>{
+      const key = p.page_key;
+      const path = p.page_path || "";
+      const on = pageAccessDraft.get(key) === true;
+      return `
+        <div class="row" data-page="${escapeHtml(key)}">
+          <div class="meta">
+            <div class="name">${escapeHtml(key)}</div>
+            <div class="sub">${escapeHtml(path)}</div>
+          </div>
+          <div class="toggle" title="تفعيل/تعطيل الوصول">
+            <div class="switch ${on ? "on":""}" role="switch" aria-checked="${on ? "true":"false"}"></div>
+          </div>
+        </div>
+      `;
+    }).join("");
+
+    [...list.querySelectorAll(".row")].forEach(row=>{
+      const key = row.getAttribute("data-page");
+      const sw = row.querySelector(".switch");
+      const toggle = ()=>{
+        const cur = pageAccessDraft.get(key) === true;
+        pageAccessDraft.set(key, !cur);
+        sw.classList.toggle("on", !cur);
+        sw.setAttribute("aria-checked", (!cur) ? "true" : "false");
+      };
+      sw.addEventListener("click", toggle);
+      row.addEventListener("click", (e)=>{
+        if(e.target.classList.contains("switch")) return;
+        toggle();
+      });
+    });
+  }
+
+  function fillDetails(){
+    if(!selected) return setDetailsEmpty();
+    $("selId").textContent = String(selected.join_request_id ?? "—");
+    $("dName").textContent = selected.full_name || "—";
+    $("dEmp").textContent = String(selected.employee_id ?? "—");
+    $("dEmail").textContent = selected.email || "—";
+    $("dReqRole").textContent = selected.requested_role || "—";
+    $("dStatus").textContent = selected.status || "pending";
+    $("dAuth").textContent = selected.auth_user_id || "—";
+
+    const authOk = !!selected.auth_user_id;
+    const canProvision = (!authOk && !!selected.email && (selected.employee_id !== null && selected.employee_id !== undefined && String(selected.employee_id).trim() !== ""));
+    show($("authWarn"), !authOk);
+    $("btnReject").disabled = false;
+    const isAlreadyApproved = normalize(selected.status) === "approved";
+    // allow approve when we can provision auth user by email+employee_id
+    $("btnApprove").disabled = !((authOk || canProvision) && !isAlreadyApproved);
+  }
+
+  async function loadPages(){
+    // Prefer admin_list_pages if allowed, otherwise fallback to page_catalog
+    try{
+      const r = await client.rpc("admin_list_pages");
+      if(!r.error && Array.isArray(r.data)) { pages = r.data; return; }
+    }catch(_){}
+    const { data, error } = await client.from("page_catalog")
+      .select("page_key,page_path,requires_auth,is_active,sort")
+      .eq("is_active", true)
+      .order("sort", { ascending: true })
+      .order("page_key", { ascending: true });
+    if(error) throw error;
+    pages = Array.isArray(data) ? data : [];
+  }
+
+  async function loadRequests(){
+    clearToast("listToast");
+    // Prefer RPC if allowed, otherwise fallback to join_requests table
+    try{
+      const r = await client.rpc("admin_list_join_requests");
+      if(!r.error && Array.isArray(r.data)) { requests = r.data; renderRequests(); return; }
+    }catch(_){}
+    const { data, error } = await client.from("join_requests")
+      .select("join_request_id,tenant_id,employee_id,full_name,email,username,note,status,requested_role,approved_by_user_id,approved_at,rejected_by_user_id,rejected_at,created_at,updated_at,auth_user_id")
+      .order("join_request_id", { ascending:false })
+      .limit(100);
+    if(error) throw error;
+    requests = Array.isArray(data) ? data : [];
+    renderRequests();
+  }
+
+  async function selectRequest(r){
+    selected = { ...r };
+    renderRequests();
+
+    // init toggles
+    pageAccessDraft.clear();
+    pages.forEach(p=>pageAccessDraft.set(p.page_key, false));
+
+    // Prefill from user_page_access if possible
+    try{
+      if(selected.auth_user_id){
+        const { data, error } = await client.from("user_page_access")
+          .select("page_key,can_access")
+          .eq("auth_user_id", selected.auth_user_id);
+        if(!error && Array.isArray(data)){
+          data.forEach(x=>{
+            if(x?.page_key) pageAccessDraft.set(x.page_key, !!x.can_access);
+          });
+        }
+      }
+    }catch(_){}
+
+    renderPages();
+    fillDetails();
+    clearToast("actionToast");
+  }
+
+  async function saveAccessForSelected(){
+    const uid = await ensureAuthUserIdForSelected();
+
+    for(const p of pages){
+      const key = p.page_key;
+      const can = pageAccessDraft.get(key) === true;
+
+      // Prefer RPC (enterprise logic)
+      try{
+        const r = await client.rpc("admin_set_user_access", { p_auth_user_id: uid, p_page_key: key, p_can_access: can });
+        if(!r?.error) continue;
+      }catch(_){}
+
+      // Fallback to direct upsert on user_page_access (if RLS allows)
+      const { error } = await client.from("user_page_access").upsert({
+        auth_user_id: uid,
+        page_key: key,
+        can_access: can
+      }, { onConflict: "auth_user_id,page_key" });
+      if(error) throw error;
+    }
+  }
+
+  
+  function mapRoleForProvision(reqRole){
+    const r = normalize(reqRole);
+    // admin_provision_user allows: admin/manager/user/viewer
+    if(r === "owner" || r === "tenant_admin" || r === "admin") return "admin";
+    if(r === "manager" || r === "shift_manager") return "manager";
+    if(r === "viewer" || r === "read" || r === "readonly") return "viewer";
+    return "user";
+  }
+
+  
+  async function ensureAuthUserIdForSelected(){
+    if(!selected) throw new Error("No selected request");
+    if(selected.auth_user_id) return selected.auth_user_id;
+
+    const email = (selected.email || "").trim();
+    if(!email) throw new Error("لا يمكن اعتماد الطلب الآن: البريد الإلكتروني غير موجود في الطلب.");
+
+    // Call Edge Function: /functions/v1/invite_user
+    // Expected (new user): { ok:true, auth_user_id:"uuid", redirect_to:"..." }
+    // Possible (existing user / rate limit): { ok:true, mode:"rate_limited_existing", auth_user_id:null, redirect_to:"..." }
+    let accessToken = null;
+    try{
+      const { data } = await client.auth.getSession();
+      accessToken = data?.session?.access_token || null;
+    }catch(_){}
+
+    const supabaseUrl = (window.SUPABASE_URL || (window.OAP_CONFIG && window.OAP_CONFIG.SUPABASE_URL) || window.NXS_SUPABASE_URL || "").replace(/\/+$/,"");
+    if (!supabaseUrl) throw new Error("SUPABASE_URL missing");
+    const fnUrl = supabaseUrl + "/functions/v1/invite_user";
+
+    const res = await fetch(fnUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(accessToken ? { "Authorization": "Bearer " + accessToken } : {})
+      },
+      body: JSON.stringify({
+        email: email,
+        employee_id: selected.employee_id ?? null,
+        full_name: selected.full_name ?? null,
+        role: selected.requested_role ?? selected.role ?? null
+      })
+    });
+
+    let j = null;
+    try{ j = await res.json(); }catch(_){}
+
+    // Hard failure (non-200 or explicit ok:false)
+    if(!res.ok || !j || j.ok !== true){
+      const msg = (j && (j.error || j.message)) ? (j.error || j.message) : ("HTTP " + res.status);
+      throw new Error("فشل إنشاء/دعوة المستخدم تلقائيًا: " + msg);
+    }
+
+    // If function returned auth_user_id, use it.
+    let uuid = j.auth_user_id || null;
+
+    // If auth_user_id is missing (existing user / rate-limited / already invited),
+    // fetch it from public.users by email (admin-only RLS should allow this page).
+    if(!uuid){
+      try{
+        const q = await client
+          .from("users")
+          .select("auth_user_id")
+          .ilike("email", email)
+          .not("auth_user_id", "is", null)
+          .limit(1)
+          .maybeSingle();
+
+        if(!q.error && q.data && q.data.auth_user_id){
+          uuid = q.data.auth_user_id;
+        }
+      }catch(_){}
+    }
+
+    if(!uuid){
+      // Do not pretend it succeeded; we need the uuid to approve safely.
+      const mode = j.mode ? String(j.mode) : "unknown";
+      throw new Error("فشل ربط المستخدم بحساب المصادقة (auth_user_id). الحالة: " + mode + ".");
+    }
+      // We intentionally do NOT write back to public.join_requests from the browser.
+      // That table is protected by RLS (and should stay protected). The approval flow
+      // continues using RPCs + server-side functions only.
+      selected.auth_user_id = uuid;
+      return uuid;
+    }
+
+
+  async function approveSelected(){
+    if(!selected) return;
+    // Use your existing safe RPC: admin_set_join_request_status(p_join_request_id text, p_status text, p_auth_user_id uuid)
+    const uid = await ensureAuthUserIdForSelected();
+    const { error } = await client.rpc("admin_set_join_request_status", {
+      p_join_request_id: String(selected.join_request_id),
+      p_status: "approved",
+      p_auth_user_id: uid
+    });
+    if(error) throw error;
+  }
+
+  async function rejectSelected(){
+    if(!selected) return;
+    const reason = ($("rejectReason").value || "").trim();
+
+    // Use reject_join_request if available (saves reason), else use admin_set_join_request_status
+    try{
+      const r = await client.rpc("reject_join_request", {
+        p_join_request_id: Number(selected.join_request_id),
+        p_rejected_by_user_id: null,
+        p_reason: reason
+      });
+      if(!r.error) return;
+    }catch(_){}
+
+    const { error } = await client.rpc("admin_set_join_request_status", {
+      p_join_request_id: String(selected.join_request_id),
+      p_status: "rejected",
+      p_auth_user_id: null
+    });
+    if(error) throw error;
+  }
+
+  // ---------- UI events ----------
+  $("q").addEventListener("input", renderRequests);
+
+  $("btnRefresh").addEventListener("click", async ()=>{
+    try{
+      $("btnRefresh").disabled = true;
+      await loadRequests();
+      setToast("listToast", "good", "تم التحديث.");
+      setTimeout(()=>clearToast("listToast"), 1500);
+    }catch(e){
+      setToast("listToast", "bad", "فشل التحديث: " + (e?.message || e));
+    }finally{
+      $("btnRefresh").disabled = false;
+    }
+  });
+
+  $("btnAllOn").addEventListener("click", ()=>{
+    pages.forEach(p=>pageAccessDraft.set(p.page_key,true));
+    renderPages();
+  });
+  $("btnAllOff").addEventListener("click", ()=>{
+    pages.forEach(p=>pageAccessDraft.set(p.page_key,false));
+    renderPages();
+  });
+
+  $("btnApprove").addEventListener("click", async ()=>{
+    if(!selected) return;
+    clearToast("actionToast");
+    try{
+      $("btnApprove").disabled = true;
+      $("btnReject").disabled = true;
+      setToast("actionToast", "warn", "… جاري حفظ الصلاحيات ثم الاعتماد");
+
+      await ensureAuthUserIdForSelected();
+      await saveAccessForSelected();
+      await approveSelected();
+
+      setToast("actionToast", "good", "✅ تم اعتماد الطلب وحفظ الصلاحيات.");
+      $("rejectReason").value = "";
+      await loadRequests();
+
+      const still = requests.find(x=>String(x.join_request_id)===String(selected.join_request_id));
+      if(still) await selectRequest(still); else setDetailsEmpty();
+
+    }catch(e){
+      setToast("actionToast", "bad", "فشل: " + (e?.message || e));
+      fillDetails();
+    }
+  });
+
+  $("btnReject").addEventListener("click", async ()=>{
+    if(!selected) return;
+    clearToast("actionToast");
+    try{
+      $("btnApprove").disabled = true;
+      $("btnReject").disabled = true;
+      setToast("actionToast", "warn", "… جاري رفض الطلب");
+
+      await rejectSelected();
+
+      setToast("actionToast", "good", "❌ تم رفض الطلب.");
+      await loadRequests();
+
+      const still = requests.find(x=>String(x.join_request_id)===String(selected.join_request_id));
+      if(still) await selectRequest(still); else setDetailsEmpty();
+
+    }catch(e){
+      setToast("actionToast", "bad", "فشل: " + (e?.message || e));
+      fillDetails();
+    }
+  });
+
+  async function boot(){
+    setDetailsEmpty();
+    client = getClient();
+    if(!client) client = await waitForClient();
+    if(!client) throw new Error("Supabase client not found");
+
+    user = await ensureAuth();
+    if(!user) return;
+
+    // Show identity in header (lightweight)
+    $("meEmail").textContent = user.email || "—";
+    $("meRole").textContent  = "—";
+
+    await loadPages();
+    await loadRequests();
+
+    const first = requests.find(r=>normalize(r.status)==="pending") || requests[0];
+    if(first) await selectRequest(first);
+  }
+
+  boot().catch(e=>{
+    console.error(e);
+    setToast("listToast", "bad", "تعذر تحميل لوحة الاعتماد: " + (e?.message || e));
+  });
+
+})();
+
+</script>
+</body>
+</html>

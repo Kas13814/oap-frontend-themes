@@ -1,0 +1,2819 @@
+<!DOCTYPE html>
+
+<html dir="ltr" lang="en">
+<head>
+  <script>
+(function(){
+  try{
+    var root = document.documentElement;
+    var sp = new URLSearchParams(window.location.search);
+    var t = sp.get('theme');
+    if(!t){
+      try{ t = localStorage.getItem('oap_theme'); }catch(_){}
+    }
+    if(t) root.setAttribute('data-theme', t);
+
+    var ink = sp.get('gink') || sp.get('gradientInk');
+    if(!ink){
+      try{ ink = localStorage.getItem('oap_gradient_ink'); }catch(_){}
+    }
+    if(ink) root.setAttribute('data-gradient-ink', ink);
+  }catch(_){}
+})();
+</script>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1" name="viewport"/>
+  <link rel="stylesheet" href="/assets/css/themes.css">
+<title>OAP • Admin Center</title>
+<!-- Supabase JS (v2) + your existing client bootstrap -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/assets/js/nxs_supabase_client.js"></script>
+<style>
+    :root{
+      --bg:#0b0f14;
+      --bg2:#0a0d12;
+      --panel:rgba(255,255,255,.04);
+      --panel2:rgba(255,255,255,.06);
+      --card:rgba(255,255,255,.055);
+      --card2:rgba(255,255,255,.075);
+      --stroke:rgba(255,255,255,.10);
+      --stroke2:rgba(255,255,255,.16);
+      --text:#e9eef6;
+      --muted:rgba(233,238,246,.72);
+      --muted2:rgba(233,238,246,.52);
+
+      --accent:#7c3aed;         /* Fluent-ish violet */
+      --accent2:#22c55e;        /* success */
+      --danger:#ef4444;         /* danger */
+      --warn:#f59e0b;           /* warning */
+
+      --radius:16px;
+      --radius2:22px;
+      --shadow: 0 18px 60px rgba(0,0,0,.45);
+      --shadow2: 0 10px 30px rgba(0,0,0,.35);
+
+      --grid: 16px;
+      --sidebarW: 292px;
+      --topbarH: 64px;
+
+      --font: ui-sans-serif, system-ui, -apple-system, "Segoe UI", "Cairo", "Tajawal", Arial, sans-serif;
+      --scrollThumb: rgba(233,238,246,.50);
+      --scrollThumbHover: rgba(233,238,246,.60)
+      --card-bg: var(--card);
+      --card-border: var(--stroke);
+      --card-shadow: var(--shadow2);
+
+    }
+        *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0; background: radial-gradient(1200px 800px at 10% 0%, rgba(124,58,237,.18), transparent 55%),
+                             radial-gradient(900px 600px at 85% 10%, rgba(34,197,94,.14), transparent 55%),
+                             linear-gradient(180deg, var(--bg), var(--bg2));
+      color:var(--text); font-family:var(--font); overflow:hidden;
+    }
+
+
+    /* Transparent scrollbars (50% thumb) */
+    /* WebKit */
+    ::-webkit-scrollbar{width:12px;height:12px}
+    ::-webkit-scrollbar-track{background:transparent}
+    ::-webkit-scrollbar-corner{background:transparent}
+    ::-webkit-scrollbar-thumb{
+      background: var(--scrollThumb, rgba(233,238,246,.50));
+      border:3px solid transparent;
+      background-clip: padding-box;
+      border-radius:999px;
+    }
+    ::-webkit-scrollbar-thumb:hover{background: var(--scrollThumbHover, rgba(233,238,246,.60)); border:3px solid transparent; background-clip: padding-box}
+    /* Firefox */
+    *{scrollbar-width: thin; scrollbar-color: var(--scrollThumb, rgba(233,238,246,.50)) transparent;}
+
+    /* App shell */
+    .app{
+      display:grid;
+      grid-template-columns: var(--sidebarW) 1fr;
+      grid-template-rows: var(--topbarH) 1fr;
+      height:100%;
+    }
+
+    /* Sidebar */
+    .side{
+      grid-row:1 / span 2;
+      grid-column:1;
+      padding:16px;
+      display:flex;
+      flex-direction:column;
+      gap:14px;
+      border-right:1px solid var(--stroke);
+      background: linear-gradient(180deg, rgba(255,255,255,.035), rgba(255,255,255,.02));
+      backdrop-filter: blur(14px);
+    }
+    .brand{
+      display:flex; align-items:center; gap:12px;
+      padding:14px 14px;
+      border:1px solid var(--stroke);
+      background: rgba(255,255,255,.03);
+      border-radius: 18px;
+      box-shadow: var(--shadow2);
+    }
+    .logo{
+      width:42px; height:42px; border-radius: 14px;
+      display:grid; place-items:center;
+      background: rgba(255,255,255,.04);
+      border:1px solid rgba(255,255,255,.12);
+      overflow:hidden;
+    }
+    .logo img{width:22px; height:22px; display:block; filter: drop-shadow(0 6px 14px rgba(0,0,0,.25));}
+    .brand h1{margin:0; font-size:15px; letter-spacing:.2px}
+    .brand p{margin:2px 0 0 0; font-size:12px; color:var(--muted2)}
+    .nav{
+      margin-top:14px;
+      border:1px solid var(--stroke);
+      background: rgba(255,255,255,.02);
+      border-radius: 18px;
+      overflow:hidden;
+    }
+    .nav button{
+      width:100%;
+      display:flex; align-items:center; gap:10px;
+      padding:14px 14px;
+      border:0; background: transparent; color:var(--text);
+      cursor:pointer; font-size:13.5px;
+    }
+    .nav button:hover{background: rgba(255,255,255,.04)}
+    .nav button.active{
+      background: linear-gradient(90deg, rgba(124,58,237,.20), rgba(124,58,237,.06));
+      border-left: 3px solid var(--accent);
+    }
+    .nav .ico{
+      width:30px; height:30px; border-radius: 12px;
+      display:grid; place-items:center;
+      background: rgba(255,255,255,.045);
+      border:1px solid rgba(255,255,255,.10);
+    }
+    .subnote{
+      margin-top:14px;
+      padding:12px 14px;
+      border:1px solid var(--stroke);
+      border-radius: 18px;
+      background: rgba(255,255,255,.02);
+      color:var(--muted);
+      font-size:12.5px;
+      line-height:1.55;
+    }
+
+    /* Topbar */
+    .top{
+      grid-column:2; grid-row:1;
+      display:flex; align-items:center; justify-content:space-between;
+      padding:0 18px;
+      border-bottom:1px solid var(--stroke);
+      background: rgba(255,255,255,.03);
+      backdrop-filter: blur(14px);
+    }
+    .top .title{
+      display:flex; align-items:baseline; gap:10px;
+    }
+    .top .title h2{margin:0; font-size:16px}
+    .top .title span{font-size:12px; color:var(--muted2)}
+    .top .actions{display:flex; gap:10px; align-items:center}
+
+    .pill{
+      display:flex; align-items:center; gap:8px;
+      padding:10px 12px;
+      border:1px solid var(--stroke);
+      background: rgba(255,255,255,.02);
+      border-radius: 999px;
+      color:var(--muted);
+      font-size:12.5px;
+    }
+
+    .btn{
+      border:1px solid var(--stroke);
+      background: rgba(255,255,255,.03);
+      color:var(--text);
+      border-radius: 14px;
+      padding:10px 12px;
+      cursor:pointer;
+      font-size:12.5px;
+      transition: .15s ease;
+    }
+    .btn:hover{transform: translateY(-1px); background: rgba(255,255,255,.05)}
+    .btn.primary{
+      border-color: rgba(124,58,237,.55);
+      background: linear-gradient(180deg, rgba(124,58,237,.30), rgba(124,58,237,.16));
+    }
+    .btn.danger{
+      border-color: rgba(239,68,68,.55);
+      background: linear-gradient(180deg, rgba(239,68,68,.26), rgba(239,68,68,.12));
+    }
+
+    /* Content */
+    .main{
+      grid-column:2; grid-row:2;
+      overflow:hidden;
+      padding: 18px;
+      height:100%;
+    }
+    .grid{
+      display:grid;
+      gap:14px;
+    }
+    .cards{
+      display:grid;
+      grid-template-columns: 1.2fr .8fr;
+      gap:14px;
+    }
+
+    /* Join Requests: keep page fixed, scroll inside cards only */
+    #viewJoin{
+      height:100%;
+      overflow:hidden;
+      display:flex;
+      flex-direction:column;
+      gap:14px;
+    }
+    #viewJoin .cards{
+      flex:1;
+      min-height:0;
+      overflow:hidden;
+    }
+    #viewJoin .panel{
+      display:flex;
+      flex-direction:column;
+      min-height:0;
+    }
+    #viewJoin .panel .bd{
+      flex:1;
+      min-height:0;
+      overflow:auto;
+    }
+    /* Better table scroll behavior inside Join Requests List */
+    #viewJoin .panel.jr-list .bd{display:flex; flex-direction:column;}
+    #viewJoin .panel.jr-list .table-wrap{flex:1; min-height:0;}
+    @media (max-width: 1100px){
+      .app{grid-template-columns: 84px 1fr}
+      .brand .txt, .subnote, .nav button .lbl{display:none}
+      .nav button{justify-content:center}
+      .cards{grid-template-columns: 1fr}
+    }
+
+    .panel{
+      border:1px solid var(--stroke);
+      background: rgba(255,255,255,.03);
+      border-radius: var(--radius2);
+      box-shadow: var(--shadow2);
+      overflow:hidden;
+    }
+    .panel .hd{
+      display:flex; align-items:center; justify-content:space-between;
+      padding:14px 14px;
+      border-bottom:1px solid var(--stroke);
+      background: linear-gradient(180deg, rgba(255,255,255,.035), rgba(255,255,255,.015));
+    }
+    .panel .hd h3{margin:0; font-size:14px}
+    .panel .hd .meta{display:flex; gap:10px; align-items:center; color:var(--muted2); font-size:12px}
+    .panel .bd{padding:14px}
+
+    /* Datagrid */
+    .table-wrap{overflow:auto; border-radius: 14px; border:1px solid var(--stroke); background: rgba(0,0,0,.18)}
+    table{width:100%; border-collapse:collapse; min-width: 980px;}
+    th,td{padding:12px 12px; border-bottom:1px solid rgba(255,255,255,.07); text-align:left; vertical-align:top}
+    th{
+      font-size:12px; color:var(--muted2); font-weight:600;
+      background: rgba(255,255,255,.03);
+      position:sticky; top:0; z-index:1;
+    }
+    td{font-size:13px; color:var(--text)}
+    tr:hover td{background: rgba(255,255,255,.03)}
+    .tag{
+      display:inline-flex; align-items:center; gap:6px;
+      padding:6px 10px; border-radius: 999px; font-size:12px;
+      border:1px solid var(--stroke);
+      color:var(--muted);
+      background: rgba(255,255,255,.02);
+      white-space:nowrap;
+    }
+    .tag.ok{border-color: rgba(34,197,94,.45); background: rgba(34,197,94,.10); color: rgba(220,252,231,.95)}
+    .tag.bad{border-color: rgba(239,68,68,.45); background: rgba(239,68,68,.10); color: rgba(254,226,226,.95)}
+    .tag.wait{border-color: rgba(245,158,11,.45); background: rgba(245,158,11,.10); color: rgba(255,237,213,.95)}
+
+    .row-actions{display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-start}
+    .row-actions .btn{padding:8px 10px; border-radius: 12px}
+
+    /* Forms */
+    .form{
+      display:grid; gap:10px;
+    }
+    .field{
+      display:grid; gap:6px;
+    }
+    label{font-size:12px; color:var(--muted2)}
+    input, select, textarea{
+      width:100%;
+      padding:11px 12px;
+      border-radius: 14px;
+      border:1px solid var(--stroke);
+      background: rgba(0,0,0,.18);
+      color:var(--text);
+      outline:none;
+      font-family: var(--font);
+      font-size:13px;
+    }
+    textarea{min-height:90px; resize:vertical}
+    .hint{font-size:12px; color:var(--muted2); line-height:1.45}
+    .two{
+      display:grid; grid-template-columns:1fr 1fr; gap:10px;
+    }
+    @media (max-width: 900px){ .two{grid-template-columns:1fr} }
+
+    /* Toast */
+    .toast{
+      position:fixed;
+      right:18px; bottom:18px;
+      min-width: 320px;
+      max-width: 560px;
+      padding:12px 14px;
+      border-radius: 16px;
+      border:1px solid var(--stroke);
+      background: rgba(10,14,20,.82);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(14px);
+      display:none;
+    }
+    .toast.show{display:block}
+    .toast .t{font-size:13px}
+    .toast .s{font-size:12px; color:var(--muted2); margin-top:4px}
+
+    /* Permission matrix */
+    .matrix{
+      border:1px solid var(--stroke);
+      border-radius: 16px;
+      overflow:hidden;
+      background: rgba(0,0,0,.16);
+    }
+    .matrix .mhd{
+      display:flex; align-items:center; justify-content:space-between;
+      padding:12px 12px;
+      border-bottom:1px solid rgba(255,255,255,.08);
+      background: rgba(255,255,255,.03);
+    }
+    .matrix .mhd .meta{color:var(--muted2); font-size:12px}
+    .matrix .mbd{
+      padding:12px 12px;
+      display:grid; gap:10px;
+      max-height: 420px;
+      overflow:auto;
+    }
+    .page-row{
+      display:grid;
+      grid-template-columns: 1fr auto;
+      gap:10px;
+      align-items:center;
+      padding:10px 10px;
+      border:1px solid rgba(255,255,255,.08);
+      border-radius: 14px;
+      background: rgba(255,255,255,.02);
+    }
+    .page-row .name{font-size:13px}
+    .toggle{
+      width:52px; height:28px; border-radius: 999px;
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.06);
+      position:relative; cursor:pointer;
+    }
+    .toggle::after{
+      content:"";
+      position:absolute; top:3px; left:3px;
+      width:22px; height:22px; border-radius: 999px;
+      background: rgba(255,255,255,.72);
+      transition:.15s ease;
+    }
+    .toggle.on{
+      background: rgba(124,58,237,.28);
+      border-color: rgba(124,58,237,.55);
+    }
+    .toggle.on::after{
+      left:27px;
+      background: rgba(255,255,255,.92);
+    }
+
+    .divider{height:1px; background: rgba(255,255,255,.08); margin:12px 0}
+  
+    .top-search{
+      width: 360px;
+      max-width: 40vw;
+      height: 36px;
+      padding: 0 12px;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.05);
+      color: rgba(255,255,255,.92);
+      outline: none;
+    }
+    .top-search::placeholder{ color: rgba(255,255,255,.55); }
+    .sidebar-footer{
+      margin-top: auto;
+      padding: 12px;
+      display:flex;
+      gap:10px;
+      align-items:center;
+      border-top: 1px solid rgba(255,255,255,.08);
+      background: linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,.00));
+    }
+    .sidebar-footer .avatar{
+      width: 36px; height: 36px;
+      border-radius: 999px;
+      display:flex; align-items:center; justify-content:center;
+      font-weight: 800;
+      letter-spacing: .5px;
+      background: rgba(255,255,255,.10);
+      border: 1px solid rgba(255,255,255,.12);
+      color: rgba(255,255,255,.92);
+      flex: 0 0 auto;
+    }
+    .sidebar-footer .who{ min-width:0; }
+    .sidebar-footer .name{
+      font-weight: 700;
+      font-size: 13px;
+      color: rgba(255,255,255,.92);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 210px;
+    }
+    .sidebar-footer .email{
+      font-size: 12px;
+      color: rgba(255,255,255,.58);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 210px;
+    }
+
+
+    /* Audit */
+    .audit-toolbar{
+      display:flex; justify-content:space-between; gap:12px;
+      flex-wrap:wrap; margin-bottom:12px;
+    }
+    .audit-filters{
+      display:grid;
+      grid-template-columns: 1.2fr 1fr 1fr 1fr 170px 170px auto auto;
+      gap:10px;
+      align-items:center;
+    }
+    .audit-filters .in{min-width:0; width:100%}
+    @media (max-width: 980px){
+      .audit-filters{grid-template-columns: 1fr 1fr}
+    }
+    @media (max-width: 560px){
+      .audit-filters{grid-template-columns: 1fr}
+    }
+    .audit-actions{display:flex; gap:10px; align-items:center; margin-left:auto}
+    .audit-filters .in{
+      height:40px; padding:0 12px;
+      border:1px solid var(--stroke);
+      background: rgba(255,255,255,.02);
+      color:var(--text);
+      border-radius: 12px;
+      outline:none;
+      min-width: 160px;
+    }
+    .audit-filters #auditSearch{min-width: 240px}
+    .audit-grid{
+      display:grid;
+      grid-template-columns: 1fr 360px;
+      gap: 14px;
+      align-items:start;
+    }
+    @media (max-width: 1100px){
+      .audit-grid{grid-template-columns: 1fr}
+    }
+    .panel.mini{height: fit-content}
+    .kv{display:grid; gap:10px}
+    .kv > div{display:flex; justify-content:space-between; gap:12px}
+    .kv span{color:var(--muted2); font-size:12px}
+    .kv b{font-weight:700; font-size:12.5px; color:var(--text); max-width: 220px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+    .hr{height:1px; background: var(--stroke); margin:12px 0}
+    .mono{
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 12px;
+      line-height: 1.45;
+      color: var(--text);
+      background: rgba(255,255,255,.02);
+      border:1px solid var(--stroke);
+      border-radius: 14px;
+      padding: 12px;
+      max-height: 360px;
+      overflow:auto;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    /* Modal */
+    .modal{position:fixed; inset:0; display:none; z-index: 50}
+    .modal.show{display:block}
+    .modal-backdrop{position:absolute; inset:0; background: rgba(0,0,0,.55)}
+    .modal-card{
+      position:relative;
+      width:min(980px, calc(100% - 28px));
+      margin: 80px auto 0 auto;
+      background: var(--card2);
+      border:1px solid var(--stroke2);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+    .modal-hd{
+      display:flex; align-items:center; justify-content:space-between;
+      padding: 12px 14px;
+      border-bottom:1px solid var(--stroke);
+    }
+    .modal-title{font-weight:800}
+    .modal-bd{padding:14px}
+    .diff-grid{display:grid; grid-template-columns: 1fr 1fr; gap:14px}
+    @media (max-width: 900px){ .diff-grid{grid-template-columns:1fr} }
+    .diff-title{font-size:12.5px; color:var(--muted); margin-bottom:8px}
+    .diff-pre{
+      margin:0;
+      border-radius: 14px;
+      border: 1px solid var(--stroke);
+      background: rgba(255,255,255,.02);
+      padding: 12px;
+      max-height: 420px;
+      overflow:auto;
+      white-space: pre;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+  
+    /* ===== HOME VIEW add-ons ===== */
+    .kpi-grid{
+      display:grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 14px;
+      margin-bottom: 14px;
+    }
+    .kpi{
+      border: 1px solid var(--stroke);
+      background: var(--card);
+      box-shadow: var(--shadow2);
+      border-radius: 18px;
+      padding: 14px 14px;
+      min-height: 86px;
+      display:flex;
+      flex-direction:column;
+      justify-content:space-between;
+    }
+    .kpi .k{ color: var(--muted2); font-size: 12px; letter-spacing:.2px; }
+    .kpi .v{ color: var(--text); font-size: 26px; font-weight: 800; }
+    .split{
+      display:grid;
+      grid-template-columns: 1.2fr .8fr;
+      gap: 14px;
+      margin-top: 14px;
+    }
+    .subpanel{
+      border: 1px solid var(--stroke);
+      background: var(--card2);
+      border-radius: 18px;
+      overflow:hidden;
+    }
+    .subhd{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      padding: 12px 14px;
+      border-bottom:1px solid var(--stroke);
+    }
+    .subhd h4{ margin:0; font-size: 13px; letter-spacing:.3px; color: var(--text); }
+    .subbd{ padding: 12px 14px; }
+    .qa{ display:flex; flex-direction:column; gap:10px; }
+    .health .row{
+      display:flex; align-items:center; justify-content:space-between;
+      padding: 10px 0;
+      border-bottom:1px dashed var(--stroke);
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .health .row:last-child{ border-bottom:0; }
+    @media (max-width: 1050px){
+      .kpi-grid{ grid-template-columns: repeat(2, minmax(0,1fr)); }
+      .split{ grid-template-columns: 1fr; }
+
+  
+    /* ===== PATCH: Overview Recent activity uses full width + no horizontal scroll ===== */
+    .split.one{ grid-template-columns: 1fr !important; }
+    .table-wrap.recent{ overflow-x: hidden !important; overflow-y: auto !important; }
+    .table-wrap.recent table{ width: 100% !important; table-layout: fixed !important; }
+    .table-wrap.recent th, .table-wrap.recent td{ overflow: hidden; text-overflow: ellipsis; }
+    .table-wrap.recent th:nth-child(2),
+    .table-wrap.recent td:nth-child(2),
+    .table-wrap.recent th:nth-child(4),
+    .table-wrap.recent td:nth-child(4){ white-space: normal !important; word-break: break-word; }
+
+    /* ===== PATCH v8: fixed page + internal scrollers ===== */
+    .main > section{ height:100%; overflow:hidden; }
+
+    /* Home/Settings can scroll inside their own view (not the whole page) */
+    #viewHome{ overflow:auto; padding-right: 8px; }
+    #viewSettings{ overflow:hidden; padding-right: 0; }
+
+    /* Datagrids: prevent page scrolling; tables scroll inside wraps */
+    .table-wrap{ overflow:auto; border-radius: 14px; }
+    #viewSettings .table-wrap{ max-height: 280px; }
+    #viewHome .table-wrap.recent{ max-height: 260px; }
+
+    /* Audit: toolbar fixed + table scroll inside */
+    #viewAudit .panel{ height:100%; display:flex; flex-direction:column; }
+    #viewAudit .bd{ flex:1; overflow:hidden; display:flex; flex-direction:column; }
+    #viewAudit .audit-toolbar{ flex:0 0 auto; }
+    #viewAudit .table-wrap{ flex:1; overflow:auto; }
+
+    /* Join requests: table scroll inside */
+    #viewJoin .panel{ height:100%; display:flex; flex-direction:column; }
+    #viewJoin .bd{ flex:1; overflow:hidden; display:flex; flex-direction:column; }
+    #viewJoin .table-wrap{ flex:1; overflow:auto; }
+
+    /* Permissions: table/matrix scroll inside */
+    #viewPerms .panel{ height:100%; display:flex; flex-direction:column; }
+    #viewPerms .bd{ flex:1; overflow:hidden; display:flex; flex-direction:column; }
+    #viewPerms .table-wrap{ flex:1; overflow:auto; }
+
+    /* Reduce horizontal scrolling where possible */
+    .table-wrap table{ width:100%; table-layout: fixed; }
+    .table-wrap th, .table-wrap td{ word-wrap: break-word; }
+
+
+    /* ===== PATCH v8b: settings cards layout ===== */
+    #viewSettings .card{ display:flex; flex-direction:column; gap:10px; }
+    #viewSettings .card-head{ display:flex; align-items:center; justify-content:space-between; gap:10px; }
+    #viewSettings .kpis{ display:grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap:10px; }
+    @media (max-width: 980px){ #viewSettings .kpis{ grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+
+    /* KPI strip (used in Join + Settings) */
+    .kpi-strip{ display:grid; gap:12px; }
+    .kpi-strip.three{ grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .kpi-strip.four{ grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    @media (max-width: 980px){
+      .kpi-strip.three, .kpi-strip.four{ grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    @media (max-width: 560px){
+      .kpi-strip.three, .kpi-strip.four{ grid-template-columns: 1fr; }
+    }
+    .kpiBox{
+      border:1px solid var(--stroke);
+      border-radius: 18px;
+      padding:14px 16px;
+      background: var(--panel);
+      box-shadow: var(--shadow);
+      min-height: 78px;
+      display:flex;
+      flex-direction:column;
+      justify-content:center;
+    }
+    .kpiBox .k{ font-size: 12px; color: var(--muted); }
+    .kpiBox .v{ font-size: 28px; font-weight: 800; margin-top: 6px; letter-spacing: .2px; }
+
+    /* ===== Settings: Department cards (accordion) ===== */
+    .deptCards{
+      display:grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap:14px;
+      margin-top: 10px;
+    }
+    .deptCard{
+      background: var(--card);
+      border:1px solid var(--stroke);
+      border-radius: 16px;
+      overflow:hidden;
+      box-shadow: 0 18px 40px rgba(0,0,0,.22);
+    }
+    .deptCard .hdr{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      padding:14px 14px;
+      cursor:pointer;
+      user-select:none;
+    }
+    .deptCard .deptName{
+      font-weight:500;
+      letter-spacing:.2px;
+      display:flex;
+      align-items:center;
+      gap:10px;
+      min-width:0;
+    }
+    .deptBadge{
+      width:34px;height:34px;border-radius:12px;
+      display:inline-flex;align-items:center;justify-content:center;
+      background: linear-gradient(135deg, rgba(124,58,237,.35), rgba(34,197,94,.18));
+      border:1px solid var(--stroke2);
+      flex:0 0 auto;
+      font-weight:800;
+    }
+    .deptName .txt{
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    .deptMeta{
+      display:flex;align-items:center;gap:10px;flex:0 0 auto;
+      color: var(--muted);
+      font-weight:600;
+    }
+    .deptMeta .count{
+      font-size:20px;
+      color: var(--text);
+      font-weight:800;
+      min-width: 40px;
+      text-align:right;
+    }
+    .chev{
+      width:34px;height:34px;border-radius:12px;
+      border:1px solid var(--stroke);
+      display:inline-flex;align-items:center;justify-content:center;
+      background: rgba(255,255,255,.03);
+      transition: transform .18s ease, background .18s ease;
+      color: var(--muted);
+    }
+    .deptCard.expanded .chev{ transform: rotate(180deg); background: rgba(255,255,255,.06); }
+    .deptBody{
+      display:none;
+      padding: 0 14px 14px;
+    }
+    .deptCard.expanded .deptBody{ display:block; }
+    .deptSplit{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:12px;
+      margin-top: 6px;
+    }
+    .deptPanel{
+      background: rgba(0,0,0,.18);
+      border:1px solid var(--stroke);
+      border-radius: 14px;
+      padding: 10px 10px;
+      min-height: 120px;
+    }
+    .deptPanel h4{
+      margin:0 0 8px 0;
+      font-size:12px;
+      text-transform: uppercase;
+      letter-spacing:.14em;
+      color: var(--muted2);
+    }
+    .deptList{
+      max-height: 210px;
+      overflow:auto;
+      padding-right: 6px;
+    }
+    .deptRow{
+      display:flex;
+      justify-content:space-between;
+      gap:12px;
+      padding:8px 8px;
+      border-radius: 12px;
+      border:1px solid transparent;
+    }
+    .deptRow:hover{ background: rgba(255,255,255,.04); border-color: var(--stroke); }
+    .deptRow .label{ color: var(--text); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .deptRow .val{ color: var(--text); font-weight:800; }
+    @media (max-width: 980px){
+      .deptSplit{ grid-template-columns:1fr; }
+    }
+
+
+/* === Department cards grid (Settings) === */
+.dept-cards-grid{
+  display:grid;
+  align-items:start;
+  grid-template-columns: 1fr;
+  gap:14px;
+}
+@media (max-width: 1200px){
+  .dept-cards-grid{ grid-template-columns: repeat(2, minmax(240px, 1fr)); }
+}
+@media (max-width: 860px){
+  .dept-cards-grid{ grid-template-columns: 1fr; }
+}
+.dept-card{
+  border:1px solid var(--card-border);
+  align-self: start;
+  background: var(--card-bg);
+  border-radius: 16px;
+  padding: 14px 14px 12px;
+  box-shadow: var(--card-shadow);
+}
+.dept-card-h{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+}
+.dept-name{  font-weight: 500;
+  letter-spacing: .2px;
+}
+.dept-total{
+  font-size: 22px;
+  font-weight: 800;
+}
+.dept-toggle{
+  width:34px;height:34px;
+  border-radius: 10px;
+  border:1px solid var(--card-border);
+  background: rgba(255,255,255,.04);
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;
+}
+.light .dept-toggle{ background: rgba(0,0,0,.04); }
+.dept-toggle svg{ width:16px;height:16px; opacity:.9; transition: transform .18s ease; }
+.dept-card.open .dept-toggle svg{ transform: rotate(180deg); }
+.dept-details{
+  margin-top: 10px;
+  border-top:1px solid rgba(255,255,255,.08);
+  padding-top: 10px;
+  display:none;
+  max-height: 220px;
+  overflow:auto;
+}
+.light .dept-details{ border-top-color: rgba(0,0,0,.10); }
+.dept-card.open .dept-details{ display:block; }
+.kv-list{ display:grid; grid-template-columns: 1fr auto; gap:6px 10px; }
+.kv-list .k{ opacity:.85; }
+.kv-list .v{ font-weight:700; text-align:right; }
+.section-label{ font-size:12px; letter-spacing:.12em; text-transform:uppercase; opacity:.7; margin:8px 0 6px; }
+
+
+.btn-row{display:flex; gap:8px; align-items:center;}
+
+/* Light theme: sidebar slightly more opaque than page for separation */
+.light .sidebar{
+  background: rgba(255,255,255,.92) !important;
+  border-right-color: rgba(0,0,0,.10) !important;
+}
+
+/* === Dept cards header spacing/alignment fix === */
+#deptCardsCard{ margin-top: 14px; }
+.dept-cards-head{ display:flex; align-items:center; justify-content:space-between; gap:12px; }
+.dept-cards-head .card-title{ margin: 2px 0 0; }
+.dept-cards-head .btn-row{ display:flex; align-items:center; gap:10px; }
+@media (max-width: 720px){
+  .dept-cards-head{ flex-direction:column; align-items:flex-start; }
+}
+
+
+/* === Dept cards: background + clearer details === */
+.dept-card{
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.14);
+}
+.light .dept-card, body.light .dept-card{
+  background: rgba(255,255,255,.86);
+  border-color: rgba(0,0,0,.12);
+  box-shadow: none !important; /* keep light clean */
+}
+.dept-details-grid{
+  display:grid;
+  grid-template-columns: 1fr;
+  gap:12px;
+}
+@media (min-width: 920px){
+  .dept-details-grid{ grid-template-columns: 1fr 1fr; }
+}
+.dept-panel{
+  border: 1px solid rgba(255,255,255,.10);
+  background: rgba(0,0,0,.12);
+  border-radius: 14px;
+  padding: 10px;
+}
+.light .dept-panel, body.light .dept-panel{
+  border-color: rgba(0,0,0,.10);
+  background: rgba(0,0,0,.03);
+}
+
+/* ===== PATCH: internal scrolling + dept cards backgrounds ===== */
+#viewSettings .card{ height:100%; }
+#viewSettings .card-b{ flex:1; min-height:0; overflow:auto; padding-right:2px; }
+
+.dept-cards-grid{ padding-bottom: 12px; }
+.dept-card{ background: var(--card-bg); border-color: var(--card-border); box-shadow: var(--card-shadow); }
+
+#viewSettings .dept-panel .section-label{
+  color: var(--accent);
+  opacity: .95;
+}
+
+
+/* === PATCH v37: Page toggles 2-per-row + prevent bottom overflow in specific boxes === */
+#permPagesBox, #pagesBox{
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  align-items: stretch;
+}
+@media (max-width: 820px){
+  #permPagesBox, #pagesBox{ grid-template-columns: 1fr; }
+}
+
+/* Ensure each toggle row behaves nicely inside grid */
+.page-row{
+  width: 100%;
+  margin: 0 !important;
+}
+
+/* Stop these boxes from stretching below viewport; scroll inside */
+#permPagesBox, #pagesBox{
+  max-height: calc(100vh - 340px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-right: 4px;
+}
+
+/* Keep inner scrollbars from forcing page scroll */
+#viewPerm .panel, #viewJoin .panel{
+  overflow: hidden;
+}
+
+/* === PATCH: kas requests (settings scroll, arrows, whoami, page-row compact) === */
+/* 1) Disable vertical scrolling inside Settings view */
+#viewSettings .card-b{ overflow:hidden !important; }
+
+/* 3) Move connected email off topbar (use sidebar footer beside avatar) */
+#whoami{ display:none !important; }
+
+/* 4) Make page access rows more compact */
+.page-row{ padding:8px 10px !important; border-radius: 12px; }
+.toggle{ width:46px !important; height:24px !important; }
+.toggle::after{ top:2px !important; left:2px !important; width:20px !important; height:20px !important; }
+.toggle.on::after{ left:24px !important; }
+
+
+    /* --- Kas patch: Settings fixed (no page scroll) + dark chevrons + hide top whoami --- */
+    #whoami{ display:none !important; }
+    /* Hide scrollbars (keep internal scrolling if needed) */
+    #viewSettings, #viewSettings *{
+      scrollbar-width: none;
+    }
+    #viewSettings::-webkit-scrollbar,
+    #viewSettings *::-webkit-scrollbar{ width:0; height:0; }
+
+</style>
+  <script src="/assets/js/theme-manager.js" defer></script>
+</head>
+<body>
+<div class="app">
+<!-- Sidebar -->
+<aside class="side">
+<div class="brand">
+<div aria-hidden="true" class="logo"><img alt="" src="public/favicon-32x32.png"/></div>
+<div class="txt">
+<h1>OAP Admin Center</h1>
+<p>Operations • Analytics • Performance</p>
+</div>
+</div>
+<div aria-label="Admin navigation" class="nav" role="navigation">
+<button data-view="home" id="navHome">
+<span class="ico">🏠</span>
+<span class="lbl">Overview</span>
+</button>
+<button class="active" data-view="join" id="navJoin">
+<span class="ico">🧾</span>
+<span class="lbl">Join Requests</span>
+</button>
+<button data-view="perm" id="navPerm">
+<span class="ico">🛡️</span>
+<span class="lbl">Permissions</span>
+</button>
+<button data-view="audit" id="navAudit">
+<span class="ico">📜</span>
+<span class="lbl">Audit</span>
+</button>
+<button data-view="settings" id="navSettings"><span class="ico">⚙️</span><span class="lbl">Settings</span></button></div>
+<div class="sidebar-footer">
+<div aria-hidden="true" class="avatar" id="sideAvatar">OA</div>
+<div class="who">
+<div class="name" id="sideUserName">Not signed in</div>
+<div class="email" id="sideUserEmail">—</div>
+</div>
+</div>
+</aside>
+<!-- Topbar -->
+<header class="top">
+<div class="title">
+<h2 id="viewTitle">Join Requests</h2>
+<span id="viewSub"></span>
+</div>
+<div class="actions">
+<div class="pill" id="whoami">Not signed in</div>
+<input class="top-search" id="employeeSearch" placeholder="Type Employee ID or Email and press Enter"/>
+<button class="btn" id="btnTheme" title="Toggle theme">Theme</button>
+<button class="btn" id="btnRefresh">Refresh</button>
+<button class="btn primary" id="btnSignOut">Sign out</button>
+</div>
+</header>
+<!-- Main -->
+<main class="main">
+<!-- HOME VIEW -->
+<section class="grid" id="viewHome" style="display:none;">
+<div class="cards">
+<div class="panel jr-list">
+<div class="hd">
+<h3>Admin Overview</h3>
+<div class="meta">
+<span class="tag" id="homeStatus">Ready</span>
+</div>
+</div>
+<div class="bd">
+<div class="kpi-grid">
+<div class="kpi">
+<div class="k">Pending join requests</div>
+<div class="v" id="kpiJoinPending">0</div>
+</div>
+<div class="kpi">
+<div class="k">Pages</div>
+<div class="v" id="kpiPages">0</div>
+</div>
+<div class="kpi">
+<div class="k">Audit records</div>
+<div class="v" id="kpiAudit">0</div>
+</div>
+<div class="kpi">
+<div class="k">Last sync</div>
+<div class="v" id="kpiLastSync">—</div>
+</div>
+</div>
+<div class="split one">
+<div class="subpanel">
+<div class="subhd">
+<h4>Recent activity</h4>
+<button class="btn sm" id="btnHomeRefresh">Refresh</button>
+</div>
+<div class="subbd">
+<div class="table-wrap recent">
+<table>
+<thead>
+<tr>
+<th style="width:180px;">Time</th>
+<th>Action</th>
+<th style="width:110px;">Result</th>
+<th>Target</th>
+</tr>
+</thead>
+<tbody id="homeRecentBody"></tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="panel jr-selected">
+<div class="hd">
+<h3>System health</h3>
+<div class="meta"><span class="tag wait" id="healthTag">Checking…</span></div>
+</div>
+<div class="bd">
+<div class="health">
+<div class="row"><span>Session</span><span id="healthSession">—</span></div>
+<div class="row"><span>RPC access</span><span id="healthRpc">—</span></div>
+<div class="row"><span>Data loaded</span><span id="healthData">—</span></div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- JOIN VIEW -->
+<section class="grid" id="viewJoin">
+  <div class="kpi-strip three" style="margin-bottom:14px">
+    <div class="kpiBox">
+      <div class="k">Approved</div>
+      <div class="v" id="setJRApproved">—</div>
+    </div>
+    <div class="kpiBox">
+      <div class="k">Pending</div>
+      <div class="v" id="setJRPend">—</div>
+    </div>
+    <div class="kpiBox">
+      <div class="k">Rejected</div>
+      <div class="v" id="setJRReject">—</div>
+    </div>
+  </div>
+<div class="cards">
+<div class="panel">
+<div class="hd">
+<h3>Join Requests List</h3>
+<div class="meta">
+<span class="tag wait" id="jrCount">0 requests</span>
+<span class="meta" id="lastSync"></span>
+</div>
+</div>
+<div class="bd">
+<div class="table-wrap">
+<table>
+<thead>
+<tr>
+<th style="min-width:120px;">Status</th>
+<th style="min-width:140px;">Employee ID</th>
+<th style="min-width:220px;">Email</th>
+<th style="min-width:190px;">Name</th>
+<th style="min-width:160px;">Department</th>
+<th style="min-width:160px;">Role</th>
+<th style="min-width:220px;">Requested at</th>
+<th style="min-width:260px;">Actions</th>
+</tr>
+</thead>
+<tbody id="jrTbody">
+<!-- rows -->
+</tbody>
+</table>
+</div>
+<div class="hint" style="margin-top:10px;">
+</div>
+</div>
+</div>
+<div class="panel">
+<div class="hd">
+<h3>Selected request</h3>
+<div class="meta">
+<span class="tag" id="selTag">None</span>
+</div>
+</div>
+<div class="bd">
+<div class="form">
+<div class="two">
+<div class="field">
+<label>Request ID</label>
+<input disabled="" id="selRequestId" placeholder="—"/>
+</div>
+<div class="field">
+<label>Status</label>
+<input disabled="" id="selStatus" placeholder="—"/>
+</div>
+</div>
+<div class="two">
+<div class="field">
+<label>Employee ID</label>
+<input disabled="" id="selEmpId" placeholder="—"/>
+</div>
+<div class="field">
+<label>Email</label>
+<input disabled="" id="selEmail" placeholder="—"/>
+</div>
+</div>
+<div class="field">
+<label>Name</label>
+<input disabled="" id="selName" placeholder="—"/>
+</div>
+<div class="two">
+<div class="field">
+<label>Department</label>
+<input disabled="" id="selDept" placeholder="—"/>
+</div>
+<div class="field">
+<label>Role (your roles)</label>
+<select id="selRole">
+<option value="agent">agent</option>
+<option value="control">control</option>
+<option value="supervisor">supervisor</option>
+<option value="duty_manager">duty_manager</option>
+<option value="admin">admin</option>
+<option value="admin_officer">admin_officer</option>
+<option value="assistant_manager">assistant_manager</option>
+<option value="department_manager">department_manager</option>
+
+</select>
+</div>
+</div>
+<div class="divider"></div>
+<div class="matrix">
+<div class="mhd">
+<div style="font-weight:700;">Page access</div>
+<div class="meta" id="pagesMeta">—</div>
+</div>
+<div class="mbd" id="pagesBox">
+<!-- page toggles -->
+</div>
+</div>
+<div style="display:flex; gap:10px; margin-top:12px; flex-wrap:wrap;">
+<button class="btn primary" disabled="" id="btnApprove">Approve request</button>
+<button class="btn danger" disabled="" id="btnReject">Reject request</button>
+</div>
+<div class="hint" id="jrHint" style="margin-top:10px;"></div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- PERMISSIONS VIEW -->
+<section class="grid" id="viewPerm" style="display:none;">
+<div class="cards">
+<div class="panel">
+<div class="hd">
+<h3>Load a user to manage access</h3>
+<div class="meta"><span class="tag">No guessing</span></div>
+</div>
+<div class="bd">
+<div class="form">
+<div class="two">
+<div class="field">
+<label>Auth UUID</label>
+<input id="permUuid" placeholder="Auth UUID"/>
+</div>
+<div class="field">
+<label>Or (Email + Employee ID) to provision</label>
+<input id="permEmail" placeholder="Email"/>
+</div>
+</div>
+<div class="two">
+<div class="field">
+<label>Employee ID</label>
+<input id="permEmpId" placeholder="Employee ID"/>
+</div>
+<div class="field">
+<label>Role</label>
+<select id="permRole">
+<option value="agent">agent</option>
+<option value="control">control</option>
+<option value="supervisor">supervisor</option>
+<option value="duty_manager">duty_manager</option>
+<option value="admin">admin</option>
+<option value="admin_officer">admin_officer</option>
+<option value="assistant_manager">assistant_manager</option>
+<option value="department_manager">department_manager</option>
+
+</select>
+</div>
+</div>
+<div style="display:flex; gap:10px; flex-wrap:wrap;">
+<button class="btn" id="btnLoadUser">Load</button>
+<button class="btn primary" disabled="" id="btnSaveAccess">Save access</button>
+<button class="btn danger" disabled="" id="btnClearAccess">Clear all access</button>
+</div>
+<div class="hint" id="permHint" style="margin-top:10px;"></div>
+</div>
+</div>
+</div>
+<div class="panel">
+<div class="hd">
+<h3>Current access</h3>
+<div class="meta"><span class="tag" id="permLoadedTag">None</span></div>
+</div>
+<div class="bd">
+<div class="matrix">
+<div class="mhd">
+<div style="font-weight:700;">Pages</div>
+<div class="meta" id="permPagesMeta">—</div>
+</div>
+<div class="mbd" id="permPagesBox">
+<!-- page toggles -->
+</div>
+</div>
+<div class="divider"></div>
+<div class="table-wrap">
+<table style="min-width: 820px;">
+<thead>
+<tr>
+<th style="min-width:220px;">page_id</th>
+<th style="min-width:260px;">path</th>
+<th style="min-width:240px;">label</th>
+<th style="min-width:120px;">enabled</th>
+</tr>
+</thead>
+<tbody id="permTableBody"></tbody>
+</table>
+</div>
+<div class="hint" style="margin-top:10px;">
+                Saving is done via RPC: <b>admin_set_user_access</b> (same as in your system).
+              </div>
+</div>
+</div>
+</div>
+</section>
+<!-- AUDIT VIEW (simple) -->
+<section class="grid" id="viewAudit" style="display:none;">
+<div class="panel">
+<div class="hd">
+<h3>Audit</h3>
+<div class="meta">
+<span class="tag wait" id="auditCount">0 records</span>
+<span class="meta" id="auditLastSync"></span>
+</div>
+</div>
+<div class="bd">
+<div class="audit-toolbar">
+<div class="audit-filters">
+<input class="in" id="auditSearch" placeholder="Employee ID or Email">
+<input class="in" id="auditActor" placeholder="Admin (email/ID)">
+<select class="in" id="auditAction">
+<option value="">All actions</option>
+<option value="join_approve">Approve join request</option>
+<option value="join_reject">Reject join request</option>
+<option value="access_save">Save permissions</option>
+<option value="access_clear">Clear permissions</option>
+<option value="role_change">Change role</option>
+<option value="page_grant">Grant page</option>
+<option value="page_revoke">Revoke page</option>
+<option value="user_load">Load user</option>
+</select>
+<select class="in" id="auditResult">
+<option value="">All results</option>
+<option value="success">Success</option>
+<option value="fail">Fail</option>
+</select>
+<input class="in" id="auditFrom" type="date">
+<input class="in" id="auditTo" type="date"/>
+<button class="btn" id="btnAuditApply">Apply</button>
+<button class="btn" id="btnAuditClear">Clear</button>
+</input></input></input></div>
+<div class="audit-actions">
+<button class="btn" id="btnAuditRefresh">Refresh</button>
+<button class="btn" id="btnAuditCopy">Copy</button>
+<button class="btn primary" id="btnAuditExport">Export</button>
+</div>
+</div>
+<div class="audit-grid">
+<div class="table-wrap">
+<table>
+<thead>
+<tr>
+<th style="min-width:170px;">Time</th>
+<th style="min-width:160px;">Action</th>
+<th style="min-width:140px;">Result</th>
+<th style="min-width:200px;">Actor</th>
+<th style="min-width:220px;">Target</th>
+<th style="min-width:360px;">Details</th>
+<th style="min-width:140px;">Diff</th>
+</tr>
+</thead>
+<tbody id="auditTbody"></tbody>
+</table>
+</div>
+<div class="panel mini">
+<div class="hd">
+<h3>Record</h3>
+<div class="meta"><span class="tag" id="auditSelTag">None</span></div>
+</div>
+<div class="bd">
+<div class="kv">
+<div><span>Time</span><b id="auditDTime">—</b></div>
+<div><span>Action</span><b id="auditDAction">—</b></div>
+<div><span>Result</span><b id="auditDResult">—</b></div>
+<div><span>Actor</span><b id="auditDActor">—</b></div>
+<div><span>Target</span><b id="auditDTarget">—</b></div>
+</div>
+<div class="hr"></div>
+<div class="mono" id="auditDJson">—</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Diff modal -->
+<div aria-hidden="true" class="modal" id="diffModal">
+<div class="modal-backdrop" data-close="1"></div>
+<div aria-modal="true" class="modal-card" role="dialog">
+<div class="modal-hd">
+<div class="modal-title">Before / After</div>
+<button class="btn" id="btnDiffClose">Close</button>
+</div>
+<div class="modal-bd">
+<div class="diff-grid">
+<div class="diff-col">
+<div class="diff-title">Before</div>
+<pre class="diff-pre" id="diffBefore">—</pre>
+</div>
+<div class="diff-col">
+<div class="diff-title">After</div>
+<pre class="diff-pre" id="diffAfter">—</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<section id="viewSettings" style="display:none">
+  <div class="settings-top">
+    <div class="kpi-strip four">
+      <div class="kpiBox">
+        <div class="k">Total employees</div>
+        <div class="v" id="setEmpTotal">—</div>
+      </div>
+      <div class="kpiBox">
+        <div class="k">Departments</div>
+        <div class="v" id="setDeptCount">—</div>
+      </div>
+      <div class="kpiBox">
+        <div class="k">Exits</div>
+        <div class="v" id="setExitTotal">—</div>
+      </div>
+      <div class="kpiBox">
+        <div class="k">Top exit reason</div>
+        <div class="v" id="setTopExitReason">—</div>
+      </div>
+    </div>
+  </div>
+
+  
+  
+  <div class="card card-lg" id="deptCardsCard">
+        <div class="card-h dept-cards-head">
+          <div class="card-title"><span class="title-icon" aria-hidden="true">👥</span> Employee Allocation by Department</div>
+          <div class="btn-row">
+            <button class="btn btn-sm" id="deptCardsRefreshBtn">Refresh</button>
+            <button class="btn btn-sm" id="deptCardsOpenAllBtn" title="Open all">Open all</button>
+            <button class="btn btn-sm" id="deptCardsCloseAllBtn" title="Close all">Close all</button>
+          </div>
+        </div>
+        <div class="card-b">
+          <div class="dept-cards-grid" id="deptCardsGrid"></div>
+          <div class="muted" id="deptCardsEmpty" style="display:none;">—</div>
+        </div>
+      </div>
+
+</main>
+</div>
+<div class="toast" id="toast">
+<div class="t" id="toastT">—</div>
+<div class="s" id="toastS"></div>
+</div>
+<script>
+  // =====================
+  // Theme (dark / light)
+  // =====================
+  (function initTheme(){
+    const key = "oap_admin_theme";
+    const saved = localStorage.getItem(key);
+    if(saved === "light") document.documentElement.setAttribute("data-theme","light");
+    const btn = document.getElementById("btnTheme");
+    const sync = ()=>{
+      const isLight = document.documentElement.getAttribute("data-theme") === "light";
+      if(btn) btn.textContent = isLight ? "Light" : "Dark";
+    };
+    if(btn){
+      btn.addEventListener("click", ()=>{
+        const isLight = document.documentElement.getAttribute("data-theme") === "light";
+        if(isLight){
+          document.documentElement.removeAttribute("data-theme");
+          localStorage.setItem(key,"dark");
+        }else{
+          document.documentElement.setAttribute("data-theme","light");
+          localStorage.setItem(key,"light");
+        }
+        sync();
+      });
+    }
+    sync();
+  })();
+
+  
+
+  // =====================
+  // Role labels / validation
+  // (Fix: ROLE_LABELS was referenced but never defined)
+  // =====================
+  const ROLE_LABELS = {
+    owner: "Owner",
+    admin: "Admin",
+    department_manager: "Department Manager",
+    assistant_manager: "Assistant Manager",
+    admin_officer: "Admin Officer",
+    duty_manager: "Duty Manager",
+    supervisor: "Supervisor",
+    control: "Control",
+    agent: "Agent",
+    user: "User"
+  };
+
+// =====================
+  // Helpers (robust connection – compatible with existing OAP pages)
+  // =====================
+  function getClient(){
+    return (window.NXS_Supabase && window.NXS_Supabase.client) ? window.NXS_Supabase.client : null;
+  }
+
+  async function bootstrapClientFromPublicConfig(){
+    // Fallback: if /assets/js/nxs_supabase_client.js didn't set a client, try to build one from /api/public-config
+    try{
+      const r = await fetch("/api/public-config", { cache: "no-store" });
+      if(!r.ok) throw new Error("public-config fetch failed");
+      const cfg = await r.json();
+      const url = cfg?.SUPABASE_URL || cfg?.supabaseUrl || cfg?.url;
+      const key = cfg?.SUPABASE_ANON_KEY || cfg?.supabaseAnonKey || cfg?.anonKey || cfg?.key;
+      if(!url || !key) throw new Error("public-config missing supabase keys");
+      if(!window.supabase || !window.supabase.createClient) throw new Error("supabase-js not loaded");
+      const client = window.supabase.createClient(url, key);
+      window.NXS_Supabase = window.NXS_Supabase || {};
+      window.NXS_Supabase.client = client;
+      return client;
+    }catch(_e){
+      return null;
+    }
+  }
+
+  async function waitForClient(timeoutMs=8000){
+    const start = Date.now();
+    while(Date.now()-start < timeoutMs){
+      const c = getClient();
+      if(c) return c;
+      await new Promise(r=>setTimeout(r,120));
+    }
+    return null;
+  }
+
+  async function ensureClient(){
+    let c = getClient();
+    if(c) return c;
+
+    // wait briefly for /assets/js/nxs_supabase_client.js to initialize
+    c = await waitForClient(2500);
+    if(c) return c;
+
+    // fallback: build from /api/public-config
+    c = await bootstrapClientFromPublicConfig();
+    if(c) return c;
+
+    // last try: wait again (in case config fetch raced)
+    c = await waitForClient(2500);
+    return c;
+  }
+
+  function initialsFromUser(u){
+    const name = (u?.user_metadata?.full_name || u?.user_metadata?.name || "").trim();
+    const email = (u?.email || "").trim();
+    const base = name || (email ? email.split("@")[0] : "User");
+    const parts = base.replace(/[_\.]+/g," ").split(/\s+/).filter(Boolean);
+    const a = (parts[0]?.[0] || "U").toUpperCase();
+    const b = (parts[1]?.[0] || (parts[0]?.[1] || "")).toUpperCase();
+    return (a + b).slice(0,2);
+  }
+  function displayNameFromUser(u){
+    return (u?.user_metadata?.full_name || u?.user_metadata?.name || "").trim() || (u?.email || "Not signed in");
+  }
+
+  function getActor(){
+    try{
+      const txt = document.getElementById("whoami")?.textContent || "";
+      return txt && txt !== "Not signed in" ? txt : "";
+    }catch(_e){ return ""; }
+  }
+
+  function renderSidebarUser(u){
+    const nameEl = document.getElementById("sideUserName");
+    const emailEl = document.getElementById("sideUserEmail");
+    const avEl = document.getElementById("sideAvatar");
+    if(!nameEl || !emailEl || !avEl) return;
+    if(!u){
+      nameEl.textContent = "Not signed in";
+      emailEl.textContent = "—";
+      avEl.textContent = "OA";
+      return;
+    }
+    nameEl.textContent = displayNameFromUser(u);
+    emailEl.textContent = u.email || "—";
+    avEl.textContent = initialsFromUser(u);
+  }
+// =====================
+  // State
+  // =====================
+  let SB = null;
+  let PAGES = [];
+  let joinRequests = [];
+  let selectedRequest = null;
+
+  let loadedUser = { uuid:null, role:null, access:{} }; // for permissions view
+
+  // =====================
+  // Audit (local + optional RPC)
+  // =====================
+  const AUDIT_LS_KEY = "oap_admin_audit_local_v1";
+  let auditRecords = [];
+  let selectedAudit = null;
+
+  function nowISO(){ return new Date().toISOString(); }
+
+  function safeJson(obj){
+    try{ return JSON.stringify(obj, null, 2); }catch(_e){ return String(obj); }
+  }
+
+  function escapeHtml(s){
+    return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/\'/g,"&#39;");
+  }
+
+  function readAuditLocal(){
+    try{
+      const raw = localStorage.getItem(AUDIT_LS_KEY);
+      if(!raw) return [];
+      const arr = JSON.parse(raw);
+      return Array.isArray(arr) ? arr : [];
+    }catch(_e){ return []; }
+  }
+  function writeAuditLocal(arr){
+    try{ localStorage.setItem(AUDIT_LS_KEY, JSON.stringify(arr.slice(0, 2000))); }catch(_e){}
+  }
+
+  function normalizeTarget(t){
+    if(!t) return "";
+    if(typeof t === "string") return t;
+    const emp = t.employee_id || t.emp_id || t.employeeId;
+    const email = t.email;
+    const uuid = t.uuid || t.auth_user_id;
+    return [emp, email, uuid].filter(Boolean).join(" • ");
+  }
+
+  function auditAdd({action, result="success", actor="", target="", details={}, before=null, after=null}){
+    const rec = {
+      id: crypto?.randomUUID ? crypto.randomUUID() : (Date.now()+"_"+Math.random().toString(16).slice(2)),
+      ts: nowISO(),
+      action,
+      result,
+      actor,
+      target: normalizeTarget(target),
+      details: details || {},
+      before,
+      after
+    };
+    auditRecords.unshift(rec);
+    auditRecords = auditRecords.slice(0, 2000);
+    writeAuditLocal(auditRecords);
+
+    // best-effort: push to backend if RPC exists (ignore errors)
+    (async ()=>{
+      try{
+        // Optional RPC name (if you later add it): admin_add_audit_log
+        await rpc("admin_add_audit_log", { p_record: rec });
+      }catch(_e){}
+    })();
+
+    try{ renderAudit(); }catch(_e){}
+    return rec;
+  }
+
+  function actionLabel(a){
+    const m = {
+      join_approve: "Approve join request",
+      join_reject: "Reject join request",
+      access_save: "Save permissions",
+      access_clear: "Clear permissions",
+      role_change: "Change role",
+      page_grant: "Grant page",
+      page_revoke: "Revoke page",
+      user_load: "Load user"
+    };
+    return m[a] || a || "—";
+  }
+
+  function resultTag(r){
+    if(r==="success") return '<span class="tag ok">SUCCESS</span>';
+    if(r==="fail") return '<span class="tag bad">FAIL</span>';
+    return '<span class="tag">—</span>';
+  }
+
+  function withinDate(ts, from, to){
+    const d = new Date(ts);
+    if(from){
+      const f = new Date(from + "T00:00:00");
+      if(d < f) return false;
+    }
+    if(to){
+      const t = new Date(to + "T23:59:59");
+      if(d > t) return false;
+    }
+    return true;
+  }
+
+  function applyAuditFilters(arr){
+    const q = (document.getElementById("auditSearch")?.value || "").trim().toLowerCase();
+    const action = document.getElementById("auditAction")?.value || "";
+    const res = document.getElementById("auditResult")?.value || "";
+    const from = document.getElementById("auditFrom")?.value || "";
+    const to = document.getElementById("auditTo")?.value || "";
+
+        const actorQ = (document.getElementById("auditActor")?.value || "").trim().toLowerCase();
+return arr.filter(rec=>{
+      if(action && rec.action !== action) return false;
+      if(res && rec.result !== res) return false;
+      if(!withinDate(rec.ts, from, to)) return false;
+      if(actorQ){
+        const hayA = (String(rec.actor||"")).toLowerCase();
+        if(!hayA.includes(actorQ)) return false;
+      }
+      if(q){
+        const hay = (rec.target+" "+rec.actor+" "+safeJson(rec.details)).toLowerCase();
+        if(!hay.includes(q)) return false;
+      }
+      return true;
+    });
+  }
+
+  function setAuditDetails(rec){
+    selectedAudit = rec || null;
+    const tag = document.getElementById("auditSelTag");
+    const t = document.getElementById("auditDTime");
+    const a = document.getElementById("auditDAction");
+    const r = document.getElementById("auditDResult");
+    const ac = document.getElementById("auditDActor");
+    const tg = document.getElementById("auditDTarget");
+    const js = document.getElementById("auditDJson");
+    if(!tag) return;
+    if(!rec){
+      tag.textContent = "None";
+      t.textContent = "—"; a.textContent="—"; r.textContent="—"; ac.textContent="—"; tg.textContent="—";
+      js.textContent = "—";
+      return;
+    }
+    // id may be numeric (bigint) depending on source
+    tag.textContent = String(rec.id || "").slice(0,8) || "—";
+    t.textContent = new Date(rec.ts).toLocaleString("en-US");
+    a.textContent = actionLabel(rec.action);
+    r.textContent = (rec.result || "—").toUpperCase();
+    ac.textContent = rec.actor || "—";
+    tg.textContent = rec.target || "—";
+    js.textContent = safeJson(rec);
+  }
+
+  function openDiff(rec){
+    const modal = document.getElementById("diffModal");
+    if(!modal) return;
+    document.getElementById("diffBefore").textContent = safeJson(rec?.before ?? {});
+    document.getElementById("diffAfter").textContent = safeJson(rec?.after ?? {});
+    modal.classList.add("show");
+    modal.setAttribute("aria-hidden","false");
+  }
+  function closeDiff(){
+    const modal = document.getElementById("diffModal");
+    if(!modal) return;
+    modal.classList.remove("show");
+    modal.setAttribute("aria-hidden","true");
+  }
+
+  function exportAuditCSV(rows){
+    const cols = ["ts","action","result","actor","target","details"];
+    const out = [];
+    out.push(cols.join(","));
+    rows.forEach(rec=>{
+      const line = [
+        rec.ts,
+        rec.action,
+        rec.result,
+        rec.actor,
+        rec.target,
+        JSON.stringify(rec.details||{})
+      ].map(v=>{
+        const s = (v ?? "").toString().replace(/"/g,'""');
+        return `"${s}"`;
+      }).join(",");
+      out.push(line);
+    });
+    const blob = new Blob([out.join("\n")], {type:"text/csv;charset=utf-8"});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "audit_export.csv";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url), 800);
+  }
+
+  async function copyAuditJSON(rows){
+    const text = safeJson(rows);
+    try{
+      await navigator.clipboard.writeText(text);
+      toast("Copied", "Audit data copied");
+    }catch(_e){
+      toast("Copy failed", "Clipboard not available");
+    }
+  }
+
+  async function loadAudit(){
+    auditRecords = readAuditLocal();
+
+    // best-effort: read from backend if RPC exists
+    try{
+      const remoteRaw = await rpc("admin_list_audit_log", {});
+      if(Array.isArray(remoteRaw) && remoteRaw.length){
+        // Normalize remote shape (supports both legacy audit schema and DB-backed admin_list_audit_log)
+        const remote = remoteRaw.map((x)=>{
+          const rec = (x && typeof x === "object") ? {...x} : { details: x };
+          if(!rec.ts && rec.created_at) rec.ts = rec.created_at;
+          if(!rec.actor && rec.actor_email) rec.actor = rec.actor_email;
+          if(!rec.result) rec.result = "ok";
+          if(!rec.target){
+            // best-effort target for display
+            rec.target = rec.details?.email || rec.details?.full_name || rec.actor || "—";
+          }
+          // Ensure id is stable string key for dedup/UI
+          if(rec.id != null) rec.id = String(rec.id);
+          return rec;
+        });
+
+        // Merge (remote first). Remote items expected to have ts/action/result/actor/target/details/before/after
+        const merged = [...remote, ...auditRecords];
+        // Dedup by id if present, else by ts+action+target
+        const seen = new Set();
+        const out = [];
+        for(const rec of merged){
+          const key = rec.id || (rec.ts+"|"+rec.action+"|"+(rec.target||""));
+          if(seen.has(key)) continue;
+          seen.add(key);
+          out.push(rec);
+        }
+        auditRecords = out.slice(0, 2000);
+        writeAuditLocal(auditRecords);
+      }
+    }catch(_e){}
+
+    const c = document.getElementById("auditCount");
+    if(c) c.textContent = `${auditRecords.length} records`;
+    const s = document.getElementById("auditLastSync");
+    if(s) s.textContent = new Date().toLocaleString("en-US");
+    renderAudit();
+  }
+
+  
+  function renderHome(force=false){
+    // KPIs
+    const kJoin = document.getElementById("kpiJoinPending");
+    const kPages = document.getElementById("kpiPages");
+    const kAudit = document.getElementById("kpiAudit");
+    const kLast = document.getElementById("kpiLastSync");
+    if(kJoin) kJoin.textContent = String((joinRequests||[]).filter(r=>String(r.status||"").toLowerCase()==="pending").length || (joinRequests||[]).length || 0);
+    if(kPages) kPages.textContent = String((PAGES||[]).length || 0);
+    if(kAudit) kAudit.textContent = String((auditRecords||[]).length || 0);
+    if(kLast){
+      const s = document.getElementById("lastSync")?.textContent || document.getElementById("auditLastSync")?.textContent || "";
+      kLast.textContent = s || "—";
+    }
+
+    // Recent table
+    const body = document.getElementById("homeRecentBody");
+    if(body){
+      const recent = (auditRecords||[]).slice(0, 12);
+      body.innerHTML = recent.map(rec=>{
+        const t = new Date(rec.ts).toLocaleString("en-US");
+        return `<tr>
+          <td>${t}</td>
+          <td>${actionLabel(rec.action)}</td>
+          <td>${(rec.result||"").toUpperCase()}</td>
+          <td style="max-width:420px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${escapeHtml(rec.target||"—")}</td>
+        </tr>`;
+      }).join("") || `<tr><td colspan="4" class="muted">No activity yet.</td></tr>`;
+    }
+
+    // Health
+    const hs = document.getElementById("healthSession");
+    const hr = document.getElementById("healthRpc");
+    const hd = document.getElementById("healthData");
+    const tag = document.getElementById("healthTag");
+    const hasSession = !!(SB && SB.auth);
+    if(hs) hs.textContent = hasSession ? "OK" : "Not connected";
+    if(hr) hr.textContent = "OK";
+    if(hd) hd.textContent = `Join:${(joinRequests||[]).length} • Pages:${(PAGES||[]).length} • Audit:${(auditRecords||[]).length}`;
+    if(tag){
+      tag.className = "tag " + (hasSession ? "ok" : "wait");
+      tag.textContent = hasSession ? "Healthy" : "Limited";
+    }
+  }
+
+function renderAudit(){
+    const tb = document.getElementById("auditTbody");
+    if(!tb) return;
+    tb.innerHTML = "";
+    const rows = applyAuditFilters(auditRecords);
+    const c = document.getElementById("auditCount");
+    if(c) c.textContent = `${rows.length} records`;
+
+    rows.forEach(rec=>{
+      const tr = document.createElement("tr");
+      const hasDiff = rec && (rec.before || rec.after);
+      tr.innerHTML = `
+        <td>${new Date(rec.ts).toLocaleString("en-US")}</td>
+        <td><span class="tag">${actionLabel(rec.action)}</span></td>
+        <td>${resultTag(rec.result)}</td>
+        <td>${(rec.actor||"—")}</td>
+        <td>${(rec.target||"—")}</td>
+        <td style="max-width:520px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${(rec.details?.summary || rec.details?.message || "").toString().slice(0,140)}</td>
+        <td>${hasDiff ? '<button class="btn" data-diff="1">View</button>' : '<span class="tag">—</span>'}</td>
+      `;
+      tr.addEventListener("click", (ev)=>{
+        if(ev.target && ev.target.getAttribute("data-diff")==="1"){
+          openDiff(rec);
+          return;
+        }
+        setAuditDetails(rec);
+      });
+      tb.appendChild(tr);
+    });
+
+    if(!selectedAudit || !rows.find(r=> (r.id && selectedAudit.id && r.id===selectedAudit.id) || r.ts===selectedAudit.ts)){
+      setAuditDetails(rows[0] || null);
+    }
+  }
+
+
+  // =====================
+  // UI navigation
+  // =====================
+  
+
+  // =====================
+  // Settings (stats from join_requests + employee_master_db)
+  // =====================
+  
+  // Lightweight counters for Join Requests (Approved / Pending / Rejected)
+  async function renderJoinCounters(){
+    const client = await ensureClient();
+    if(!client) return;
+    const el = (id)=>document.getElementById(id);
+
+    async function countJoinByStatus(statusVal){
+      try{
+        const { count, error } = await client
+          .from("join_requests")
+          .select("id", { count: "exact", head: true })
+          .eq("status", statusVal);
+        if(error) throw error;
+        return (typeof count==="number") ? count : 0;
+      }catch(_e){
+        try{
+          const { data, error } = await client.from("join_requests").select("status");
+          if(error) throw error;
+          return (data||[]).filter(r=>String(r.status||"").toLowerCase()===String(statusVal).toLowerCase()).length;
+        }catch(__){ return 0; }
+      }
+    }
+
+    const [jrApproved, jrPending, jrRejected] = await Promise.all([
+      countJoinByStatus("approved"),
+      countJoinByStatus("pending"),
+      countJoinByStatus("rejected"),
+    ]);
+
+    if(el("setJRApproved")) el("setJRApproved").textContent = String(jrApproved);
+    if(el("setJRPend")) el("setJRPend").textContent = String(jrPending);
+    if(el("setJRReject")) el("setJRReject").textContent = String(jrRejected);
+  }
+
+async function renderSettings(){
+    const client = await ensureClient();
+    if(!client) return;
+
+    const el = (id)=>document.getElementById(id);
+
+    // UI placeholders
+    ["setJRApproved","setJRPend","setJRReject","setEmpTotal","setDeptCount","setExitTotal","setTopExitReason"].forEach(id=>{
+      const n = el(id); if(n) n.textContent="…";
+    });
+
+    const setBody = (id, html)=>{ const b=el(id); if(b) b.innerHTML=html; };
+
+    // ---------- Join requests counts ----------
+    async function countJoinByStatus(statusVal){
+      try{
+        const { count, error } = await client
+          .from("join_requests")
+          .select("id", { count: "exact", head: true })
+          .eq("status", statusVal);
+        if(error) throw error;
+        return (typeof count==="number") ? count : 0;
+      }catch(_e){
+        // Fallback: fetch statuses (safe for small tables)
+        try{
+          const { data, error } = await client.from("join_requests").select("status");
+          if(error) throw error;
+          return (data||[]).filter(r=>String(r.status||"").toLowerCase()===String(statusVal).toLowerCase()).length;
+        }catch(__){ return 0; }
+      }
+    }
+
+    const [jrApproved, jrPending, jrRejected] = await Promise.all([
+      countJoinByStatus("approved"),
+      countJoinByStatus("pending"),
+      countJoinByStatus("rejected"),
+    ]);
+
+    if(el("setJRApproved")) el("setJRApproved").textContent = String(jrApproved);
+    if(el("setJRPend")) el("setJRPend").textContent = String(jrPending);
+    if(el("setJRReject")) el("setJRReject").textContent = String(jrRejected);
+
+    // ---------- Employees stats (via secure RPC to bypass RLS safely) ----------
+    try{
+      const { data: statRows, error: statErr } = await client.rpc("admin_employee_stats");
+      if(statErr) throw statErr;
+      const s = (statRows && statRows[0]) ? statRows[0] : null;
+
+      if(el("setEmpTotal"))  el("setEmpTotal").textContent  = (s && s.total_employees!=null) ? String(s.total_employees) : "—";
+      if(el("setDeptCount")) el("setDeptCount").textContent = (s && s.departments!=null)     ? String(s.departments)     : "—";
+    }catch(e){
+      if(el("setEmpTotal"))  el("setEmpTotal").textContent  = "—";
+      if(el("setDeptCount")) el("setDeptCount").textContent = "—";
+    }
+
+    // ---------- Exits / top exit reason (via secure RPC) ----------
+    try{
+      const { data: exitRows, error: exitErr } = await client.rpc("admin_employee_exit_summary");
+      if(exitErr) throw exitErr;
+      const x = (exitRows && exitRows[0]) ? exitRows[0] : null;
+
+      if(el("setExitTotal")) el("setExitTotal").textContent = (x && x.exits_total!=null) ? String(x.exits_total) : "—";
+      if(el("setTopExitReason")) el("setTopExitReason").textContent = (x && x.top_exit_reason) ? String(x.top_exit_reason) : "—";
+    }catch(e){
+      if(el("setExitTotal")) el("setExitTotal").textContent = "—";
+      if(el("setTopExitReason")) el("setTopExitReason").textContent = "—";
+    }
+
+    // ---------- Department cards (dept + total + Job Title + Actual Role) ---------- (dept + total + Job Title + Actual Role) ----------
+    let deptRows = [];
+    try{
+      const { data, error } = await client.rpc("admin_employee_dept_cards");
+      if(error) throw error;
+      deptRows = Array.isArray(data) ? data : [];
+    }catch(e){
+      const dc = el("deptCards");
+      if(dc) dc.innerHTML = `<div class="muted" style="padding:12px">No access to department breakdown (check admin role)</div>`;
+      return;
+    }
+
+    // Build maps in the same shape used by the existing renderer below
+    const deptCounts = new Map();
+    const byDeptJob = Object.create(null);
+    const byDeptRole = Object.create(null);
+
+    for(const row of deptRows){
+      const dept = row.department || "—";
+      const total = Number(row.total || 0);
+      deptCounts.set(dept, total);
+
+      const jt = row.job_titles || {};
+      const ar = row.actual_roles || {};
+
+      // Convert JSON objects to sorted arrays: [{name, count}, ...]
+      const jtArr = Object.entries(jt).map(([name, count])=>({ name, count: Number(count||0) }))
+        .sort((a,b)=> (b.count-a.count) || (a.name||"").localeCompare(b.name||""));
+      const arArr = Object.entries(ar).map(([name, count])=>({ name, count: Number(count||0) }))
+        .sort((a,b)=> (b.count-a.count) || (a.name||"").localeCompare(b.name||""));
+
+      byDeptJob[dept] = jtArr;
+      byDeptRole[dept] = arArr;
+    }
+
+    // If no rows, keep it clean
+    if(deptCounts.size === 0){
+      const dc = el("deptCards");
+      if(dc) dc.innerHTML = `<div class="muted" style="padding:12px">No data</div>`;
+      return;
+    }
+
+const deptCardsEl = el("deptCards");
+    if(deptCardsEl){
+      const depts = [...deptCounts.entries()].sort((a,b)=>b[1]-a[1]).map(([d])=>d);
+
+ [...deptCounts.entries()].sort((a,b)=>b[1]-a[1]).map(([d])=>d);
+
+      const badgeTxt = (name)=>{
+        const s = (name||"").trim();
+        if(!s || s==="—") return "—";
+        // use first 2 chars for compact badge
+        return s.replace(/\s+/g," ").slice(0,2).toUpperCase();
+      };
+
+      const listHtml = (arr)=>{
+        if(!arr || arr.length===0) return `<div class="muted" style="padding:6px 8px">No data</div>`;
+        return arr
+          .slice()
+          .sort((a,b)=> (Number(b.count||0)-Number(a.count||0)) || String(a.name||"").localeCompare(String(b.name||"")) )
+          .map((it)=>`
+            <div class="deptRow">
+              <div class="label" title="${escapeHtml(it.name)}">${escapeHtml(it.name)}</div>
+              <div class="val">${Number(it.count||0)}</div>
+            </div>
+          `).join("");
+      };
+
+      let cards = "";
+      for(const dept of depts){
+        const total = deptCounts.get(dept) || 0;
+        const jobs = byDeptJob[dept] || [];
+        const roles = byDeptRole[dept] || [];
+        cards += `
+          <div class="deptCard" data-dept="${escapeHtml(dept)}">
+            <div class="hdr" role="button" tabindex="0" aria-expanded="false">
+              <div class="deptName">
+                <span class="deptBadge">${escapeHtml(badgeTxt(dept))}</span>
+                <span class="txt">${escapeHtml(dept)}</span>
+              </div>
+              <div class="deptMeta">
+                <span class="count">${total}</span>
+                <span class="chev">⌄</span>
+              </div>
+            </div>
+            <div class="deptBody">
+              <div class="deptSplit">
+                <div class="deptPanel">
+                  <h4>Job title</h4>
+                  <div class="deptList">${listHtml(jobs)}</div>
+                </div>
+                <div class="deptPanel">
+                  <h4>Actual role</h4>
+                  <div class="deptList">${listHtml(roles)}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      deptCardsEl.innerHTML = cards || `<div class="muted" style="padding:12px">No data</div>`;
+
+      // Toggle expand/collapse
+      deptCardsEl.querySelectorAll(".deptCard .hdr").forEach(h=>{
+        const card = h.closest(".deptCard");
+        const toggle = ()=>{
+          const isOpen = card.classList.toggle("expanded");
+          h.setAttribute("aria-expanded", isOpen ? "true" : "false");
+        };
+        h.addEventListener("click", toggle);
+        h.addEventListener("keydown", (e)=>{ if(e.key==="Enter" || e.key===" "){ e.preventDefault(); toggle(); }});
+      });
+    }
+
+  
+    // Auto-load department cards
+    try{ await loadDeptCards(); }catch(e){}
+}
+function setView(view){
+    document.querySelectorAll(".nav button").forEach(b=>b.classList.remove("active"));
+    const map = { home:"Home", join:"Join", perm:"Perm", audit:"Audit", settings:"Settings" };
+    const btn = document.getElementById("nav"+(map[view] || "Join"));
+    if(btn) btn.classList.add("active");
+
+    const vHome = document.getElementById("viewHome");
+    const vJoin = document.getElementById("viewJoin");
+    const vPerm = document.getElementById("viewPerm");
+    const vAudit = document.getElementById("viewAudit");
+    const vSettings = document.getElementById("viewSettings");
+    if(vHome) vHome.style.display = (view==="home") ? "" : "none";
+    if(vJoin) vJoin.style.display = (view==="join") ? "" : "none";
+    if(vPerm) vPerm.style.display = (view==="perm") ? "" : "none";
+    if(vAudit) vAudit.style.display = (view==="audit") ? "" : "none";
+    if(vSettings) vSettings.style.display = (view==="settings") ? "" : "none";
+
+    const title = document.getElementById("viewTitle");
+    const sub = document.getElementById("viewSub");
+    if(view==="home"){ title.textContent="Overview"; sub.textContent=""; renderHome(); }
+    if(view==="join"){ title.textContent="Join Requests"; sub.textContent=""; renderJoinCounters(); }
+    if(view==="perm"){ title.textContent="Permissions"; sub.textContent=""; }
+    if(view==="audit"){ title.textContent="Audit"; sub.textContent=""; }
+    if(view==="settings"){ title.textContent="Settings"; sub.textContent=""; renderSettings(); }
+  }
+
+  document.getElementById("navHome").addEventListener("click", ()=>setView("home"));
+  document.getElementById("navJoin").addEventListener("click", ()=>setView("join"));
+  document.getElementById("navPerm").addEventListener("click", ()=>setView("perm"));
+  document.getElementById("navAudit").addEventListener("click", ()=>setView("audit"));
+  document.getElementById("navSettings").addEventListener("click", ()=>setView("settings"));
+  const btnSetRef = document.getElementById("btnSettingsRefresh");
+  if(btnSetRef) btnSetRef.addEventListener("click", ()=>renderSettings());
+
+  // Home quick actions
+  document.getElementById("btnHomeRefresh")?.addEventListener("click", ()=>renderHome(true));
+  document.getElementById("qaGoJoin")?.addEventListener("click", ()=>setView("join"));
+  document.getElementById("qaGoPerm")?.addEventListener("click", ()=>setView("perm"));
+  document.getElementById("qaGoAudit")?.addEventListener("click", ()=>setView("audit"));
+
+
+  // Audit UI
+  document.getElementById("btnAuditRefresh").addEventListener("click", async ()=>{ await loadAudit(); });
+  document.getElementById("btnAuditApply").addEventListener("click", ()=>{ renderAudit(); });
+  document.getElementById("btnAuditClear").addEventListener("click", ()=>{
+    document.getElementById("auditSearch").value="";
+    document.getElementById("auditAction").value="";
+    document.getElementById("auditResult").value="";
+    document.getElementById("auditFrom").value="";
+    document.getElementById("auditTo").value="";
+    renderAudit();
+  });
+  document.getElementById("btnAuditExport").addEventListener("click", ()=>{ exportAuditCSV(applyAuditFilters(auditRecords)); });
+  document.getElementById("btnAuditCopy").addEventListener("click", ()=>{ copyAuditJSON(applyAuditFilters(auditRecords)); });
+  document.getElementById("auditSearch").addEventListener("keydown", (e)=>{ if(e.key==="Enter") renderAudit(); });
+
+  // Diff modal close
+  document.getElementById("btnDiffClose").addEventListener("click", closeDiff);
+  document.getElementById("diffModal").addEventListener("click", (e)=>{
+    const close = e.target?.getAttribute?.("data-close");
+    if(close==="1") closeDiff();
+  });
+
+
+  document.getElementById("btnRefresh").addEventListener("click", async ()=>{
+    await refreshAll();
+  });
+
+  document.getElementById("btnSignOut").addEventListener("click", async ()=>{
+    try{
+      if(!SB) SB = await ensureClient();
+      if(SB) await SB.auth.signOut();
+    }catch(_e){}
+    location.href = "/Login.html";
+  });
+
+  // =====================
+  // Supabase calls
+  // =====================
+  async function ensureAuth(){
+    SB = SB || await ensureClient();
+    if(!SB){ toast("Could not load Supabase client", "Check /assets/js/nxs_supabase_client.js"); return null; }
+
+    const u = await SB.auth.getUser();
+    if(!u || !u.data || !u.data.user){
+      location.href = "/Login.html";
+      return null;
+    }
+    return u.data.user;
+  }
+
+  async function rpc(name, params={}){
+    const { data, error } = await SB.rpc(name, params);
+    if(error) throw error;
+    return data;
+  }
+
+  async function loadPages(){
+    // Expect RPC: admin_list_pages()
+    const pages = await rpc("admin_list_pages", {});
+    // normalize: accept array of {page_id, path, label, ...}
+    PAGES = Array.isArray(pages) ? pages : [];
+    document.getElementById("pagesMeta").textContent = `${PAGES.length} pages`;
+    document.getElementById("permPagesMeta").textContent = `${PAGES.length} pages`;
+    renderPagesToggles("pagesBox", {});
+    renderPagesToggles("permPagesBox", loadedUser.access || {});
+  }
+
+  async function loadJoinRequests(){
+    // Expect RPC: admin_list_join_requests()
+    const rows = await rpc("admin_list_join_requests", {});
+    joinRequests = Array.isArray(rows) ? rows : [];
+    document.getElementById("jrCount").textContent = `${joinRequests.length} requests`;
+    renderJoinTable();
+  }
+
+  // =====================
+  // Rendering
+  // =====================
+  function statusTag(status){
+    const s = (status||"").toLowerCase();
+    if(["approved","accepted","active"].includes(s)) return '<span class="tag ok">Approved</span>';
+    if(["rejected","declined"].includes(s)) return '<span class="tag bad">Rejected</span>';
+    return '<span class="tag wait">Pending</span>';
+  }
+
+  function renderJoinTable(){
+    const tb = document.getElementById("jrTbody");
+    tb.innerHTML = "";
+    if(!joinRequests.length){
+      tb.innerHTML = `<tr><td colspan="8" style="color:var(--muted2); padding:18px;">No requests right now</td></tr>`;
+      return;
+    }
+
+    joinRequests.forEach(r=>{
+      const tr = document.createElement("tr");
+
+      const created = r.created_at ? new Date(r.created_at).toLocaleString("en-US") : "—";
+      const role = r.requested_role || r.role || "user";
+      const dept = r.department || r.dept || "—";
+      const name = r.full_name || r.name || "—";
+      const emp = r.employee_id ?? r.emp_id ?? "—";
+      const email = r.email || "—";
+      const status = r.status || "pending";
+
+      tr.innerHTML = `
+        <td>${statusTag(status)}</td>
+        <td>${emp}</td>
+        <td style="direction:ltr; text-align:left;">${email}</td>
+        <td>${name}</td>
+        <td>${dept}</td>
+        <td><span class="tag">${role}</span></td>
+        <td>${created}</td>
+        <td>
+          <div class="row-actions">
+            <button class="btn primary" data-act="select">Open</button>
+          </div>
+        </td>
+      `;
+      tr.querySelector('[data-act="select"]').addEventListener("click", ()=>selectJoinRequest(r));
+      tb.appendChild(tr);
+    });
+  }
+
+  function selectJoinRequest(r){
+    selectedRequest = r;
+
+    document.getElementById("selTag").textContent = `#${r.id ?? "—"}`;
+    document.getElementById("selRequestId").value = r.id ?? "";
+    document.getElementById("selStatus").value = r.status ?? "pending";
+    document.getElementById("selEmpId").value = r.employee_id ?? "";
+    document.getElementById("selEmail").value = r.email ?? "";
+    document.getElementById("selName").value = r.full_name ?? r.name ?? "";
+    document.getElementById("selDept").value = r.department ?? "";
+
+    // map role to your labels if needed:
+    const role = (r.requested_role || r.role || "agent").toString();
+    const sel = document.getElementById("selRole");
+    sel.value = ROLE_LABELS[role] ? role : "agent";
+
+    // default access selection from request if exists
+    const requested_access = (r.requested_access && typeof r.requested_access==="object") ? r.requested_access : {};
+    renderPagesToggles("pagesBox", requested_access);
+
+    document.getElementById("btnApprove").disabled = false;
+    document.getElementById("btnReject").disabled = false;
+    document.getElementById("jrHint").textContent = "";
+  }
+
+  function renderPagesToggles(containerId, accessMap){
+    const box = document.getElementById(containerId);
+    box.innerHTML = "";
+    const map = accessMap || {};
+    if(!PAGES.length){
+      box.innerHTML = `
+`;
+      return;
+    }
+    PAGES.forEach(p=>{
+      const id = p.page_key ?? p.permission_key ?? p.page_id ?? p.id ?? p.slug ?? p.path ?? p.page_path;
+      const path = p.page_path ?? p.path ?? p.page_url ?? "";
+      const label = p.label ?? p.title ?? p.name ?? p.page_key ?? p.permission_key ?? id;
+      const enabled = !!(map[id] ?? map[path] ?? map[label]);
+      const row = document.createElement("div");
+      row.className = "page-row";
+      row.innerHTML = `
+        <div>
+          <div class="name">${label}</div>
+          <!-- path hidden by request: do not show filenames/paths under page labels -->
+        </div>
+        <div class="toggle ${enabled ? "on":""}" role="switch" aria-checked="${enabled}" tabindex="0"></div>
+      `;
+      const t = row.querySelector(".toggle");
+      t.addEventListener("click", ()=>{
+        t.classList.toggle("on");
+        t.setAttribute("aria-checked", t.classList.contains("on") ? "true":"false");
+      });
+      t.addEventListener("keydown", (e)=>{
+        if(e.key==="Enter"||e.key===" "){ e.preventDefault(); t.click(); }
+      });
+      // attach data
+      row.dataset.pageId = id;
+      box.appendChild(row);
+    });
+  }
+
+  function readPagesSelection(containerId){
+    const box = document.getElementById(containerId);
+    const access = {};
+    box.querySelectorAll(".page-row").forEach(row=>{
+      const id = row.dataset.pageId;
+      const on = row.querySelector(".toggle").classList.contains("on");
+      access[id] = on;
+    });
+    return access;
+  }
+
+  // =====================
+  // Join actions
+  // =====================
+  document.getElementById("btnApprove").addEventListener("click", async ()=>{
+    if(!selectedRequest) return;
+    try{
+      const role = document.getElementById("selRole").value;
+      const access = readPagesSelection("pagesBox");
+
+      // 1) Ensure user exists in auth (admin_provision_user)
+      const email = (selectedRequest.email || "").toString();
+      const empId = selectedRequest.employee_id ?? null;
+
+      const provision = await rpc("admin_provision_user", {
+        p_email: email,
+        p_employee_id: empId
+      });
+      // Expect {auth_user_id: 'uuid'} or direct uuid string
+      const auth_user_id = provision?.auth_user_id || provision?.id || provision || null;
+      if(!auth_user_id) throw { message:"Could not obtain Auth UUID from admin_provision_user" };
+
+      // 2) Set access + role
+      await rpc("admin_set_user_access", {
+        p_auth_user_id: auth_user_id,
+        p_role: role,
+        p_access: access
+      });
+
+      // 3) Update join request status
+      await rpc("admin_set_join_request_status", {
+        p_request_id: selectedRequest.id,
+        p_status: "approved",
+        p_auth_user_id: auth_user_id
+      });
+
+      toast("Request approved", `UUID: ${auth_user_id}`);
+      auditAdd({action:"join_approve", result:"success", actor:getActor(), target:{employee_id:selectedRequest.employee_id, email:selectedRequest.email, uuid:auth_user_id}, details:{summary:"Join request approved", request_id:selectedRequest.id}, before:null, after:{role, access}});
+      selectedRequest = null;
+      document.getElementById("btnApprove").disabled = true;
+      document.getElementById("btnReject").disabled = true;
+      await loadJoinRequests();
+    await loadAudit();
+    }catch(e){
+      toast("Approve failed", e.message || JSON.stringify(e));
+      auditAdd({action:"join_approve", result:"fail", actor:getActor(), target:{employee_id:selectedRequest?.employee_id, email:selectedRequest?.email}, details:{summary:"Approve failed", message:(e.message||String(e)), request_id:selectedRequest?.id}});
+      document.getElementById("jrHint").textContent = (e.message || JSON.stringify(e));
+    }
+  });
+
+  document.getElementById("btnReject").addEventListener("click", async ()=>{
+    if(!selectedRequest) return;
+    try{
+      await rpc("reject_join_request", { p_request_id: selectedRequest.id });
+      toast("Request rejected", `Request: ${selectedRequest.id}`);
+      auditAdd({action:"join_reject", result:"success", actor:getActor(), target:{employee_id:selectedRequest.employee_id, email:selectedRequest.email}, details:{summary:"Join request rejected", request_id:selectedRequest.id}});
+      selectedRequest = null;
+      document.getElementById("btnApprove").disabled = true;
+      document.getElementById("btnReject").disabled = true;
+      await loadJoinRequests();
+    await loadAudit();
+    }catch(e){
+      toast("Reject failed", e.message || JSON.stringify(e));
+      auditAdd({action:"join_reject", result:"fail", actor:getActor(), target:{employee_id:selectedRequest?.employee_id, email:selectedRequest?.email}, details:{summary:"Reject failed", message:(e.message||String(e)), request_id:selectedRequest?.id}});
+      document.getElementById("jrHint").textContent = (e.message || JSON.stringify(e));
+    }
+  });
+
+  // =====================
+  // Permissions actions
+  // =====================
+  function renderPermTable(access){
+    const tb = document.getElementById("permTableBody");
+    tb.innerHTML = "";
+    const map = access || {};
+    PAGES.forEach(p=>{
+      const id = p.page_id ?? p.id ?? p.slug ?? p.path;
+      const label = p.label ?? p.title ?? p.name ?? id;
+      const enabled = !!(map[id]);
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td style="direction:ltr; text-align:left;">${id}</td>
+        <td style="direction:ltr; text-align:left;">${path}</td>
+        <td>${label}</td>
+        <td>${enabled ? '<span class="tag ok">ON</span>' : '<span class="tag">OFF</span>'}</td>
+      `;
+      tb.appendChild(tr);
+    });
+  }
+
+  document.getElementById("btnLoadUser").addEventListener("click", async ()=>{
+    try{
+      const uuid = document.getElementById("permUuid").value.trim();
+      const email = document.getElementById("permEmail").value.trim();
+      const empId = document.getElementById("permEmpId").value.trim();
+      const role = document.getElementById("permRole").value;
+
+      let auth_user_id = uuid || null;
+      if(!auth_user_id){
+        if(!email) throw {message:"Enter UUID or Email"};
+        const provision = await rpc("admin_provision_user", {
+          p_email: email,
+          p_employee_id: empId ? Number(empId) : null
+        });
+        auth_user_id = provision?.auth_user_id || provision?.id || provision || null;
+        if(!auth_user_id) throw {message:"Could not obtain UUID"};
+        document.getElementById("permUuid").value = auth_user_id;
+      }
+
+      // Load current access (if you have RPC for it). If not, we keep empty and let admin set.
+      // We'll try to read from a view/table via RPC if exists: admin_get_user_access (optional).
+      let currentAccess = {};
+      try{
+        const got = await rpc("admin_get_user_access", { p_auth_user_id: auth_user_id });
+        if(got && typeof got === "object") currentAccess = got.access || got;
+      }catch(_e){
+        // RPC may not exist; that's okay.
+      }
+
+      loadedUser = { uuid: auth_user_id, role, access: currentAccess };
+
+      document.getElementById("permLoadedTag").textContent = auth_user_id;
+      document.getElementById("btnSaveAccess").disabled = false;
+      document.getElementById("btnClearAccess").disabled = false;
+
+      renderPagesToggles("permPagesBox", currentAccess);
+      renderPermTable(readPagesSelection("permPagesBox"));
+      document.getElementById("permHint").textContent = "Loaded.";
+      toast("User loaded", auth_user_id);
+      auditAdd({action:"user_load", result:"success", actor:getActor(), target:{uuid:auth_user_id, email:email, employee_id:empId}, details:{summary:"User loaded in permissions", role}});
+    }catch(e){
+      toast("Load failed", e.message || JSON.stringify(e));
+      auditAdd({action:"user_load", result:"fail", actor:getActor(), target:{uuid:document.getElementById("permUuid")?.value, email:document.getElementById("permEmail")?.value, employee_id:document.getElementById("permEmpId")?.value}, details:{summary:"Load user failed", message:(e.message||String(e))}});
+      document.getElementById("permHint").textContent = (e.message || JSON.stringify(e));
+    }
+  });
+
+  document.getElementById("btnSaveAccess").addEventListener("click", async ()=>{
+    try{
+      if(!loadedUser.uuid) throw {message:"Load a user first"};
+      const role = document.getElementById("permRole").value;
+      const access = readPagesSelection("permPagesBox");
+
+      await rpc("admin_set_user_access", {
+        p_auth_user_id: loadedUser.uuid,
+        p_role: role,
+        p_access: access
+      });
+
+      renderPermTable(access);
+      toast("Access saved", loadedUser.uuid);
+
+      // Audit: role change + per-page grant/revoke + aggregate save
+      const _beforeAccess = loadedUser.access || {};
+      const _beforeRole = loadedUser.role || "";
+      const _afterRole = role || "";
+
+      // Role change event (separate)
+      if(_beforeRole && _afterRole && _beforeRole !== _afterRole){
+        auditAdd({
+          action:"role_change",
+          result:"success",
+          actor:getActor(),
+          target:{uuid:loadedUser.uuid},
+          details:{summary:"Role changed", from:_beforeRole, to:_afterRole},
+          before:{role:_beforeRole},
+          after:{role:_afterRole}
+        });
+      }
+
+      // Page-level changes (separate events)
+      const allKeys = new Set([...Object.keys(_beforeAccess||{}), ...Object.keys(access||{})]);
+      allKeys.forEach(k=>{
+        const b = !!_beforeAccess[k];
+        const a = !!access[k];
+        if(b===a) return;
+        const pageMeta = (PAGES||[]).find(p=>String(p.page_key||p.key||p.id)===String(k)) || {};
+        const label = pageMeta.page_name || pageMeta.name || pageMeta.title || k;
+        auditAdd({
+          action: a ? "page_grant" : "page_revoke",
+          result:"success",
+          actor:getActor(),
+          target:{uuid:loadedUser.uuid},
+          details:{summary:(a?"Granted":"Revoked")+" page access", page_key:k, page_label:label},
+          before:{[k]:b},
+          after:{[k]:a}
+        });
+      });
+
+      // Aggregate save (kept)
+      auditAdd({action:"access_save", result:"success", actor:getActor(), target:{uuid:loadedUser.uuid}, details:{summary:"Permissions saved", role}, before:_beforeAccess, after:access});
+
+      loadedUser.access = access;
+      loadedUser.role = role;
+      document.getElementById("permHint").textContent = "Saved successfully.";
+    }catch(e){
+      toast("Save failed", e.message || JSON.stringify(e));
+      auditAdd({action:"access_save", result:"fail", actor:getActor(), target:{uuid:loadedUser.uuid}, details:{summary:"Save permissions failed", message:(e.message||String(e))}});
+      document.getElementById("permHint").textContent = (e.message || JSON.stringify(e));
+    }
+  });
+
+  document.getElementById("btnClearAccess").addEventListener("click", async ()=>{
+    try{
+      if(!loadedUser.uuid) throw {message:"Load a user first"};
+      // set all OFF
+      const access = {};
+      PAGES.forEach(p=>{
+        const id = p.page_id ?? p.id ?? p.slug ?? p.path;
+        access[id] = false;
+      });
+      const role = document.getElementById("permRole").value;
+
+      await rpc("admin_set_user_access", {
+        p_auth_user_id: loadedUser.uuid,
+        p_role: role,
+        p_access: access
+      });
+
+      renderPagesToggles("permPagesBox", access);
+      renderPermTable(access);
+      toast("All access cleared", loadedUser.uuid);
+      auditAdd({action:"access_clear", result:"success", actor:getActor(), target:{uuid:loadedUser.uuid}, details:{summary:"Permissions cleared", role}, before:loadedUser.access, after:access});
+      loadedUser.access = access;
+      document.getElementById("permHint").textContent = "Page access cleared (OFF).";
+    }catch(e){
+      toast("Delete failed", e.message || JSON.stringify(e));
+      auditAdd({action:"access_clear", result:"fail", actor:getActor(), target:{uuid:loadedUser.uuid}, details:{summary:"Clear permissions failed", message:(e.message||String(e))}});
+      document.getElementById("permHint").textContent = (e.message || JSON.stringify(e));
+    }
+  });
+
+  // update perm table on toggle clicks
+  document.getElementById("permPagesBox").addEventListener("click", ()=>{
+    try{ renderPermTable(readPagesSelection("permPagesBox")); }catch(_e){}
+  });
+
+  // =====================
+  // Boot
+  // =====================
+  async function refreshAll(){
+    const user = await ensureAuth();
+    if(!user) return;
+
+    document.getElementById("whoami").textContent = user.email || "Signed in";
+    try{ renderSidebarUser(user); }catch(_e){}
+    try{ renderSidebarUser(user); }catch(_e){}
+    document.getElementById("lastSync").textContent = new Date().toLocaleString("en-US");
+
+    await loadPages();
+    await loadJoinRequests();
+    await loadAudit();
+
+    // Refresh overview KPIs
+    try{ renderHome(); }catch(_e){}
+  }
+
+  (async ()=>{
+    const user = await ensureAuth();
+    if(!user) return;
+    document.getElementById("whoami").textContent = user.email || "Signed in";
+    try{ renderSidebarUser(user); }catch(_e){}
+    await refreshAll();
+  })();
+
+  // =====================
+  // Settings: Department cards (from admin_employee_dept_cards)
+  // =====================
+  async function loadDeptCards(){
+    const grid = document.getElementById('deptCardsGrid');
+    const empty = document.getElementById('deptCardsEmpty');
+    if(!grid) return;
+    grid.innerHTML = '';
+    if(empty){
+      empty.style.display = 'none';
+      empty.textContent = '—';
+    }
+
+    const showEmpty = (msg)=>{
+      if(!empty) return;
+      empty.style.display = 'block';
+      empty.textContent = msg || '—';
+    };
+
+    try{
+      const sb = await ensureClient();
+      if(!sb) throw new Error('Supabase client not ready');
+
+      // 1) Preferred RPC (dept cards)
+      let data = null;
+      let err = null;
+
+      try{
+        const r1 = await sb.rpc('admin_employee_dept_cards');
+        err = r1.error;
+        data = r1.data;
+      }catch(e){
+        err = e;
+      }
+
+      // 2) Fallback RPC (stats) — build cards from stats payload if available
+      if(err || !data){
+        try{
+          const r2 = await sb.rpc('admin_employee_stats');
+          if(r2.error) throw r2.error;
+          const s = r2.data || {};
+          // Accept either array in s.departments or s.dept_cards
+          data = s.departments || s.dept_cards || s.department_cards || null;
+        }catch(e2){
+          // keep original error if exists
+          if(!err) err = e2;
+        }
+      }
+
+      if(!data || (Array.isArray(data) && data.length === 0)){
+        showEmpty('No department data');
+        return;
+      }
+
+      renderDeptCards(data);
+    }catch(e){
+      showEmpty('No access to department cards');
+      console.error('dept cards error', e);
+    }
+  }
+
+  function renderDeptCards(rows){
+    const grid = document.getElementById('deptCardsGrid');
+    if(!grid) return;
+
+    const chevron = `
+      <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>`;
+
+    grid.innerHTML = rows.map((r, idx) => {
+      const dept = r.department ?? '—';
+      const total = r.total ?? 0;
+
+      // r.job_titles and r.actual_roles are jsonb objects {name:count}
+      const jt = r.job_titles || {};
+      const ar = r.actual_roles || {};
+
+      const jtItems = Object.entries(jt).sort((a,b)=> (b[1]||0)-(a[1]||0)).slice(0,50)
+        .map(([k,v]) => `<div class="k">${escapeHtml(k)}</div><div class="v">${v}</div>`).join('') || '<div class="muted">—</div>';
+      const arItems = Object.entries(ar).sort((a,b)=> (b[1]||0)-(a[1]||0)).slice(0,50)
+        .map(([k,v]) => `<div class="k">${escapeHtml(k)}</div><div class="v">${v}</div>`).join('') || '<div class="muted">—</div>';
+
+      return `
+        <div class="dept-card" data-idx="${idx}">
+          <div class="dept-card-h">
+            <div>
+              <div class="dept-name">${escapeHtml(dept)}</div>
+            </div>
+            <div style="display:flex; align-items:center; gap:10px;">
+              <div class="dept-total">${total}</div>
+              <button class="dept-toggle" type="button" aria-label="Toggle details">${chevron}</button>
+            </div>
+          </div>
+          <div class="dept-details">
+            <div class="dept-details-grid">
+              <div class="dept-panel">
+                <div class="section-label">Job titles</div>
+                <div class="kv-list">${jtItems}</div>
+              </div>
+              <div class="dept-panel">
+                <div class="section-label">Actual roles</div>
+                <div class="kv-list">${arItems}</div>
+              </div>
+            </div>
+          </div>
+        </div>`;
+    }).join('');
+
+    // toggle behavior: expand ONLY the clicked card (no grid row stretch)
+    grid.querySelectorAll('.dept-card .dept-toggle').forEach(btn=>{
+      btn.addEventListener('click', (ev)=>{
+        ev.preventDefault();
+        const card = ev.currentTarget.closest('.dept-card');
+        if(!card) return;
+
+        // close others
+        grid.querySelectorAll('.dept-card.open').forEach(other=>{
+          if(other !== card) other.classList.remove('open');
+        });
+
+        card.classList.toggle('open');
+      });
+    });}
+
+  // Buttons: Refresh / Open all / Close all
+  document.addEventListener('DOMContentLoaded', () => {
+    const btn = document.getElementById('deptCardsRefreshBtn');
+    if(btn) btn.addEventListener('click', loadDeptCards);
+
+    const openAll = document.getElementById('deptCardsOpenAllBtn');
+    const closeAll = document.getElementById('deptCardsCloseAllBtn');
+
+    if(openAll){
+      openAll.addEventListener('click', () => {
+        const grid = document.getElementById('deptCardsGrid');
+        if(!grid) return;
+        grid.querySelectorAll('.dept-card').forEach(c => c.classList.add('open'));
+      });
+    }
+    if(closeAll){
+      closeAll.addEventListener('click', () => {
+        const grid = document.getElementById('deptCardsGrid');
+        if(!grid) return;
+        grid.querySelectorAll('.dept-card').forEach(c => c.classList.remove('open'));
+      });
+    }
+  });
+
+  // Hook into navigation to auto-load when Settings section is opened
+  (function(){
+    const _orig = window.showSection;
+    if(typeof _orig === 'function' && !window.__deptCardsHooked){
+      window.__deptCardsHooked = true;
+      window.showSection = function(id){
+        const r = _orig.apply(this, arguments);
+        if(id === 'settings') setTimeout(()=>{ try{ loadDeptCards(); }catch(e){} }, 50);
+        return r;
+      };
+    }
+  })();
+
+
+
+  </script>
+</body>
+</html>
